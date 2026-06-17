@@ -1137,8 +1137,8 @@ function showTab(name, btn) {
   if (name === 'kpi') renderKpi();
   if (name === 'claim' && claimData.length) renderClaimTable();
   if (name === 'gajebon') {
-    if (IS_SERVER) fetchGajebonFromServer();
-    else if (Object.keys(gajebonSheets).length) renderGajebonTable();
+    if (Object.keys(gajebonSheets).length) renderGajebonTable();
+    else if (IS_SERVER) fetchGajebonFromServer();
   }
   if (name === 'docs') renderDocsList();
 }
@@ -1208,6 +1208,7 @@ function refreshDash() {
   // ─ 대시보드 전용 차트 ─
   renderDashCharts(thisYear);
   renderEquipDefect();
+  renderGajebonTodaySummary();
 }
 
 function renderDashCharts(year) {
