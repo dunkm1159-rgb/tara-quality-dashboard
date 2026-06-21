@@ -3597,13 +3597,14 @@ function renderDocsList() {
     const cat = doc.category === 'standard' ? '📋 작업표준서' : '📄 작업지침서';
     const size = doc.size ? (doc.size > 1048576 ? (doc.size/1048576).toFixed(1)+'MB' : (doc.size/1024).toFixed(0)+'KB') : '';
     const date = doc.addedAt ? doc.addedAt.slice(0,10) : '';
-    return '<div class="card" style="padding:16px;cursor:pointer;transition:box-shadow .2s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,.12)'" onmouseleave="this.style.boxShadow=''" onclick="openDocFile(\'' + doc.id + '\')">'
+    const cardId = 'doc-card-' + doc.id;
+    return '<div id="' + cardId + '" class="card" style="padding:16px;cursor:pointer;" onclick="openDocFile(&quot;' + doc.id + '&quot;)">'
       + '<div style="font-size:32px;margin-bottom:8px">' + icon + '</div>'
       + '<div style="font-size:13px;font-weight:600;color:#1a2844;margin-bottom:4px;word-break:break-all">' + doc.name + '</div>'
       + '<div style="font-size:11px;color:#666;margin-bottom:10px">' + cat + '</div>'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      +   '<span style="font-size:11px;color:#999">' + size + (size && date ? ' · ' : '') + date + '</span>'
-      +   '<button onclick="event.stopPropagation();deleteDocFile(\'' + doc.id + '\')" title="삭제" style="border:none;background:none;color:#ccc;cursor:pointer;font-size:18px;padding:0;line-height:1" onmouseenter="this.style.color='#e74c3c'" onmouseleave="this.style.color='#ccc'">✕</button>'
+      +   '<span style="font-size:11px;color:#999">' + size + (size && date ? ' &middot; ' : '') + date + '</span>'
+      +   '<button onclick="event.stopPropagation();deleteDocFile(&quot;' + doc.id + '&quot;)" title="삭제" style="border:none;background:none;color:#ccc;cursor:pointer;font-size:18px;padding:0;line-height:1">✕</button>'
       + '</div>'
       + '</div>';
   }).join('');
