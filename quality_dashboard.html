@@ -6,13 +6,15 @@
 <title>타라TPS 품질QMS</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   /* ── 기본 리셋 ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Segoe UI', -apple-system, sans-serif;
-    background: #f0f2f5; color: #1a1a1a; font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'SF Pro KR', 'Segoe UI', sans-serif;
+    background: #f5f5f7; color: #1d1d1f; font-size: 14px;
     height: 100vh; overflow: hidden;
+    -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
   }
 
   /* ── 전체 레이아웃 ── */
@@ -20,47 +22,48 @@
 
   /* ── 사이드바 ── */
   .sidebar {
-    width: 220px; min-width: 220px; flex-shrink: 0;
-    background: #1a2844;
+    width: 230px; min-width: 230px; flex-shrink: 0;
+    background: #fbfbfd;
+    border-right: 1px solid rgba(0,0,0,0.07);
     display: flex; flex-direction: column;
     height: 100vh;
     overflow-y: auto; overflow-x: hidden;
     position: relative; z-index: 10;
   }
   .sidebar-logo {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 22px 20px 16px;
     overflow: hidden; flex-shrink: 0;
   }
   .sidebar-logo .brand {
-    font-size: 11px; color: rgba(255,255,255,0.5);
-    letter-spacing: 0.5px; margin-bottom: 3px;
+    font-size: 11px; color: #86868b;
+    letter-spacing: 0.3px; margin-bottom: 3px;
     white-space: nowrap; overflow: hidden;
   }
   .sidebar-logo .title {
-    font-size: 16px; font-weight: 700; color: #fff;
+    font-size: 17px; font-weight: 600; color: #1d1d1f;
+    letter-spacing: -0.02em;
     white-space: nowrap; overflow: hidden;
   }
-  .sidebar-logo .title span { color: #5b9bd5; }
+  .sidebar-logo .title span { color: #0071e3; }
 
-  .sidebar-section { padding: 14px 0 4px; flex-shrink: 0; }
+  .sidebar-section { padding: 12px 0 4px; flex-shrink: 0; }
   .sidebar-section-label {
-    font-size: 10px; color: rgba(255,255,255,0.35);
-    letter-spacing: 1px; text-transform: uppercase;
-    padding: 0 18px 6px; font-weight: 600;
+    font-size: 11px; color: #86868b;
+    letter-spacing: 0.2px;
+    padding: 0 22px 6px; font-weight: 600;
     white-space: nowrap; overflow: hidden;
   }
   .nav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 9px 18px; color: rgba(255,255,255,0.65);
+    padding: 8px 12px; margin: 1px 10px; color: #424245;
     cursor: pointer; font-size: 13px; font-weight: 500;
-    border: none; background: none; width: 100%; text-align: left;
+    border: none; background: none; width: calc(100% - 20px); text-align: left;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     transition: background 0.15s, color 0.15s;
-    border-left: 3px solid transparent; flex-shrink: 0;
+    border-radius: 8px; flex-shrink: 0;
   }
-  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
-  .nav-item.active { background: rgba(91,155,213,0.15); color: #5b9bd5; border-left-color: #5b9bd5; }
+  .nav-item:hover { background: rgba(0,0,0,0.045); color: #1d1d1f; }
+  .nav-item.active { background: rgba(0,113,227,0.12); color: #0071e3; font-weight: 600; }
   .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
 
   /* ── 메인 영역 ── */
@@ -72,24 +75,22 @@
 
   /* ── 상단 바 ── */
   .topbar {
-    background: #fff; border-bottom: 1px solid #e0e3e8;
-    padding: 0 24px; height: 50px; min-height: 50px; max-height: 50px;
+    background: rgba(255,255,255,0.8); backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    padding: 0 28px; height: 52px; min-height: 52px; max-height: 52px;
     display: flex; align-items: center; justify-content: space-between;
     flex-shrink: 0; overflow: hidden; gap: 16px;
     position: relative; z-index: 5;
   }
   .topbar-title {
-    font-size: 14px; font-weight: 600; color: #1a2844;
+    font-size: 15px; font-weight: 600; color: #1d1d1f;
+    letter-spacing: -0.02em;
     display: flex; align-items: center; gap: 8px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     flex: 1; min-width: 0;
   }
-  .topbar-title::before {
-    content: ''; display: block; flex-shrink: 0;
-    width: 3px; height: 16px; background: #185FA5; border-radius: 2px;
-  }
   .topbar-meta {
-    font-size: 12px; color: #999;
+    font-size: 12px; color: #86868b;
     white-space: nowrap; flex-shrink: 0;
   }
 
@@ -111,17 +112,17 @@
     gap: 12px; margin-bottom: 20px;
   }
   .metric {
-    background: #fff; border: 1px solid #e5e5e0;
-    border-radius: 8px; padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: #fff; border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px; padding: 18px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     min-width: 0; overflow: hidden;
   }
-  .metric .label { font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .metric .value { font-size: 26px; font-weight: 600; color: #1a1a1a; white-space: nowrap; }
+  .metric .label { font-size: 12px; color: #86868b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .metric .value { font-size: 28px; font-weight: 600; color: #1d1d1f; white-space: nowrap; letter-spacing: -0.02em; }
   .metric .sub { font-size: 12px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sub.up { color: #c0392b; }
-  .sub.down { color: #1a7a4a; }
-  .sub.neutral { color: #888; }
+  .sub.up { color: #d70015; }
+  .sub.down { color: #248a3d; }
+  .sub.neutral { color: #86868b; }
 
   /* ── 2칸 그리드 ── */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
@@ -129,13 +130,14 @@
 
   /* ── 카드 ── */
   .card {
-    background: #fff; border: 1px solid #e5e5e0;
-    border-radius: 8px; padding: 18px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: #fff; border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px; padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     min-width: 0; overflow: hidden;
   }
   .card-title {
-    font-size: 13px; font-weight: 600; color: #444;
+    font-size: 14px; font-weight: 600; color: #1d1d1f;
+    letter-spacing: -0.01em;
     margin-bottom: 14px;
     display: flex; align-items: center; justify-content: space-between;
     white-space: nowrap; overflow: hidden; gap: 8px;
@@ -143,99 +145,99 @@
 
   /* ── 문서 관리 ── */
   .doc-filter {
-    padding: 6px 14px; border: 1px solid #d0d3d8; border-radius: 20px;
-    background: #fff; color: #555; font-size: 12px; cursor: pointer;
+    padding: 6px 15px; border: 1px solid #d2d2d7; border-radius: 980px;
+    background: #fff; color: #424245; font-size: 12px; cursor: pointer;
     transition: all 0.15s;
   }
-  .doc-filter.active { background: #1a2844; color: #fff; border-color: #1a2844; }
-  .doc-filter:hover:not(.active) { background: #f4f6fb; }
+  .doc-filter.active { background: #0071e3; color: #fff; border-color: #0071e3; }
+  .doc-filter:hover:not(.active) { background: #f5f5f7; }
   .btn-blue {
-    padding: 7px 14px; background: #1a2844; color: #fff;
-    border: none; border-radius: 6px; font-size: 12px; cursor: pointer;
+    padding: 7px 16px; background: #0071e3; color: #fff;
+    border: none; border-radius: 980px; font-size: 12px; cursor: pointer;
     transition: background 0.15s;
   }
-  .btn-blue:hover { background: #2d4070; }
+  .btn-blue:hover { background: #0077ed; }
   .doc-card {
-    background: #fff; border: 1px solid #e5e5e0; border-radius: 10px;
+    background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px;
     padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     display: flex; flex-direction: column; gap: 10px; min-width: 0;
   }
   .doc-card-icon { font-size: 32px; line-height: 1; }
-  .doc-card-name { font-size: 13px; font-weight: 600; color: #1a2844; word-break: break-all; }
-  .doc-card-meta { font-size: 11px; color: #888; }
+  .doc-card-name { font-size: 13px; font-weight: 600; color: #1d1d1f; word-break: break-all; }
+  .doc-card-meta { font-size: 11px; color: #86868b; }
   .doc-card-actions { display: flex; gap: 8px; margin-top: 4px; }
   .doc-btn-open {
-    flex: 1; padding: 6px 0; background: #f0f4ff; color: #1a2844;
-    border: 1px solid #c5d0e8; border-radius: 6px; font-size: 12px; cursor: pointer;
+    flex: 1; padding: 6px 0; background: #e3f1fd; color: #0071e3;
+    border: none; border-radius: 8px; font-size: 12px; cursor: pointer;
   }
-  .doc-btn-open:hover { background: #dde6ff; }
+  .doc-btn-open:hover { background: #d2e7fc; }
   .doc-btn-del {
-    padding: 6px 10px; background: #fff3f3; color: #c0392b;
-    border: 1px solid #f5c6c6; border-radius: 6px; font-size: 12px; cursor: pointer;
+    padding: 6px 12px; background: #ffe5e3; color: #d70015;
+    border: none; border-radius: 8px; font-size: 12px; cursor: pointer;
   }
-  .doc-btn-del:hover { background: #ffe0e0; }
+  .doc-btn-del:hover { background: #ffd6d3; }
 
   /* ── 테이블 ── */
   .tbl-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th {
-    text-align: left; padding: 8px 10px;
-    background: #f4f6f9; color: #555;
-    font-weight: 600; border-bottom: 2px solid #e0e3e8;
+    text-align: left; padding: 10px 12px;
+    background: #f5f5f7; color: #6e6e73;
+    font-weight: 600; border-bottom: 1px solid rgba(0,0,0,0.06);
     font-size: 12px; white-space: nowrap;
   }
   td {
-    padding: 9px 10px; border-bottom: 1px solid #f0f2f5;
-    color: #1a1a1a; vertical-align: middle;
+    padding: 10px 12px; border-bottom: 1px solid rgba(0,0,0,0.05);
+    color: #1d1d1f; vertical-align: middle;
   }
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #f7f9fc; }
+  tr:hover td { background: #f5f5f7; }
 
   /* ── 배지 ── */
   .badge {
-    display: inline-block; padding: 2px 8px;
-    border-radius: 5px; font-size: 11px; font-weight: 500;
+    display: inline-block; padding: 3px 9px;
+    border-radius: 7px; font-size: 11px; font-weight: 600;
     white-space: nowrap;
   }
-  .badge-open { background: #fde8e8; color: #a32d2d; }
-  .badge-progress { background: #fef3dc; color: #7a4a00; }
-  .badge-done { background: #e3f5e9; color: #1a7a4a; }
-  .badge-pass { background: #e3f5e9; color: #1a7a4a; }
-  .badge-fail { background: #fde8e8; color: #a32d2d; }
-  .badge-high { background: #fde8e8; color: #a32d2d; }
-  .badge-mid { background: #fef3dc; color: #7a4a00; }
-  .badge-low { background: #e8f0fb; color: #185FA5; }
+  .badge-open { background: #ffe5e3; color: #d70015; }
+  .badge-progress { background: #ffefd6; color: #c93400; }
+  .badge-done { background: #ddf4e2; color: #248a3d; }
+  .badge-pass { background: #ddf4e2; color: #248a3d; }
+  .badge-fail { background: #ffe5e3; color: #d70015; }
+  .badge-high { background: #ffe5e3; color: #d70015; }
+  .badge-mid { background: #ffefd6; color: #c93400; }
+  .badge-low { background: #e3f1fd; color: #0071e3; }
 
   /* ── 폼 ── */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
   .form-full { grid-column: 1 / -1; }
   .form-group { display: flex; flex-direction: column; gap: 4px; }
-  .form-group label { font-size: 12px; color: #666; font-weight: 500; }
+  .form-group label { font-size: 12px; color: #6e6e73; font-weight: 500; }
   .form-group input, .form-group select, .form-group textarea {
-    border: 1px solid #ddd; border-radius: 6px; padding: 7px 10px;
+    border: 1px solid #d2d2d7; border-radius: 9px; padding: 8px 11px;
     font-size: 13px; font-family: inherit;
-    background: #fff; color: #1a1a1a; outline: none;
-    transition: border-color 0.15s;
+    background: #fff; color: #1d1d1f; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #185FA5; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
   .form-group textarea { resize: vertical; min-height: 70px; }
 
   /* ── 버튼 ── */
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border-radius: 6px;
+    padding: 8px 18px; border-radius: 980px;
     font-size: 13px; font-weight: 500; cursor: pointer;
     border: 1px solid transparent; transition: all 0.15s;
     white-space: nowrap;
   }
-  .btn-primary { background: #185FA5; color: #fff; border-color: #185FA5; }
-  .btn-primary:hover { background: #0e4a82; }
-  .btn-secondary { background: #fff; color: #444; border-color: #ddd; }
-  .btn-secondary:hover { background: #f5f5f3; }
-  .btn-danger { background: #fff; color: #c0392b; border-color: #f0c0bd; }
-  .btn-danger:hover { background: #fde8e8; }
-  .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 5px; }
+  .btn-primary { background: #0071e3; color: #fff; border-color: #0071e3; }
+  .btn-primary:hover { background: #0077ed; }
+  .btn-secondary { background: #f5f5f7; color: #1d1d1f; border-color: transparent; }
+  .btn-secondary:hover { background: #e8e8ed; }
+  .btn-danger { background: #fff; color: #d70015; border-color: #f5c0bd; }
+  .btn-danger:hover { background: #ffe5e3; }
+  .btn-sm { padding: 5px 13px; font-size: 12px; }
 
   /* ── 섹션 헤더 ── */
   .section-header {
@@ -246,21 +248,21 @@
 
   /* ── 폼 패널 ── */
   .form-panel {
-    background: #fff; border: 1px solid #e5e5e0;
-    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    background: #fff; border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px; padding: 22px; margin-bottom: 20px;
   }
   .form-actions { display: flex; gap: 8px; margin-top: 16px; }
 
   /* ── 알림 ── */
-  .alert { padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 12px; display: none; }
-  .alert-success { background: #e3f5e9; color: #1a7a4a; border: 1px solid #b8e6ca; }
+  .alert { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; display: none; }
+  .alert-success { background: #ddf4e2; color: #248a3d; border: none; }
 
   /* ── 프로그레스 바 ── */
-  .progress-bar { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-  .fill-green { background: #1a7a4a; }
-  .fill-amber { background: #d4860a; }
-  .fill-red { background: #c0392b; }
+  .progress-bar { height: 6px; background: #e8e8ed; border-radius: 980px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 980px; transition: width 0.3s; }
+  .fill-green { background: #34c759; }
+  .fill-amber { background: #ff9500; }
+  .fill-red { background: #ff3b30; }
 
   /* ── NCR 상세 ── */
   .detail-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0f0ee; }
@@ -273,10 +275,11 @@
   /* ── 필터 바 ── */
   .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .filter-bar input, .filter-bar select {
-    padding: 6px 10px; border: 1px solid #ddd;
-    border-radius: 6px; font-size: 13px;
+    padding: 7px 12px; border: 1px solid #d2d2d7;
+    border-radius: 9px; font-size: 13px;
     background: #fff; outline: none;
   }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
   .filter-bar input { flex: 1; min-width: 120px; }
 
   /* ── 시트/연도 탭 버튼 ── */
@@ -286,16 +289,35 @@
     cursor: pointer; margin-bottom: -1px; transition: all 0.15s;
     white-space: nowrap;
   }
-  .gajebon-sheet-btn:hover, .claim-year-btn:hover, .ncr-src-btn:hover { color: #1a1a1a; }
+  .gajebon-sheet-btn:hover, .claim-year-btn:hover, .ncr-src-btn:hover { color: #1d1d1f; }
   .gajebon-sheet-btn.active, .claim-year-btn.active, .ncr-src-btn.active {
-    color: #185FA5; border-bottom-color: #185FA5; font-weight: 500;
+    color: #0071e3; border-bottom-color: #0071e3; font-weight: 600;
   }
 
   /* ── 태그 ── */
-  .tag { display: inline-block; background: #f0f2f5; color: #555; border-radius: 4px; padding: 2px 7px; font-size: 11px; white-space: nowrap; }
+  .tag { display: inline-block; background: #f5f5f7; color: #6e6e73; border-radius: 6px; padding: 2px 8px; font-size: 11px; white-space: nowrap; }
 
   /* ── 빈 상태 ── */
   .empty { text-align: center; padding: 24px; color: #bbb; font-size: 13px; }
+
+  /* ── 아이콘 버튼 / 토글 ── */
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%; border: none;
+    font-size: 15px; cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+  }
+  .icon-btn.primary { background: #0071e3; color: #fff; }
+  .icon-btn.primary:hover { background: #0077ed; }
+  .icon-btn.ghost { background: #f5f5f7; color: #424245; }
+  .icon-btn.ghost:hover { background: #e8e8ed; }
+  .gj-toggle {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid #d2d2d7; background: #fff; color: #424245;
+    border-radius: 980px; padding: 7px 14px; font-size: 13px;
+    cursor: pointer; white-space: nowrap; transition: all 0.15s;
+  }
+  .gj-toggle:hover { background: #f5f5f7; }
+  .gj-toggle.gj-on { background: #0071e3; color: #fff; border-color: #0071e3; }
 
   /* ── 검사 항목 행 ── */
   .insp-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
@@ -367,8 +389,8 @@
       <button class="nav-item" id="nav-gajebon" onclick="showTab('gajebon',this)">
         <span class="nav-icon">📑</span> 가제본 현황
       </button>
-      <button class="nav-item" id="nav-capa" onclick="showTab('capa',this)">
-        <span class="nav-icon">🔧</span> 시정·예방조치
+      <button class="nav-item" id="nav-parts" onclick="showTab('parts',this)">
+        <span class="nav-icon">🧩</span> 가제본 품목구성
       </button>
     </div>
 
@@ -415,7 +437,7 @@
       <div class="card" style="margin-bottom:16px;padding:16px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div class="card-title" style="margin:0;">📋 오늘 가제본 현황 <span id="gajebon-today-date" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
-          <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:11px;color:#185FA5;background:none;border:none;cursor:pointer;text-decoration:underline;">전체 보기 →</button>
+          <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:11px;color:#0071e3;background:none;border:none;cursor:pointer;text-decoration:underline;">전체 보기 →</button>
         </div>
         <div id="gajebon-today-summary" style="display:flex;gap:16px;flex-wrap:wrap;">
           <span style="color:#aaa;font-size:13px;">데이터 로딩 중...</span>
@@ -467,18 +489,18 @@
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#1a2844;margin:0;">KPI 데이터 등록</h2>
+      <h2 style="font-size:18px;font-weight:700;color:#0071e3;margin:0;">KPI 데이터 등록</h2>
       <p style="font-size:12px;color:#888;margin:4px 0 0;">품질개선팀 운영전략 엑셀 파일에 직접 저장</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div id="kpi-excel-status" style="font-size:12px;color:#888;">엑셀 미연결</div>
-      <button onclick="connectKpiExcel()" style="background:#1a2844;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 KPI 엑셀 연결</button>
+      <button onclick="connectKpiExcel()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 KPI 엑셀 연결</button>
     </div>
   </div>
 
   <!-- 섹션 탭 -->
   <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e5e5e0;">
-    <button class="kpi-reg-tab-btn" id="kbtn-top3" onclick="switchKpiRegTab('top3',this)" style="background:none;border:none;border-bottom:3px solid #185FA5;padding:8px 16px 9px;font-size:13px;font-weight:600;color:#185FA5;cursor:pointer;margin-bottom:-2px;">TOP3 불량</button>
+    <button class="kpi-reg-tab-btn" id="kbtn-top3" onclick="switchKpiRegTab('top3',this)" style="background:none;border:none;border-bottom:3px solid #0071e3;padding:8px 16px 9px;font-size:13px;font-weight:600;color:#0071e3;cursor:pointer;margin-bottom:-2px;">TOP3 불량</button>
     <button class="kpi-reg-tab-btn" id="kbtn-cost" onclick="switchKpiRegTab('cost',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">품질비용</button>
     <button class="kpi-reg-tab-btn" id="kbtn-sop" onclick="switchKpiRegTab('sop',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">SOP 준수율</button>
     <button class="kpi-reg-tab-btn" id="kbtn-std" onclick="switchKpiRegTab('std',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">표준 위반</button>
@@ -516,7 +538,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="top3-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiTop3()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiTop3()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="top3-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -564,7 +586,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="cost-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiCost()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiCost()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="cost-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -592,7 +614,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="sop-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiSop()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiSop()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="sop-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -620,7 +642,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="std-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiStd()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiStd()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="std-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -652,7 +674,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="color-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiColor()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiColor()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="color-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -665,12 +687,12 @@
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#1a2844;margin:0;">클레임 등록</h2>
+      <h2 style="font-size:18px;font-weight:700;color:#0071e3;margin:0;">클레임 등록</h2>
       <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 엑셀 파일에 자동 저장</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div id="reg-excel-status" style="font-size:12px;color:#888;">엑셀 미연결</div>
-      <button onclick="connectRegExcel()" style="background:#1a2844;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 엑셀 파일 연결</button>
+      <button onclick="connectRegExcel()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 엑셀 파일 연결</button>
     </div>
   </div>
 
@@ -720,7 +742,7 @@
 
       <div>
         <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">부적합유형</label>
-        <select id="reg-deftype" style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;background:#fff;box-sizing:border-box;">
+        <select id="reg-deftype" onchange="onDeftypeChange(this)" style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;background:#fff;box-sizing:border-box;">
           <option value="">선택</option>
         </select>
       </div>
@@ -770,89 +792,18 @@
 
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <div id="reg-msg" style="font-size:13px;color:#666;"></div>
-      <button type="button" onclick="resetClaimRegForm()" style="background:#f0f2f5;color:#555;border:none;border-radius:6px;padding:9px 18px;font-size:13px;cursor:pointer;">초기화</button>
-      <button type="submit" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">✅ 등록</button>
+      <button type="button" onclick="resetClaimRegForm()" style="background:#f5f5f7;color:#555;border:none;border-radius:6px;padding:9px 18px;font-size:13px;cursor:pointer;">초기화</button>
+      <button type="submit" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">✅ 등록</button>
     </div>
   </form>
 
   <div style="margin-top:24px;background:#fff;border-radius:10px;border:1px solid #e0e3e8;padding:20px;">
-    <h3 style="font-size:14px;font-weight:700;color:#1a2844;margin:0 0 12px;">이번 세션 등록 내역</h3>
+    <h3 style="font-size:14px;font-weight:700;color:#0071e3;margin:0 0 12px;">이번 세션 등록 내역</h3>
     <div id="reg-log" style="font-size:13px;color:#888;">아직 등록된 항목 없음</div>
   </div>
 
 </div>
 </div>
-
-<!-- ============ 시정·예방조치 (CAPA) ============ -->
-    <div id="tab-capa" class="tab">
-      <div class="section-header">
-        <div class="section-title">시정·예방조치 (CAPA)</div>
-        <button class="btn btn-primary" onclick="toggleCapaForm()">+ 신규 등록</button>
-      </div>
-
-      <!-- 등록 폼 -->
-      <div id="capa-form" class="card" style="display:none;margin-bottom:16px;padding:20px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
-          <div>
-            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">등록일 *</label>
-            <input id="capa-date" type="date" class="form-input" style="width:100%">
-          </div>
-          <div>
-            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">NCR 번호</label>
-            <input id="capa-ncr" type="text" class="form-input" placeholder="NCR-2024-001" style="width:100%">
-          </div>
-          <div>
-            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">조치 기한</label>
-            <input id="capa-due" type="date" class="form-input" style="width:100%">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <div>
-            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">근본원인 *</label>
-            <textarea id="capa-root" rows="2" class="form-input" placeholder="근본원인을 입력하세요" style="width:100%;resize:vertical"></textarea>
-          </div>
-          <div>
-            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">시정조치 내용 *</label>
-            <textarea id="capa-action" rows="2" class="form-input" placeholder="시정조치 내용을 입력하세요" style="width:100%;resize:vertical"></textarea>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 3fr;gap:12px;margin-bottom:16px">
-          <div>
-            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">담당자</label>
-            <input id="capa-owner" type="text" class="form-input" placeholder="담당자 이름" style="width:100%">
-          </div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="saveCapa()">저장</button>
-          <button class="btn btn-secondary" onclick="toggleCapaForm()">취소</button>
-        </div>
-        <div id="capa-alert" class="form-alert" style="display:none;color:#27ae60;margin-top:8px;font-size:13px">✅ 등록 완료</div>
-      </div>
-
-      <!-- 요약 카드 -->
-      <div class="metrics" style="margin-bottom:16px" id="capa-metrics"></div>
-
-      <!-- 목록 테이블 -->
-      <div class="card" style="padding:0">
-        <div class="tbl-wrap">
-          <table style="table-layout:fixed">
-            <colgroup>
-              <col style="width:130px"><col style="width:110px"><col style="width:90px">
-              <col style="width:90px"><col style="width:90px"><col style="width:240px">
-              <col style="width:80px"><col style="width:70px">
-            </colgroup>
-            <thead>
-              <tr>
-                <th>CAPA ID</th><th>NCR 번호</th><th>등록일</th>
-                <th>기한</th><th>담당자</th><th>시정조치 내용</th>
-                <th>상태</th><th></th>
-              </tr>
-            </thead>
-            <tbody id="capa-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
     <div id="tab-claim" class="tab">
       <div class="section-header">
@@ -934,7 +885,7 @@
         <div class="metrics" id="gajebon-metrics" style="margin-bottom:20px"></div>
 
         <!-- 시트 탭 -->
-        <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid #e5e5e0;padding-bottom:0">
+        <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:0">
           <button class="gajebon-sheet-btn active" onclick="switchGajebonSheet('기타',this)">국내영업본부</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('대교',this)">전략사업본부(대교)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('정상제이엘에스',this)">전략사업본부(정상)</button>
@@ -950,38 +901,70 @@
             <option value="진행중">진행중</option>
             <option value="미처리">미처리</option>
           </select>
-          <input type="date" id="gajebon-date-from" title="시작일">
+          <input type="date" id="gajebon-date-from" title="시작일" onchange="renderGajebonTable()">
           <span style="line-height:32px;color:#aaa;font-size:12px">~</span>
-          <input type="date" id="gajebon-date-to" title="종료일">
-          <button onclick="renderGajebonTable()" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">🔍 조회</button>
-          <button onclick="clearGajebonDate()" style="background:#f0f2f5;color:#555;border:none;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;">초기화</button>
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#555;cursor:pointer;white-space:nowrap;">
-            <input type="checkbox" id="gajebon-only-check" style="width:15px;height:15px;cursor:pointer;">
-            가제본만
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#555;cursor:pointer;white-space:nowrap;">
-            <input type="checkbox" id="gajebon-hide-done" style="width:15px;height:15px;cursor:pointer;">
-            완료 숨기기
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#555;cursor:pointer;white-space:nowrap;">
-            <input type="checkbox" id="gajebon-only-progress" style="width:15px;height:15px;cursor:pointer;">
-            진행중만
-          </label>
+          <input type="date" id="gajebon-date-to" title="종료일" onchange="renderGajebonTable()">
+          <button class="icon-btn primary" onclick="renderGajebonTable()" title="조회">🔍</button>
+          <button class="icon-btn ghost" onclick="clearGajebonDate()" title="초기화">↺</button>
+          <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">📑 가제본만</button>
+          <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('hideDone',this)">✅ 완료 숨기기</button>
+          <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
         </div>
 
         <div class="card" style="padding:0">
-          <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="gajebon-count"></div>
+          <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="gajebon-count"></div>
           <div class="tbl-wrap">
-            <table>
+            <table style="table-layout:fixed;min-width:1298px">
               <thead>
                 <tr>
-                  <th>날짜</th><th>주문번호</th><th>거래처</th><th>제품명</th>
-                  <th>요청내용</th><th>설비명</th><th>진행상태</th>
+                  <th style="width:88px">날짜</th><th style="width:140px">주문번호</th><th style="width:120px">거래처</th><th style="width:210px">제품명</th>
+                  <th style="width:90px">요청내용</th><th style="width:160px">설비명</th><th style="width:124px">진행상태</th>
+                  <th style="width:60px;text-align:center">진행</th>
+                  <th style="width:62px;text-align:center">표지</th><th style="width:62px;text-align:center">속표지</th>
+                  <th style="width:62px;text-align:center">정답표지</th><th style="width:62px;text-align:center">개매본문</th>
+                  <th style="width:62px;text-align:center">정매본문</th>
                 </tr>
               </thead>
               <tbody id="gajebon-tbody"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 가제본 품목 구성 ============ -->
+    <div id="tab-parts" class="tab">
+      <div class="section-header">
+        <div class="section-title">가제본 품목 구성</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="importGajebonProducts()">가제본 품목 불러오기</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#86868b;margin:-6px 0 14px;">품목마다 해당되는 가제본 파트를 켜두면, 가제본 현황 표에서 그 제품은 켠 파트만 체크할 수 있어요. 같은 제품명에 자동 적용됩니다.</p>
+
+      <div class="filter-bar" style="margin-bottom:12px">
+        <input type="text" id="parts-search" placeholder="제품명 검색..." oninput="renderPartTemplates()" style="flex:1;min-width:200px">
+        <input type="text" id="parts-new-name" placeholder="새 제품명 직접 추가" style="flex:1;min-width:200px">
+        <button onclick="addPartProduct()" style="background:#0071e3;color:#fff;border:none;border-radius:980px;padding:7px 18px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">추가</button>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="parts-count"></div>
+        <div class="tbl-wrap">
+          <table style="table-layout:fixed;min-width:760px">
+            <thead>
+              <tr>
+                <th style="width:auto">제품명</th>
+                <th style="width:84px;text-align:center">표지</th>
+                <th style="width:84px;text-align:center">속표지</th>
+                <th style="width:84px;text-align:center">정답표지</th>
+                <th style="width:84px;text-align:center">개매본문</th>
+                <th style="width:84px;text-align:center">정매본문</th>
+                <th style="width:60px;text-align:center">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="parts-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1145,7 +1128,7 @@
       <div id="docs-preview-wrap" style="display:none;margin-top:24px;">
         <div class="card" style="padding:0;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e8eaed;">
-            <span id="docs-preview-title" style="font-size:14px;font-weight:600;color:#1a2844;"></span>
+            <span id="docs-preview-title" style="font-size:14px;font-weight:600;color:#0071e3;"></span>
             <button onclick="closeDocsPreview()" style="background:none;border:none;color:#888;cursor:pointer;font-size:16px;">✕</button>
           </div>
           <div id="docs-preview-body" style="padding:16px;overflow-x:auto;max-height:480px;overflow-y:auto;font-size:13px;"></div>
@@ -1196,7 +1179,7 @@ const TAB_TITLES = {
   kpi: 'KPI 현황',
   claim: '클레임 DB',
   gajebon: '가제본 현황',
-  capa: '시정·예방조치 (CAPA)',
+  parts: '가제본 품목 구성',
   docs: '문서 관리',
 };
 
@@ -1217,7 +1200,8 @@ function showTab(name, btn) {
     else if (IS_SERVER) fetchGajebonFromServer();
   }
   if (name === 'docs') renderDocsList();
-  if (name === 'capa') renderCapaTable();
+  if (name === 'parts') renderPartTemplates();
+  if (name === 'register') initRegForm();
 }
 
 // ========================
@@ -1312,7 +1296,7 @@ function renderDashCharts(year) {
   const clientMap = {};
   d.forEach(r=>{ const c=r[2]||'기타'; clientMap[c]=(clientMap[c]||0)+1; });
   const clientS = Object.entries(clientMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if (clientS.length) renderBarH('dash-chartClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#185FA5');
+  if (clientS.length) renderBarH('dash-chartClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#0071e3');
 }
 
 function renderEquipDefect() {
@@ -1342,7 +1326,7 @@ function renderEquipDefect() {
   const maxTotal = equipList[0]?.[1].total || 1;
 
   // 부적합유형 색상 매핑
-  const typeColors = ['#185FA5','#c0392b','#d4860a','#1a7a4a','#7B4EA0','#888','#e67e22','#16a085'];
+  const typeColors = ['#0071e3','#c0392b','#d4860a','#1a7a4a','#7B4EA0','#888','#e67e22','#16a085'];
 
   // 전체 등장하는 유형 목록
   const allTypes = [...new Set(filtered.map(r=>(r[8]||'').trim()||'기타'))];
@@ -1376,10 +1360,10 @@ function renderEquipDefect() {
     tableHTML += `
       <tr style="border-bottom:1px solid #f0f0ee;cursor:pointer" onclick="toggleEquipDetail('equip-detail-${idx}', this)" title="클릭하여 상세 내역 보기">
         <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#333">${equip}</td>
-        <td style="text-align:center;font-size:14px;font-weight:700;color:#185FA5">${info.total}</td>
+        <td style="text-align:center;font-size:14px;font-weight:700;color:#0071e3">${info.total}</td>
         <td style="padding:0 8px">
           <div style="background:#f0f0ee;border-radius:3px;height:8px">
-            <div style="background:#185FA5;height:8px;border-radius:3px;width:${pct}%;opacity:0.75"></div>
+            <div style="background:#0071e3;height:8px;border-radius:3px;width:${pct}%;opacity:0.75"></div>
           </div>
         </td>
         ${typeCells}
@@ -1405,7 +1389,7 @@ function renderEquipDefect() {
                     <td style="padding:5px 8px;white-space:nowrap">${r[0]||'-'}</td>
                     <td style="padding:5px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[2]}">${r[2]||'-'}</td>
                     <td style="padding:5px 8px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[4]}">${r[4]||'-'}</td>
-                    <td style="padding:5px 8px"><span style="font-size:10px;background:#e8f0fb;color:#185FA5;border-radius:3px;padding:1px 5px">${r[7]||'-'}</span></td>
+                    <td style="padding:5px 8px"><span style="font-size:10px;background:#e8f0fb;color:#0071e3;border-radius:3px;padding:1px 5px">${r[7]||'-'}</span></td>
                     <td style="padding:5px 8px">${r[8]||'-'}</td>
                     <td style="padding:5px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[10]}">${r[10]||'-'}</td>
                     <td style="padding:5px 8px;text-align:right;white-space:nowrap">${typeof r[12]==='number' ? r[12].toLocaleString()+'원' : '-'}</td>
@@ -1536,12 +1520,12 @@ function renderNcrTable() {
 
   const sevLabel = s => s==='high'?'높음':s==='mid'?'중간':'낮음';
   const srcBadge = n => n.source==='claim'
-    ? '<span style="font-size:10px;background:#e8f0fb;color:#185FA5;border-radius:3px;padding:1px 6px">클레임DB</span>'
+    ? '<span style="font-size:10px;background:#e8f0fb;color:#0071e3;border-radius:3px;padding:1px 6px">클레임DB</span>'
     : '<span style="font-size:10px;background:#e8f5e9;color:#1a7a4a;border-radius:3px;padding:1px 6px">직접입력</span>';
 
   tbody.innerHTML = filtered.map(n => `
     <tr>
-      <td style="font-weight:500;color:#185FA5;font-size:11px;white-space:nowrap">${n.id}</td>
+      <td style="font-weight:500;color:#0071e3;font-size:11px;white-space:nowrap">${n.id}</td>
       <td style="white-space:nowrap;font-size:12px">${n.date||'-'}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${n.process}">${n.process}</td>
       <td style="font-size:12px">${n.type}</td>
@@ -1642,7 +1626,7 @@ function renderInspTable() {
     const rate = i.qty ? (i.defect/i.qty*100).toFixed(1) : '0.0';
     return `
       <tr>
-        <td style="font-weight:500;color:#185FA5">${i.id}</td>
+        <td style="font-weight:500;color:#0071e3">${i.id}</td>
         <td>${i.lot}</td>
         <td>${i.product}</td>
         <td>${i.date}</td>
@@ -1748,7 +1732,7 @@ function renderCapaTable() {
   if (!capaList.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">데이터 없음</td></tr>'; return; }
   tbody.innerHTML = capaList.map(c => `
     <tr>
-      <td style="font-weight:500;color:#185FA5">${c.id}</td>
+      <td style="font-weight:500;color:#0071e3">${c.id}</td>
       <td>${c.ncr||'-'}</td>
       <td>${c.date}</td>
       <td>${c.due||'-'}</td>
@@ -1784,7 +1768,7 @@ function deleteCapa(id) {
 let chartInstances = {};
 
 // 색상 팔레트
-const CHART_PALETTE = ['#185FA5','#27ae60','#e67e22','#c0392b','#7B4EA0','#16a085','#2980b9','#f39c12','#8e44ad','#1abc9c','#e74c3c','#3498db'];
+const CHART_PALETTE = ['#0071e3','#27ae60','#e67e22','#c0392b','#7B4EA0','#16a085','#2980b9','#f39c12','#8e44ad','#1abc9c','#e74c3c','#3498db'];
 
 function renderPie(id, labels, data) {
   if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
@@ -1822,13 +1806,13 @@ function renderLine(id, labels, data) {
       type: 'line',
       data: { labels, datasets: [{
         label: '건수', data,
-        borderColor: '#185FA5',
+        borderColor: '#0071e3',
         backgroundColor: ctx2 => {
           const g = ctx2.chart.ctx.createLinearGradient(0,0,0,200);
           g.addColorStop(0,'rgba(24,95,165,0.25)'); g.addColorStop(1,'rgba(24,95,165,0.01)');
           return g;
         },
-        tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#185FA5',
+        tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#0071e3',
         pointBorderColor: '#fff', pointBorderWidth: 2, pointHoverRadius: 7
       }]},
       options: {
@@ -1872,7 +1856,7 @@ function renderBarH(id, labels, data, color) {
   if (wrap) wrap.style.height = Math.max(200, labels.length * 34 + 40) + 'px';
 
   const maxVal = Math.max(...data, 1);
-  const base = color || '#185FA5';
+  const base = color || '#0071e3';
   const bgColors = data.map(v => {
     const alpha = 0.45 + (v / maxVal) * 0.55;
     return base + Math.round(alpha * 255).toString(16).padStart(2,'0');
@@ -1916,7 +1900,7 @@ function renderBar(id, labels, data, colors) {
   try {
     chartInstances[id] = new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ data, backgroundColor: colors || '#185FA5', borderRadius: 5 }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors || '#0071e3', borderRadius: 5 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}건` } } },
@@ -1971,7 +1955,7 @@ function renderCharts() {
     type: 'bar',
     data: { labels: years, datasets: [{
       data: yearCounts,
-      backgroundColor: years.map(y => y===selYear ? '#c0392b' : '#185FA5'),
+      backgroundColor: years.map(y => y===selYear ? '#c0392b' : '#0071e3'),
       borderRadius: 7,
       borderSkipped: false,
     }]},
@@ -2047,7 +2031,7 @@ function renderCharts() {
     const clientCnt = {};
     d.forEach(r => { const c = (r[2]||'').trim(); if(c) clientCnt[c]=(clientCnt[c]||0)+1; });
     const clientS = Object.entries(clientCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    if (clientS.length) renderBarH('chartClaimClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#185FA5');
+    if (clientS.length) renderBarH('chartClaimClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#0071e3');
   } catch(e) { console.warn('chartClaimClient error', e); }
 }
 
@@ -2197,14 +2181,14 @@ function renderClaimTable() {
 
   tbody.innerHTML = filtered.map(r => `
     <tr>
-      <td style="white-space:nowrap;font-size:12px">${r[0]||'-'}</td>
-      <td style="text-align:center">${r[14]||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[2]}">${r[2]||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r[4]}">${r[4]||'-'}</td>
+      <td style="white-space:nowrap;font-size:13px">${r[0]||'-'}</td>
+      <td style="text-align:center;font-size:13px">${r[14]||'-'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r[2]}">${r[2]||'-'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r[4]}">${r[4]||'-'}</td>
       <td><span class="badge ${typeColor(r[7])}">${r[7]||'-'}</span></td>
-      <td style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[8]}">${r[8]||'-'}</td>
-      <td style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[11]||''}">${r[11]||'-'}</td>
-      <td style="text-align:right;font-size:12px">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
+      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[8]}">${r[8]||'-'}</td>
+      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[11]||''}">${r[11]||'-'}</td>
+      <td style="text-align:right;font-size:13px">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
     </tr>
   `).join('');
 }
@@ -2276,10 +2260,10 @@ function renderGajebonTable() {
   const dateFrom = document.getElementById('gajebon-date-from')?.value || '';
   const dateTo   = document.getElementById('gajebon-date-to')?.value || '';
 
-  // 필터 조건 미리 읽기 (filter 밖에서 한 번만)
-  const gajebonOnly  = document.getElementById('gajebon-only-check')?.checked || false;
-  const hideDone     = document.getElementById('gajebon-hide-done')?.checked || false;
-  const onlyProgress = document.getElementById('gajebon-only-progress')?.checked || false;
+  // 필터 조건 미리 읽기 (토글 버튼 상태)
+  const gajebonOnly  = gajebonFilters.onlyGajebon;
+  const hideDone     = gajebonFilters.hideDone;
+  const onlyProgress = gajebonFilters.onlyProgress;
 
   // 날짜 검색어 변환 (6/10 → 2026-06-10)
   let searchDate = '';
@@ -2330,7 +2314,7 @@ function renderGajebonTable() {
   const tbody = document.getElementById('gajebon-tbody');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" class="empty">데이터 없음</td></tr>';
     return;
   }
   const statusBadge = s => {
@@ -2351,16 +2335,17 @@ function renderGajebonTable() {
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#27ae60' : status.includes('진행') ? '#e67e22' : '#aaa';
     return `<tr>
-      <td style="white-space:nowrap;font-size:12px">${r['날짜']||'-'}</td>
-      <td style="font-size:12px">${r['주문번호']||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['거래처']}">${r['거래처']||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${r['제품명']}">${r['제품명']||'-'}</td>
-      <td style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['요청내용']}">${r['요청내용']||'-'}</td>
-      <td style="font-size:12px">${r['설비명']||'-'}</td>
+      <td style="white-space:nowrap;font-size:13px">${r['날짜']||'-'}</td>
+      <td style="font-size:13px">${r['주문번호']||'-'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['거래처']}">${r['거래처']||'-'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['제품명']}">${r['제품명']||'-'}</td>
+      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['요청내용']}">${r['요청내용']||'-'}</td>
+      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['설비명']||''}">${r['설비명']||'-'}</td>
       <td>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <select onchange="updateGajebonField(${origIdx},'진행상태',this.value)"
             style="border:1px solid ${statusColor};border-radius:4px;padding:3px 6px;font-size:12px;font-weight:600;color:${statusColor};background:#fff;cursor:pointer;width:80px;">
+            <option value="" ${!['진행중','완료','대기','미처리'].includes(status)?'selected':''}>미지정</option>
             <option value="진행중" ${status==='진행중'?'selected':''}>진행중</option>
             <option value="완료"   ${status==='완료'  ?'selected':''}>완료</option>
             <option value="대기"   ${status==='대기'  ?'selected':''}>대기</option>
@@ -2368,9 +2353,12 @@ function renderGajebonTable() {
           </select>
           <input type="date" value="${r['가제본날짜']||''}" onchange="updateGajebonField(${origIdx},'가제본날짜',this.value)"
             placeholder="가제본일"
-            style="border:1px solid #ddd;border-radius:4px;padding:2px 4px;font-size:11px;width:110px;cursor:pointer;">
+            style="border:1px solid #d2d2d7;border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;">
         </div>
       </td>
+      ${(() => { const order = r['주문번호']||''; const pr = partsProgress(order);
+        const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${pr.applicable&&pr.done===pr.applicable?'#248a3d':'#1d1d1f'}">${pr.done}/${pr.applicable}</span></td>`;
+        return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join(''); })()}
     </tr>`;
   }).join('');
 }
@@ -2384,16 +2372,150 @@ function updateGajebonField(idx, field, value) {
   if (hideDone) renderGajebonTable();
 }
 
+// ── 가제본 파트별 진행 (표지/속표지/정답표지/개매본문/정매본문) ──
+// 임시 저장: 이 브라우저(localStorage). 추후 구글시트 서버 저장으로 교체 예정.
+const GAJEBON_PARTS = ['표지','속표지','정답표지','개매본문','정매본문'];
+let gajebonPartStore = {};      // 주문별 파트 완료/날짜 + _app(해당 파트 목록)
+let gajebonPartTemplates = {};  // 제품명 → 해당 파트 목록 (기억)
+let gajebonEditOrder = null;    // 현재 '구성' 편집중인 주문번호
+try { gajebonPartStore = JSON.parse(localStorage.getItem('gajebonParts') || '{}'); } catch(e) { gajebonPartStore = {}; }
+try { gajebonPartTemplates = JSON.parse(localStorage.getItem('gajebonPartTpl') || '{}'); } catch(e) { gajebonPartTemplates = {}; }
+function savePartStore() { try { localStorage.setItem('gajebonParts', JSON.stringify(gajebonPartStore)); } catch(e) {} }
+function saveTemplates() { try { localStorage.setItem('gajebonPartTpl', JSON.stringify(gajebonPartTemplates)); } catch(e) {} }
+function getPart(order, part) { return (gajebonPartStore[order] || {})[part] || { st: '' }; }
+function productOfOrder(order) {
+  const rows = gajebonSheets[gajebonCurrentSheet] || [];
+  const r = rows.find(x => (x['주문번호']||'') === order);
+  return r ? (r['제품명']||'') : '';
+}
+// 해당 파트 목록: 주문 설정 > 제품명 기억 > 기본(전체)
+function applicableParts(order) {
+  const s = gajebonPartStore[order];
+  if (s && Array.isArray(s._app)) return s._app;
+  const tpl = gajebonPartTemplates[productOfOrder(order)];
+  if (Array.isArray(tpl)) return tpl;
+  return GAJEBON_PARTS.slice();
+}
+function isApplicable(order, part) { return applicableParts(order).includes(part); }
+function partsProgress(order) {
+  const app = applicableParts(order);
+  const m = gajebonPartStore[order] || {};
+  let done = 0;
+  app.forEach(p => { if ((m[p]||{}).st === 'done') done++; });
+  return { done, applicable: app.length };
+}
+function toggleGajebonEdit(order) {
+  gajebonEditOrder = (gajebonEditOrder === order) ? null : order;
+  renderGajebonTable();
+}
+function togglePartApplicable(order, part) {
+  let app = applicableParts(order).slice();
+  if (app.includes(part)) app = app.filter(x => x !== part);
+  else { app.push(part); app = GAJEBON_PARTS.filter(p => app.includes(p)); }
+  if (!gajebonPartStore[order]) gajebonPartStore[order] = {};
+  gajebonPartStore[order]._app = app;
+  if (!app.includes(part) && gajebonPartStore[order][part]) delete gajebonPartStore[order][part];
+  const prod = productOfOrder(order);
+  if (prod) { gajebonPartTemplates[prod] = app.slice(); saveTemplates(); }
+  savePartStore();
+  renderGajebonTable();
+}
+function cyclePart(order, part) {
+  if (!isApplicable(order, part)) return;
+  if (!gajebonPartStore[order]) gajebonPartStore[order] = {};
+  const cur = (gajebonPartStore[order][part] || {}).st || '';
+  if (cur === '') gajebonPartStore[order][part] = { st: 'done', date: new Date().toISOString().slice(0,10) };
+  else delete gajebonPartStore[order][part];
+  savePartStore();
+  renderGajebonTable();
+}
+function partCell(order, part) {
+  // 구성 편집 모드: 해당 여부 체크박스
+  if (gajebonEditOrder === order) {
+    const on = isApplicable(order, part);
+    return `<td onclick="togglePartApplicable('${order}','${part}')" style="text-align:center;cursor:pointer;padding:6px 4px;background:#eef6ff;">
+      <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#0071e3':'#d2d2d7'};background:${on?'#0071e3':'#fff'};color:#fff;font-size:12px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
+  }
+  // 비해당 파트: 회색 잠금
+  if (!isApplicable(order, part))
+    return `<td style="text-align:center;padding:6px 4px;background:#fafafa;"><span style="color:#d2d2d7;font-size:14px;">&ndash;</span></td>`;
+  const p = getPart(order, part);
+  const base = `onclick="cyclePart('${order}','${part}')" style="text-align:center;cursor:pointer;padding:6px 4px;"`;
+  if (p.st === 'done') return `<td ${base}><div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#ddf4e2;color:#248a3d;font-size:13px;font-weight:700;">&#10003;</div><div style="font-size:10px;color:#86868b;margin-top:2px;white-space:nowrap;">${(p.date||'').slice(5)}</div></td>`;
+  return `<td ${base}><div style="display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px solid #d2d2d7;"></div></td>`;
+}
+
+
+// ── 가제본 품목 구성 탭 ──
+function escAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+let _partNames = [];
+function renderPartTemplates() {
+  const tb = document.getElementById('parts-tbody'); if (!tb) return;
+  const q = (document.getElementById('parts-search')?.value || '').trim().toLowerCase();
+  let names = Object.keys(gajebonPartTemplates).sort((a,b)=>a.localeCompare(b,'ko'));
+  const totalN = names.length;
+  if (q) names = names.filter(n => n.toLowerCase().includes(q));
+  _partNames = names;
+  const cnt = document.getElementById('parts-count');
+  if (cnt) cnt.textContent = `${names.length}개 품목` + (q ? ` (전체 ${totalN}개 중 검색)` : '');
+  if (!names.length) { tb.innerHTML = '<tr><td colspan="7" class="empty">품목이 없습니다. "가제본 품목 불러오기"를 누르거나 직접 추가하세요.</td></tr>'; return; }
+  tb.innerHTML = names.map((name, i) => {
+    const app = gajebonPartTemplates[name] || [];
+    const cells = GAJEBON_PARTS.map(p => {
+      const on = app.includes(p);
+      return `<td onclick="toggleTemplatePart(${i},'${p}')" style="text-align:center;cursor:pointer;padding:8px 4px;">
+        <div style="display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#0071e3':'#d2d2d7'};background:${on?'#0071e3':'#fff'};color:#fff;font-size:13px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
+    }).join('');
+    return `<tr>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${escAttr(name)}">${escAttr(name)}</td>
+      ${cells}
+      <td style="text-align:center"><button onclick="deletePartProduct(${i})" style="border:none;background:#ffe5e3;color:#d70015;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+function toggleTemplatePart(i, part) {
+  const name = _partNames[i]; if (name == null) return;
+  let app = (gajebonPartTemplates[name] || []).slice();
+  if (app.includes(part)) app = app.filter(x => x !== part);
+  else { app.push(part); app = GAJEBON_PARTS.filter(p => app.includes(p)); }
+  gajebonPartTemplates[name] = app; saveTemplates();
+  renderPartTemplates();
+}
+function deletePartProduct(i) {
+  const name = _partNames[i]; if (name == null) return;
+  if (!confirm(`'${name}' 품목 구성을 삭제할까요?`)) return;
+  delete gajebonPartTemplates[name]; saveTemplates(); renderPartTemplates();
+}
+function addPartProduct() {
+  const inp = document.getElementById('parts-new-name'); const name = (inp.value || '').trim();
+  if (!name) { alert('제품명을 입력하세요.'); return; }
+  if (!gajebonPartTemplates[name]) gajebonPartTemplates[name] = GAJEBON_PARTS.slice();
+  saveTemplates(); inp.value = ''; renderPartTemplates();
+}
+function importGajebonProducts() {
+  const all = Object.values(gajebonSheets).flat();
+  if (!all.length) { alert('먼저 가제본 현황 데이터가 로드되어야 합니다.'); return; }
+  let added = 0;
+  all.forEach(r => { const n = (r['제품명']||'').trim(); if (n && !gajebonPartTemplates[n]) { gajebonPartTemplates[n] = GAJEBON_PARTS.slice(); added++; } });
+  saveTemplates(); renderPartTemplates();
+  alert(`${added}개 품목을 새로 불러왔습니다. (기본: 전체 파트 켜짐 — 해당 없는 파트는 꺼주세요)`);
+}
+
+// 가제본 토글 필터 상태
+let gajebonFilters = { onlyGajebon: false, hideDone: false, onlyProgress: false };
+function toggleGajebonFilter(key, btn) {
+  gajebonFilters[key] = !gajebonFilters[key];
+  if (btn) btn.classList.toggle('gj-on', gajebonFilters[key]);
+  renderGajebonTable();
+}
 
 function clearGajebonDate() {
-  document.getElementById('gajebon-date-from').value = '';
-  document.getElementById('gajebon-date-to').value = '';
-  const cb = document.getElementById('gajebon-only-check');
-  if (cb) cb.checked = false;
-  const hd = document.getElementById('gajebon-hide-done');
-  if (hd) hd.checked = false;
-  const op = document.getElementById('gajebon-only-progress');
-  if (op) op.checked = false;
+  const f = document.getElementById('gajebon-date-from'); if (f) f.value = '';
+  const t = document.getElementById('gajebon-date-to');   if (t) t.value = '';
+  const s = document.getElementById('gajebon-search');    if (s) s.value = '';
+  const sf = document.getElementById('gajebon-filter');   if (sf) sf.value = '';
+  gajebonFilters = { onlyGajebon: false, hideDone: false, onlyProgress: false };
+  ['gjt-only','gjt-hide','gjt-prog'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
   renderGajebonTable();
 }
 
@@ -2485,26 +2607,40 @@ async function restoreRegHandle() {
 
 /* ── 폼 드롭다운 초기화 ── */
 function initRegForm() {
-  if (!window.claimData) return;
-  const qualSet = new Set(claimData.map(r => (r[7]||'').trim()).filter(Boolean));
-  const defSet  = new Set(claimData.map(r => (r[8]||'').trim()).filter(Boolean));
-  const cliSet  = new Set(claimData.map(r => (r[2]||'').trim()).filter(Boolean));
-  const equipSet = new Set(claimData.map(r => (r[9]||'').trim()).filter(Boolean));
+  const data = (typeof claimData !== 'undefined' && claimData.length) ? claimData
+             : (window.CLAIM_DATA && window.CLAIM_DATA.rows ? normalizeClaimData(window.CLAIM_DATA.rows) : []);
+  const defSet  = new Set(data.map(r => (r[8]||'').trim()).filter(Boolean));
+  const cliSet  = new Set(data.map(r => (r[2]||'').trim()).filter(Boolean));
+  const equipSet = new Set(data.map(r => (r[9]||'').trim()).filter(Boolean));
 
-  const qs = document.getElementById('reg-qualtype');
   const ds = document.getElementById('reg-deftype');
   const cl = document.getElementById('reg-client-list');
   const eq = document.getElementById('reg-equip-list');
 
-  if (qs) [...qualSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; qs.appendChild(o); });
-  if (ds) [...defSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; ds.appendChild(o); });
-  if (cl) [...cliSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; cl.appendChild(o); });
-  if (eq) [...equipSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; eq.appendChild(o); });
+  // 부적합유형: 기존 데이터에서 수집 + 직접입력 옵션 (중복방지 위해 매번 새로 채움)
+  if (ds) {
+    ds.innerHTML = '<option value="">선택</option>';
+    [...defSet].sort((a,b)=>a.localeCompare(b,'ko')).forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; ds.appendChild(o); });
+    const oEtc=document.createElement('option'); oEtc.value='__custom__'; oEtc.textContent='+ 직접 입력'; ds.appendChild(oEtc);
+  }
+  if (cl) { cl.innerHTML=''; [...cliSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; cl.appendChild(o); }); }
+  if (eq) { eq.innerHTML=''; [...equipSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; eq.appendChild(o); }); }
 
   // 오늘 날짜 기본값
   const today = new Date().toISOString().slice(0,10);
   const rd = document.getElementById('reg-date');
-  if (rd) rd.value = today;
+  if (rd && !rd.value) rd.value = today;
+}
+// 부적합유형 '직접 입력' 선택 시 텍스트 입력으로 전환
+function onDeftypeChange(sel) {
+  if (sel.value !== '__custom__') return;
+  const custom = prompt('새 부적합유형을 입력하세요');
+  if (custom && custom.trim()) {
+    const v = custom.trim();
+    let opt = [...sel.options].find(o => o.value === v);
+    if (!opt) { opt = document.createElement('option'); opt.value=v; opt.textContent=v; sel.insertBefore(opt, sel.lastElementChild); }
+    sel.value = v;
+  } else { sel.value = ''; }
 }
 
 function resetClaimRegForm() {
@@ -2551,12 +2687,11 @@ async function submitClaimReg(e) {
     costPart ? Number(costPart) : null,
     year
   ];
-  if (window.claimData) {
-    window.claimData.push(newRow);
-    if (typeof refreshDash === 'function') refreshDash();
-    if (typeof refreshClaimFilters === 'function') refreshClaimFilters(window.claimYear || '');
-    if (typeof renderCharts === 'function') renderCharts();
-  }
+  claimData.push(newRow);
+  if (typeof refreshDash === 'function') refreshDash();
+  if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
+  if (typeof renderClaimTable === 'function') renderClaimTable();
+  if (typeof renderCharts === 'function') renderCharts();
 
   // 엑셀 파일에 저장
   // 클레임 Excel 컬럼 (0-indexed):
@@ -2648,12 +2783,12 @@ function updateRegLog() {
   if (!el) return;
   if (regSessionLog.length === 0) { el.textContent = '아직 등록된 항목 없음'; return; }
   el.innerHTML = regSessionLog.map((r, i) =>
-    `<div style="display:flex; gap:12px; align-items:center; padding:6px 0; border-bottom:1px solid #f0f2f5;">
+    `<div style="display:flex; gap:12px; align-items:center; padding:6px 0; border-bottom:1px solid #f5f5f7;">
       <span style="color:#aaa; font-size:11px; min-width:20px;">${i+1}</span>
       <span style="color:#555;">${r.date}</span>
-      <span style="font-weight:600; color:#1a2844;">${r.client}</span>
+      <span style="font-weight:600; color:#0071e3;">${r.client}</span>
       <span style="color:#555; flex:1;">${r.product.slice(0,30)}${r.product.length>30?'…':''}</span>
-      <span style="background:#e8f0fb; color:#185FA5; border-radius:4px; padding:2px 7px; font-size:11px;">${r.qual}</span>
+      <span style="background:#e8f0fb; color:#0071e3; border-radius:4px; padding:2px 7px; font-size:11px;">${r.qual}</span>
       <span style="background:#fdf0e8; color:#c0392b; border-radius:4px; padding:2px 7px; font-size:11px;">${r.def}</span>
       <span style="font-size:11px; color:${r.saved?'#27ae60':'#e67e22'};">${r.saved?'💾 엑셀저장':'📋 메모리만'}</span>
     </div>`
@@ -2689,7 +2824,7 @@ function renderGajebonTodaySummary() {
           ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
         </div>
         <div style="background:#f5f7fa;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #e0e3e8;">
-          <div style="font-size:24px;font-weight:700;color:#1a2844;">${total}</div>
+          <div style="font-size:24px;font-weight:700;color:#0071e3;">${total}</div>
           <div style="font-size:12px;color:#555;margin-top:2px;">전체</div>
         </div>
       </div>
@@ -2730,7 +2865,7 @@ function renderGajebonTodaySummary() {
         ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
       </div>
       <div style="background:#f5f7fa;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #e0e3e8;">
-        <div style="font-size:24px;font-weight:700;color:#1a2844;">${total}</div>
+        <div style="font-size:24px;font-weight:700;color:#0071e3;">${total}</div>
         <div style="font-size:12px;color:#555;margin-top:2px;">전체</div>
       </div>
     </div>
@@ -2781,8 +2916,8 @@ function switchKpiRegTab(name, btn) {
     b.style.fontWeight = '400';
   });
   document.getElementById('kpi-reg-' + name).style.display = '';
-  btn.style.borderBottomColor = '#185FA5';
-  btn.style.color = '#185FA5';
+  btn.style.borderBottomColor = '#0071e3';
+  btn.style.color = '#0071e3';
   btn.style.fontWeight = '600';
 }
 
@@ -3026,7 +3161,7 @@ function renderKpiLog(sec, data, rowFn) {
   if (!el || !data?.length) { if(el) el.innerHTML=''; return; }
   el.innerHTML = `<div style="background:#f8f9fb;border-radius:8px;border:1px solid #e0e3e8;padding:12px;margin-top:8px;">
     <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;">저장된 데이터 (${data.length}건)</div>
-    ${data.slice().reverse().map(r => `<div style="font-size:12px;color:#333;padding:3px 0;border-bottom:1px solid #f0f2f5;">${rowFn(r)}</div>`).join('')}
+    ${data.slice().reverse().map(r => `<div style="font-size:12px;color:#333;padding:3px 0;border-bottom:1px solid #f5f5f7;">${rowFn(r)}</div>`).join('')}
   </div>`;
 }
 
@@ -3291,7 +3426,7 @@ function renderKpi() {
     if(ctx) chartInstances.chartCostMonthly = new Chart(ctx, {
       type:'bar',
       data:{labels:MONS, datasets:[
-        {label:'실제비용', data:costVals, backgroundColor:costVals.map(v=>v>monthTarget?'#c0392b':'#185FA5'), borderRadius:4},
+        {label:'실제비용', data:costVals, backgroundColor:costVals.map(v=>v>monthTarget?'#c0392b':'#0071e3'), borderRadius:4},
         {label:'월목표', data:Array(12).fill(monthTarget), type:'line', borderColor:'#e67e22', borderWidth:2, borderDash:[4,4], pointRadius:0, fill:false}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
@@ -3314,7 +3449,7 @@ function renderKpi() {
     const procs = Object.keys(equipCostMap).sort((a,b)=>equipCostMap[b]-equipCostMap[a]).slice(0,7);
     if(!procs.length){procs.push('데이터없음');}
     const pVals = procs.map(p=>equipCostMap[p]||0);
-    const pColors = ['#185FA5','#7B4EA0','#888','#27ae60','#e67e22','#c0392b','#16a085'];
+    const pColors = ['#0071e3','#7B4EA0','#888','#27ae60','#e67e22','#c0392b','#16a085'];
     if(ctx) chartInstances.chartCostProcess = new Chart(ctx, {
       type:'doughnut',
       data:{labels:procs, datasets:[{data:pVals, backgroundColor:pColors, borderWidth:2, borderColor:'#fff'}]},
@@ -3334,7 +3469,7 @@ function renderKpi() {
     if(ctx) chartInstances.chartSOP = new Chart(ctx, {
       type:'line',
       data:{labels:sopM, datasets:[
-        {label:'준수율', data:sopA, borderColor:'#185FA5', backgroundColor:'rgba(24,95,165,0.1)', borderWidth:2, pointRadius:4, tension:0.3, fill:true},
+        {label:'준수율', data:sopA, borderColor:'#0071e3', backgroundColor:'rgba(24,95,165,0.1)', borderWidth:2, pointRadius:4, tension:0.3, fill:true},
         {label:'목표(95점)', data:Array(sopM.length).fill(95), borderColor:'#27ae60', borderWidth:1.5, borderDash:[5,5], pointRadius:0, fill:false}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
@@ -3533,7 +3668,7 @@ async function previewExcelDoc(file) {
       wb.SheetNames.forEach((sn, i) => {
         html += `<button onclick="switchDocsSheet(this,'${sn.replace(/'/g,"\\'")}',window.__docsWB)" `
               + `style="padding:4px 12px;font-size:12px;border-radius:4px;cursor:pointer;`
-              + (i===0 ? 'background:#1a2844;color:#fff;border:1px solid #1a2844;'
+              + (i===0 ? 'background:#0071e3;color:#fff;border:1px solid #0071e3;'
                        : 'background:#fff;color:#555;border:1px solid #ccc;')
               + `">${sn}</button>`;
       });
@@ -3551,8 +3686,8 @@ function switchDocsSheet(btn, sheetName, wb) {
   btn.parentElement.querySelectorAll('button').forEach(b => {
     b.style.background='#fff'; b.style.color='#555'; b.style.border='1px solid #ccc';
   });
-  btn.style.background='#1a2844';  btn.style.color = '#fff';
-  btn.style.border = '1px solid #1a2844';
+  btn.style.background='#0071e3';  btn.style.color = '#fff';
+  btn.style.border = '1px solid #0071e3';
   renderDocsSheet(sheetName, wb);
 }
 
@@ -3573,7 +3708,7 @@ function renderDocsSheet(sheetName, wb) {
       const tag = isHead ? 'th' : 'td';
       const bg = isHead ? '' : (r % 2 === 0 ? 'background:#f8f9fa;' : 'background:#fff;');
       const style = isHead
-        ? 'background:#1a2844;color:#fff;padding:6px 10px;border:1px solid #2d3f6b;white-space:nowrap;text-align:left;'
+        ? 'background:#0071e3;color:#fff;padding:6px 10px;border:1px solid #2d3f6b;white-space:nowrap;text-align:left;'
         : bg + 'padding:5px 10px;border:1px solid #e0e0e0;white-space:nowrap;';
       html += '<' + tag + ' style="' + style + '">' + v + '</' + tag + '>';
     }
@@ -3600,7 +3735,7 @@ function renderDocsList() {
     const cardId = 'doc-card-' + doc.id;
     return '<div id="' + cardId + '" class="card" style="padding:16px;cursor:pointer;" onclick="openDocFile(&quot;' + doc.id + '&quot;)">'
       + '<div style="font-size:32px;margin-bottom:8px">' + icon + '</div>'
-      + '<div style="font-size:13px;font-weight:600;color:#1a2844;margin-bottom:4px;word-break:break-all">' + doc.name + '</div>'
+      + '<div style="font-size:13px;font-weight:600;color:#0071e3;margin-bottom:4px;word-break:break-all">' + doc.name + '</div>'
       + '<div style="font-size:11px;color:#666;margin-bottom:10px">' + cat + '</div>'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
       +   '<span style="font-size:11px;color:#999">' + size + (size && date ? ' &middot; ' : '') + date + '</span>'
