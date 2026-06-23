@@ -907,7 +907,7 @@
           <button class="icon-btn primary" onclick="renderGajebonTable()" title="조회">🔍</button>
           <button class="icon-btn ghost" onclick="clearGajebonDate()" title="초기화">↺</button>
           <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">📑 가제본만</button>
-          <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('hideDone',this)">✅ 완료 숨기기</button>
+          <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
         </div>
 
@@ -2262,7 +2262,7 @@ function renderGajebonTable() {
 
   // 필터 조건 미리 읽기 (토글 버튼 상태)
   const gajebonOnly  = gajebonFilters.onlyGajebon;
-  const hideDone     = gajebonFilters.hideDone;
+  const onlyDone     = gajebonFilters.onlyDone;
   const onlyProgress = gajebonFilters.onlyProgress;
 
   // 날짜 검색어 변환 (6/10 → 2026-06-10)
@@ -2290,8 +2290,8 @@ function renderGajebonTable() {
     if (statusFilter && r['진행상태'] !== statusFilter) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
-    // 완료 숨기기
-    if (hideDone && (r['진행상태']||'').includes('완료')) return false;
+    // 완료만 보이기
+    if (onlyDone && (r['진행상태']||'') !== '완료') return false;
     // 진행중만
     if (onlyProgress && (r['진행상태']||'') !== '진행중') return false;
     if (dateFrom || dateTo) {
@@ -2502,7 +2502,7 @@ function importGajebonProducts() {
 }
 
 // 가제본 토글 필터 상태
-let gajebonFilters = { onlyGajebon: false, hideDone: false, onlyProgress: false };
+let gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false };
 function toggleGajebonFilter(key, btn) {
   gajebonFilters[key] = !gajebonFilters[key];
   if (btn) btn.classList.toggle('gj-on', gajebonFilters[key]);
@@ -2514,7 +2514,7 @@ function clearGajebonDate() {
   const t = document.getElementById('gajebon-date-to');   if (t) t.value = '';
   const s = document.getElementById('gajebon-search');    if (s) s.value = '';
   const sf = document.getElementById('gajebon-filter');   if (sf) sf.value = '';
-  gajebonFilters = { onlyGajebon: false, hideDone: false, onlyProgress: false };
+  gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false };
   ['gjt-only','gjt-hide','gjt-prog'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
   renderGajebonTable();
 }
