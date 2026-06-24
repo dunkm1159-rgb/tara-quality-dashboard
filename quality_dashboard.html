@@ -3288,12 +3288,20 @@ function normalizeClaimData(rows) {
     return c || '미상';
   }
 
-  return rows.map(r => {
-    const q = (r[7]||'').trim(); if (qualMap[q]!==undefined) r[7]=qualMap[q];
-    const d = (r[8]||'').trim(); if (defMap[d]!==undefined) r[8]=defMap[d];
-    r[2] = cleanClient(r[2]);
-    return r;
-  });
+  return rows
+    // 메모성/비클레임 행 제거 (예: "주간보고_매주 수요일 일과중 마감")
+    .filter(r => {
+      const a = (r[0]||'').trim();
+      if (/주간보고|일과중|마감/.test(a)) return false;       // 메모 행
+      if ((r[2]||'').trim()==='미상' && !(r[4]||'').trim()) return false; // 거래처 미상 + 제품 없음
+      return true;
+    })
+    .map(r => {
+      const q = (r[7]||'').trim(); if (qualMap[q]!==undefined) r[7]=qualMap[q];
+      const d = (r[8]||'').trim(); if (defMap[d]!==undefined) r[8]=defMap[d];
+      r[2] = cleanClient(r[2]);
+      return r;
+    });
 }
 
 // ========================
