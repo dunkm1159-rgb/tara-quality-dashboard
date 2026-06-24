@@ -1214,9 +1214,11 @@ function refreshDash() {
   document.getElementById('dash-month').textContent = now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
 
   // ─ 메트릭 ─
-  const claimYear = claimData.filter(r => r[14] === thisYear).length;
+  // 품질유형이 '클레임'인 건만 집계 (검수중발견 등 제외)
+  const isClaim = r => (r[7]||'').trim() === '클레임';
+  const claimYear = claimData.filter(r => r[14] === thisYear && isClaim(r)).length;
   const claimMon  = claimData.filter(r => {
-    if (r[14] !== thisYear) return false;
+    if (r[14] !== thisYear || !isClaim(r)) return false;
     const m = parseInt((r[0]||'').split('-')[1]||'0',10) - 1;
     return m === thisMon;
   }).length;
@@ -1230,7 +1232,7 @@ function refreshDash() {
     <div class="metric">
       <div class="label">${thisYear}년 클레임</div>
       <div class="value">${claimYear.toLocaleString()}</div>
-      <div class="sub neutral">클레임DB 기준</div>
+      <div class="sub neutral">품질유형 '클레임'만</div>
     </div>
     <div class="metric">
       <div class="label">이번 달 클레임</div>
@@ -1251,7 +1253,7 @@ function refreshDash() {
 
   // ─ 최근 클레임 5건 ─
   const recent = [...claimData]
-    .filter(r=>r[0])
+    .filter(r=>r[0] && (r[7]||'').trim()==='클레임')
     .sort((a,b)=>(b[0]||'').localeCompare(a[0]||''))
     .slice(0,5);
   const clEl = document.getElementById('dash-claim-list');
