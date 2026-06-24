@@ -967,6 +967,11 @@
           <div class="chart-wrap"><canvas id="nccost-chart-cnt"></canvas></div>
         </div>
       </div>
+
+      <div class="card" style="padding:0;margin-top:0">
+        <div class="card-title" style="padding:16px 18px 0;margin:0">공정별 불량 상세 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 목표·성과(.xlsb)와 별개 집계</span></div>
+        <div id="nccost-proc-detail" style="padding:8px 18px 16px"></div>
+      </div>
     </div>
 
     <!-- ============ 가제본 품목 구성 ============ -->
@@ -1372,6 +1377,61 @@ function renderNcCost(){
   const cnts = NC_MONTHS.map(m => yd.months[m]?.cnt||0);
   renderBar('nccost-chart-cnt', NC_MONTHS, cnts, NC_MONTHS.map(()=>'#34c759'));
   ncYearChart('nccost-chart-year', years, years.map(y=>D[y].target/10000), years.map(y=>D[y].totalCost/10000));
+  renderNcProcDetail(nccostYear);
+}
+// 설비명 → 공정 매핑
+function claimToProc(eq){
+  eq = (eq||'').trim();
+  if (!eq) return '미상';
+  if (eq.includes('매엽')) return '매엽';
+  if (eq.includes('중철') || eq.includes('무선') || eq.includes('제본') || eq.includes('호침') || eq.includes('사철')) return '제본';
+  if (eq.includes('윤전')) return '윤전';
+  if (eq.includes('제판') || eq.includes('동판') || eq.includes('CTP')) return '제판';
+  return '외주';
+}
+const NC_PROC_ORDER = ['제판','매엽','윤전','제본','외주','미상'];
+function renderNcProcDetail(year){
+  const el = document.getElementById('nccost-proc-detail');
+  if (!el) return;
+  const data = (typeof claimData!=='undefined' ? claimData : []).filter(r => r[14]===year);
+  if (!data.length){ el.innerHTML = '<div class="empty" style="color:#ccc">'+year+'년 클레임 데이터 없음</div>'; return; }
+  const procs = {};
+  data.forEach(r => {
+    const p = claimToProc(r[9]);
+    const cost = (typeof r[12]==='number'?r[12]:0) + (typeof r[13]==='number'?r[13]:0);
+    const dt = (r[8]||'기타').trim() || '기타';
+    if (!procs[p]) procs[p] = { cost:0, cnt:0, types:{} };
+    procs[p].cost += cost; procs[p].cnt += 1;
+    if (!procs[p].types[dt]) procs[p].types[dt] = { cost:0, cnt:0 };
+    procs[p].types[dt].cost += cost; procs[p].types[dt].cnt += 1;
+  });
+  const order = NC_PROC_ORDER.filter(p=>procs[p]).concat(Object.keys(procs).filter(p=>!NC_PROC_ORDER.includes(p)));
+  const won = v => Math.round(v/10000).toLocaleString();
+  el.innerHTML = order.map((p,idx) => {
+    const pd = procs[p];
+    const types = Object.entries(pd.types).sort((a,b)=>b[1].cost-a[1].cost);
+    const rows = types.map(([t,v])=>`
+      <tr style="border-top:1px solid rgba(0,0,0,0.05)">
+        <td style="padding:6px 8px;font-size:12px">${t}</td>
+        <td style="padding:6px 8px;text-align:right;font-size:12px">${v.cnt}건</td>
+        <td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:500">${won(v.cost)}만</td>
+      </tr>`).join('');
+    return `
+      <div style="border:1px solid rgba(0,0,0,0.07);border-radius:10px;margin-bottom:10px;overflow:hidden">
+        <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+          style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;cursor:pointer;background:#f5f5f7">
+          <div style="font-size:13px;font-weight:600;color:#1d1d1f">${p} <span style="font-weight:400;color:#86868b;font-size:12px">${pd.cnt}건</span></div>
+          <div style="font-size:14px;font-weight:600;color:#0071e3">${won(pd.cost)}만</div>
+        </div>
+        <div style="display:${idx===0?'block':'none'};padding:0 6px 6px">
+          <table style="width:100%"><thead><tr>
+            <th style="text-align:left;padding:6px 8px;font-size:11px;color:#6e6e73">불량유형</th>
+            <th style="text-align:right;padding:6px 8px;font-size:11px;color:#6e6e73">건수</th>
+            <th style="text-align:right;padding:6px 8px;font-size:11px;color:#6e6e73">금액</th>
+          </tr></thead><tbody>${rows}</tbody></table>
+        </div>
+      </div>`;
+  }).join('');
 }
 function ncMixedChart(id, labels, costs, goals){
   if (chartInstances[id]) { try{chartInstances[id].destroy();}catch(e){} }
