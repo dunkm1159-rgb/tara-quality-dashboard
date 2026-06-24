@@ -914,10 +914,10 @@
         <div class="card" style="padding:0">
           <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="gajebon-count"></div>
           <div class="tbl-wrap">
-            <table style="table-layout:fixed;min-width:1298px">
+            <table style="table-layout:fixed;min-width:1366px">
               <thead>
                 <tr>
-                  <th style="width:88px">날짜</th><th style="width:140px">주문번호</th><th style="width:120px">거래처</th><th style="width:210px">제품명</th>
+                  <th style="width:84px">날짜</th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:300px">제품명</th>
                   <th style="width:90px">요청내용</th><th style="width:160px">설비명</th><th style="width:124px">진행상태</th>
                   <th style="width:60px;text-align:center">진행</th>
                   <th style="width:62px;text-align:center">표지</th><th style="width:62px;text-align:center">속표지</th>
@@ -2335,12 +2335,12 @@ function renderGajebonTable() {
     const origIdx = allRows.indexOf(r);
     const status = r['진행상태'] || '';
     const inspDate = r['검수일자'] || '';
-    const statusColor = status.includes('완료') ? '#27ae60' : status.includes('진행') ? '#e67e22' : '#aaa';
+    const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
     return `<tr>
       <td style="white-space:nowrap;font-size:13px">${r['날짜']||'-'}</td>
       <td style="font-size:13px">${r['주문번호']||'-'}</td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['거래처']}">${r['거래처']||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['제품명']}">${r['제품명']||'-'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;color:#1d1d1f" title="${r['제품명']}">${r['제품명']||'-'}</td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['요청내용']}">${r['요청내용']||'-'}</td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['설비명']||''}">${r['설비명']||'-'}</td>
       <td>
