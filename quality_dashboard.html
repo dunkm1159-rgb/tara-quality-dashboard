@@ -1258,12 +1258,12 @@ function refreshDash() {
     .slice(0,5);
   const clEl = document.getElementById('dash-claim-list');
   if (clEl) clEl.innerHTML = recent.length ? recent.map(r=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0ee;font-size:12px;">
-      <span style="color:#888;flex-shrink:0;min-width:80px;">${r[0]||'-'}</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#444;">${r[2]||'-'}</span>
-      <span style="color:#777;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;">${r[4]||'-'}</span>
+    <div style="display:flex;align-items:center;gap:14px;padding:9px 2px;border-bottom:1px solid rgba(0,0,0,0.05);font-size:13px;">
+      <span style="color:#6e6e73;flex-shrink:0;min-width:84px;font-variant-numeric:tabular-nums;">${r[0]||'-'}</span>
+      <span style="flex-shrink:0;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1d1d1f;font-weight:500;">${r[2]||'-'}</span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#424245;">${r[4]||'-'}</span>
     </div>`).join('')
-    : '<div style="color:#bbb;font-size:13px;padding:16px 0;text-align:center;">클레임 데이터 없음</div>';
+    : '<div style="color:#86868b;font-size:13px;padding:16px 0;text-align:center;">클레임 데이터 없음</div>';
 
   const ylEl = document.getElementById('dash-year-label');
   if (ylEl) ylEl.textContent = thisYear+'년';
