@@ -2850,6 +2850,7 @@ async function submitClaimReg(e) {
     year
   ];
   claimData.push(newRow);
+  if (typeof saveClaimToSheet === 'function') saveClaimToSheet(newRow);
   if (typeof refreshDash === 'function') refreshDash();
   if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
   if (typeof renderClaimTable === 'function') renderClaimTable();
@@ -3930,11 +3931,45 @@ async function deleteDocFile(id) {
   renderDocsList();
 }
 
+// ── 클레임 구글시트 백엔드 연동 ──
+const CLAIM_SHEET_URL = 'https://script.google.com/macros/s/AKfycby4dE8hBu5dhYa8aNUNfPKrgPjtAttT6WLDXJe-hQ8aeTXXNlzAssUKL0exCR0dvjVO/exec';
+const CLAIM_SHEET_KEY = 'tara2026';
+function saveClaimToSheet(row){
+  try{
+    fetch(CLAIM_SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:CLAIM_SHEET_KEY,row:row})});
+  }catch(e){ console.warn('sheet save fail', e); }
+}
+async function loadSheetClaims(){
+  try{
+    const r = await fetch(CLAIM_SHEET_URL);
+    const j = await r.json();
+    if(!j || !j.ok || !Array.isArray(j.rows)) return;
+    const nd = v => (typeof v==='string' && /\dT\d/.test(v)) ? new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : v;
+    const add = j.rows
+      .filter(row => row && row[1] && !String(row[1]).startsWith('TEST'))
+      .map(row => {
+        const r2 = row.slice(0,15);
+        r2[0]=nd(r2[0]); r2[11]=nd(r2[11]); r2[14]=String(r2[14]||'').slice(0,4);
+        r2[12]=(typeof r2[12]==='number')?r2[12]:(r2[12]?Number(r2[12]):null);
+        r2[13]=(typeof r2[13]==='number')?r2[13]:(r2[13]?Number(r2[13]):null);
+        return r2;
+      });
+    if(add.length){
+      claimData = claimData.concat(add);
+      if(typeof refreshDash==='function') refreshDash();
+      if(typeof refreshClaimFilters==='function') refreshClaimFilters(typeof claimCurrentYear!=='undefined'?claimCurrentYear:'');
+      if(typeof renderClaimTable==='function') renderClaimTable();
+      if(typeof renderCharts==='function') renderCharts();
+    }
+  }catch(e){ console.warn('sheet claims load fail', e); }
+}
+
 function initDashboard() {
   initClaim();
   initGajebon();
   renderDocsList();
   showTab('dashboard', document.getElementById('nav-dashboard'));
+  loadSheetClaims();
 }
 
 if (document.readyState === 'loading') {
