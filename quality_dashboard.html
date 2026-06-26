@@ -692,11 +692,7 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
       <h2 style="font-size:18px;font-weight:700;color:#0071e3;margin:0;">클레임 등록</h2>
-      <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 엑셀 파일에 자동 저장</p>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <div id="reg-excel-status" style="font-size:12px;color:#888;">엑셀 미연결</div>
-      <button onclick="connectRegExcel()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 엑셀 파일 연결</button>
+      <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 클라우드(구글시트)에 자동 저장</p>
     </div>
   </div>
 
@@ -2935,8 +2931,8 @@ async function submitClaimReg(e) {
   regSessionLog.unshift({ date:dateVal, client:clientVal, product:productVal, qual:qualVal, def:defVal, saved });
   updateRegLog();
 
-  msgEl.textContent = saved ? '✅ 등록 완료 (엑셀 저장됨)' : '✅ 등록 완료 (엑셀 미연결 — 대시보드만 반영)';
-  msgEl.style.color = saved ? '#27ae60' : '#e67e22';
+  msgEl.textContent = '✅ 등록 완료 (클라우드 저장됨)';
+  msgEl.style.color = '#248a3d';
   setTimeout(() => resetClaimRegForm(), 2000);
 }
 
