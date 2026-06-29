@@ -915,11 +915,11 @@
         <div class="card" style="padding:0">
           <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="gajebon-count"></div>
           <div class="tbl-wrap">
-            <table style="table-layout:fixed;min-width:1366px">
+            <table style="table-layout:fixed;min-width:1470px">
               <thead>
                 <tr>
-                  <th style="width:84px">날짜</th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:300px">제품명</th>
-                  <th style="width:90px">요청내용</th><th style="width:160px">설비명</th><th style="width:124px">진행상태</th>
+                  <th style="width:84px">날짜</th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
+                  <th style="width:90px">요청내용</th><th style="width:150px">설비명</th><th style="width:124px">진행상태</th>
                   <th style="width:60px;text-align:center">진행</th>
                   <th style="width:62px;text-align:center">표지</th><th style="width:62px;text-align:center">속표지</th>
                   <th style="width:62px;text-align:center">정답표지</th><th style="width:62px;text-align:center">개매본문</th>
@@ -2483,7 +2483,7 @@ function renderGajebonTable() {
   const tbody = document.getElementById('gajebon-tbody');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="13" class="empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" class="empty">데이터 없음</td></tr>';
     return;
   }
   const statusBadge = s => {
@@ -2507,6 +2507,7 @@ function renderGajebonTable() {
       <td style="white-space:nowrap;font-size:13px">${r['날짜']||'-'}</td>
       <td style="font-size:13px">${r['주문번호']||'-'}</td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['거래처']}">${r['거래처']||'-'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['부서']||''} ${r['담당자']||''}">${r['담당자']||'-'}</td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;color:#1d1d1f" title="${r['제품명']}">${r['제품명']||'-'}</td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['요청내용']}">${r['요청내용']||'-'}</td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['설비명']||''}">${r['설비명']||'-'}</td>
