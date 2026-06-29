@@ -909,6 +909,7 @@
           <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">📑 가제본만</button>
           <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
+          <button type="button" class="gj-toggle" id="gjt-need" onclick="toggleGajebonFilter('needGajebon',this)">🛠 가제본 만들 것</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -2422,6 +2423,7 @@ function renderGajebonTable() {
   const gajebonOnly  = gajebonFilters.onlyGajebon;
   const onlyDone     = gajebonFilters.onlyDone;
   const onlyProgress = gajebonFilters.onlyProgress;
+  const needGajebon  = gajebonFilters.needGajebon;
 
   // 날짜 검색어 변환 (6/10 → 2026-06-10)
   let searchDate = '';
@@ -2452,6 +2454,12 @@ function renderGajebonTable() {
     if (onlyDone && (r['진행상태']||'') !== '완료') return false;
     // 진행중만
     if (onlyProgress && (r['진행상태']||'') !== '진행중') return false;
+    // 가제본 만들 것 = 완료 + 가제본요청 있음 + 아직 가제본 안 만듦
+    if (needGajebon) {
+      if ((r['진행상태']||'') !== '완료') return false;
+      if (!(r['요청내용']||'').includes('가제본')) return false;
+      if (gajDate(r['주문번호']||'')) return false;
+    }
     if (dateFrom || dateTo) {
       // 날짜 파싱 — 다양한 형식 지원 (YYYY-MM-DD, YYYY.MM.DD, MM/DD 등)
       const raw = (r['날짜'] || '').trim();
@@ -2509,9 +2517,12 @@ function renderGajebonTable() {
             <option value="대기"   ${status==='대기'  ?'selected':''}>대기</option>
             <option value="미처리" ${status==='미처리'?'selected':''}>미처리</option>
           </select>
-          <input type="date" value="${r['가제본날짜']||''}" onchange="updateGajebonField(${origIdx},'가제본날짜',this.value)"
-            placeholder="가제본일"
+          <input type="date" value="${gajDate(r['주문번호']||'')}" onchange="saveGajebonDate('${r['주문번호']||''}', this.value)"
+            title="가제본 만든 날짜"
             style="border:1px solid #d2d2d7;border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;">
+          ${status==='완료' ? (gajDate(r['주문번호']||'')
+            ? '<div style="font-size:10px;color:#248a3d;font-weight:600">✓ 가제본 완료</div>'
+            : ((r['요청내용']||'').includes('가제본') ? '<div style="font-size:10px;color:#c93400;font-weight:600">가제본 만들 것</div>' : '')) : ''}
         </div>
       </td>
       ${(() => { const order = r['주문번호']||''; const pr = partsProgress(order);
@@ -2519,6 +2530,30 @@ function renderGajebonTable() {
         return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join(''); })()}
     </tr>`;
   }).join('');
+}
+
+// ── 가제본 완료날짜 (구글시트 저장, ERP 자동수집과 무관하게 보존) ──
+let gajebonDateStore = {};   // 주문번호 -> 'YYYY-MM-DD'
+function gajDate(order){ return gajebonDateStore[order] || ''; }
+function saveGajebonDate(order, date){
+  if(!order) return;
+  if(date) gajebonDateStore[order]=date; else delete gajebonDateStore[order];
+  try{
+    if(typeof CLAIM_SHEET_URL!=='undefined')
+      fetch(CLAIM_SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:CLAIM_SHEET_KEY,type:'gajebon',order:order,date:date||''})});
+  }catch(e){ console.warn('gajebon date save fail',e); }
+  renderGajebonTable();
+}
+async function loadGajebonDates(){
+  try{
+    if(typeof CLAIM_SHEET_URL==='undefined') return;
+    const r=await fetch(CLAIM_SHEET_URL+'?type=gajebon&t='+Date.now());
+    const j=await r.json();
+    if(!j||!j.ok||!Array.isArray(j.rows)) return;
+    const nd=v=>(typeof v==='string'&&/\dT\d/.test(v))?new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}):v;
+    j.rows.forEach(row=>{ if(row&&row[0]){ const d=nd(row[1]); if(d) gajebonDateStore[String(row[0])]=String(d).slice(0,10); } });
+    if(typeof renderGajebonTable==='function') renderGajebonTable();
+  }catch(e){ console.warn('gajebon dates load fail',e); }
 }
 
 function updateGajebonField(idx, field, value) {
@@ -2660,7 +2695,7 @@ function importGajebonProducts() {
 }
 
 // 가제본 토글 필터 상태
-let gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false };
+let gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false };
 function toggleGajebonFilter(key, btn) {
   gajebonFilters[key] = !gajebonFilters[key];
   if (btn) btn.classList.toggle('gj-on', gajebonFilters[key]);
@@ -2672,8 +2707,8 @@ function clearGajebonDate() {
   const t = document.getElementById('gajebon-date-to');   if (t) t.value = '';
   const s = document.getElementById('gajebon-search');    if (s) s.value = '';
   const sf = document.getElementById('gajebon-filter');   if (sf) sf.value = '';
-  gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false };
-  ['gjt-only','gjt-hide','gjt-prog'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
+  gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false };
+  ['gjt-only','gjt-hide','gjt-prog','gjt-need'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
   renderGajebonTable();
 }
 
@@ -2956,7 +2991,7 @@ function updateRegLog() {
 
 
 function renderGajebonTodaySummary() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const el = document.getElementById('gajebon-today-summary');
   const dateEl = document.getElementById('gajebon-today-date');
   if (!el) return;
@@ -3966,6 +4001,7 @@ function initDashboard() {
   renderDocsList();
   showTab('dashboard', document.getElementById('nav-dashboard'));
   loadSheetClaims();
+  loadGajebonDates();
 }
 
 if (document.readyState === 'loading') {
