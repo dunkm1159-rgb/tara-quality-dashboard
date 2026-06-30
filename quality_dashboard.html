@@ -393,9 +393,6 @@
       <button class="nav-item" id="nav-gajebon" onclick="showTab('gajebon',this)">
         <span class="nav-icon">📑</span> 가제본 현황
       </button>
-      <button class="nav-item" id="nav-parts" onclick="showTab('parts',this)">
-        <span class="nav-icon">🧩</span> 가제본 품목구성
-      </button>
     </div>
 
     <div class="sidebar-section">
@@ -972,43 +969,6 @@
       </div>
     </div>
 
-    <!-- ============ 가제본 품목 구성 ============ -->
-    <div id="tab-parts" class="tab">
-      <div class="section-header">
-        <div class="section-title">가제본 품목 구성</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="importGajebonProducts()">가제본 품목 불러오기</button>
-        </div>
-      </div>
-      <p style="font-size:12px;color:#86868b;margin:-6px 0 14px;">품목마다 해당되는 가제본 파트를 켜두면, 가제본 현황 표에서 그 제품은 켠 파트만 체크할 수 있어요. 같은 제품명에 자동 적용됩니다.</p>
-
-      <div class="filter-bar" style="margin-bottom:12px">
-        <input type="text" id="parts-search" placeholder="제품명 검색..." oninput="renderPartTemplates()" style="flex:1;min-width:200px">
-        <input type="text" id="parts-new-name" placeholder="새 제품명 직접 추가" style="flex:1;min-width:200px">
-        <button onclick="addPartProduct()" style="background:#0071e3;color:#fff;border:none;border-radius:980px;padding:7px 18px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">추가</button>
-      </div>
-
-      <div class="card" style="padding:0">
-        <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="parts-count"></div>
-        <div class="tbl-wrap">
-          <table style="table-layout:fixed;min-width:760px">
-            <thead>
-              <tr>
-                <th style="width:auto">제품명</th>
-                <th style="width:84px;text-align:center">표지</th>
-                <th style="width:84px;text-align:center">속표지</th>
-                <th style="width:84px;text-align:center">정답표지</th>
-                <th style="width:84px;text-align:center">개매본문</th>
-                <th style="width:84px;text-align:center">정매본문</th>
-                <th style="width:60px;text-align:center">삭제</th>
-              </tr>
-            </thead>
-            <tbody id="parts-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
     <!-- ============ 분석 ============ -->
     <div id="tab-analysis" class="tab">
       <!-- 분석 필터 헤더 -->
@@ -1220,7 +1180,6 @@ const TAB_TITLES = {
   nccost: '부적합 목표·성과',
   claim: '클레임 DB',
   gajebon: '가제본 현황',
-  parts: '가제본 품목 구성',
   docs: '문서 관리',
 };
 
@@ -1241,7 +1200,6 @@ function showTab(name, btn) {
     else if (IS_SERVER) fetchGajebonFromServer();
   }
   if (name === 'docs') renderDocsList();
-  if (name === 'parts') renderPartTemplates();
   if (name === 'register') initRegForm();
   if (name === 'nccost') renderNcCost();
 }
