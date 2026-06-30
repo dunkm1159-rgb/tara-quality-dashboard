@@ -909,6 +909,7 @@
           <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
           <button type="button" class="gj-toggle" id="gjt-need" onclick="toggleGajebonFilter('needGajebon',this)">🛠 가제본 만들 것</button>
+          <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">📅 오늘 가제본 완료</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -2381,6 +2382,8 @@ function renderGajebonTable() {
   const onlyDone     = gajebonFilters.onlyDone;
   const onlyProgress = gajebonFilters.onlyProgress;
   const needGajebon  = gajebonFilters.needGajebon;
+  const todayDone    = gajebonFilters.todayDone;
+  const todayKST     = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const empSel = document.getElementById('gajebon-emp')?.value || '';
 
   // 담당자 드롭다운 채우기 (현재 시트 기준, 선택 유지)
@@ -2416,6 +2419,8 @@ function renderGajebonTable() {
     if (statusFilter && r['진행상태'] !== statusFilter) return false;
     // 담당자 필터
     if (empSel && (r['담당자']||'') !== empSel) return false;
+    // 오늘 가제본 완료한 것만 (가제본 만든 날짜 = 오늘)
+    if (todayDone && gajDate(r['주문번호']||'') !== todayKST) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
     // 완료만 보이기 = 완료 + 아직 가제본 안 만든 것 (날짜 넣으면 사라짐)
@@ -2672,7 +2677,7 @@ function importGajebonProducts() {
 }
 
 // 가제본 토글 필터 상태
-let gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false };
+let gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false, todayDone: false };
 function toggleGajebonFilter(key, btn) {
   gajebonFilters[key] = !gajebonFilters[key];
   if (btn) btn.classList.toggle('gj-on', gajebonFilters[key]);
@@ -2685,8 +2690,8 @@ function clearGajebonDate() {
   const s = document.getElementById('gajebon-search');    if (s) s.value = '';
   const sf = document.getElementById('gajebon-filter');   if (sf) sf.value = '';
   const ep = document.getElementById('gajebon-emp');      if (ep) ep.value = '';
-  gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false };
-  ['gjt-only','gjt-hide','gjt-prog','gjt-need'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
+  gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false, todayDone: false };
+  ['gjt-only','gjt-hide','gjt-prog','gjt-need','gjt-today'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
   renderGajebonTable();
 }
 
