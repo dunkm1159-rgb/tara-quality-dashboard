@@ -901,6 +901,7 @@
             <option value="진행중">진행중</option>
             <option value="미처리">미처리</option>
           </select>
+          <select id="gajebon-emp" onchange="renderGajebonTable()"><option value="">전체 담당자</option></select>
           <input type="date" id="gajebon-date-from" title="시작일" onchange="renderGajebonTable()">
           <span style="line-height:32px;color:#aaa;font-size:12px">~</span>
           <input type="date" id="gajebon-date-to" title="종료일" onchange="renderGajebonTable()">
@@ -2424,6 +2425,15 @@ function renderGajebonTable() {
   const onlyDone     = gajebonFilters.onlyDone;
   const onlyProgress = gajebonFilters.onlyProgress;
   const needGajebon  = gajebonFilters.needGajebon;
+  const empSel = document.getElementById('gajebon-emp')?.value || '';
+
+  // 담당자 드롭다운 채우기 (현재 시트 기준, 선택 유지)
+  const empSelEl = document.getElementById('gajebon-emp');
+  if (empSelEl) {
+    const emps = [...new Set(rows.map(r => (r['담당자']||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+    const cur = empSelEl.value;
+    empSelEl.innerHTML = '<option value="">전체 담당자</option>' + emps.map(e=>`<option value="${e}" ${e===cur?'selected':''}>${e}</option>`).join('');
+  }
 
   // 날짜 검색어 변환 (6/10 → 2026-06-10)
   let searchDate = '';
@@ -2448,6 +2458,8 @@ function renderGajebonTable() {
     }
     // 진행상태 필터
     if (statusFilter && r['진행상태'] !== statusFilter) return false;
+    // 담당자 필터
+    if (empSel && (r['담당자']||'') !== empSel) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
     // 완료만 보이기 = 완료 + 아직 가제본 안 만든 것 (날짜 넣으면 사라짐)
@@ -2541,6 +2553,11 @@ let gajebonDateStore = {};   // 주문번호 -> 'YYYY-MM-DD'
 function gajDate(order){ return gajebonDateStore[order] || ''; }
 function saveGajebonDate(order, date){
   if(!order) return;
+  if(date){
+    const prod = (typeof productOfOrder==='function') ? productOfOrder(order) : '';
+    const ok = confirm('이 주문을 가제본 완료 처리할까요?\n\n주문번호: '+order+(prod?'\n제품: '+prod:'')+'\n가제본일: '+date+'\n\n확인하면 "완료만 보이기" 목록에서 사라집니다.');
+    if(!ok){ renderGajebonTable(); return; }  // 취소 시 입력 되돌림
+  }
   if(date) gajebonDateStore[order]=date; else delete gajebonDateStore[order];
   try{
     if(typeof CLAIM_SHEET_URL!=='undefined')
@@ -2711,6 +2728,7 @@ function clearGajebonDate() {
   const t = document.getElementById('gajebon-date-to');   if (t) t.value = '';
   const s = document.getElementById('gajebon-search');    if (s) s.value = '';
   const sf = document.getElementById('gajebon-filter');   if (sf) sf.value = '';
+  const ep = document.getElementById('gajebon-emp');      if (ep) ep.value = '';
   gajebonFilters = { onlyGajebon: false, onlyDone: false, onlyProgress: false, needGajebon: false };
   ['gjt-only','gjt-hide','gjt-prog','gjt-need'].forEach(id => document.getElementById(id)?.classList.remove('gj-on'));
   renderGajebonTable();
