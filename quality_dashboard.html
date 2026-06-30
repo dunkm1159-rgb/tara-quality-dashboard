@@ -964,7 +964,7 @@
       </div>
 
       <div class="card" style="padding:0;margin-top:0">
-        <div class="card-title" style="padding:16px 18px 0;margin:0">공정별 불량 상세 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 목표·성과(.xlsb)와 별개 집계</span></div>
+        <div class="card-title" style="padding:16px 18px 0;margin:0">공정별 불량유형 (건수) <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 공정 클릭 시 펼침</span></div>
         <div id="nccost-proc-detail" style="padding:8px 18px 16px"></div>
       </div>
     </div>
@@ -1354,38 +1354,35 @@ function renderNcProcDetail(year){
   const procs = {};
   data.forEach(r => {
     const p = claimToProc(r[9]);
-    const cost = (typeof r[12]==='number'?r[12]:0) + (typeof r[13]==='number'?r[13]:0);
     const dt = (r[8]||'기타').trim() || '기타';
-    if (!procs[p]) procs[p] = { cost:0, cnt:0, types:{} };
-    procs[p].cost += cost; procs[p].cnt += 1;
-    if (!procs[p].types[dt]) procs[p].types[dt] = { cost:0, cnt:0 };
-    procs[p].types[dt].cost += cost; procs[p].types[dt].cnt += 1;
+    if (!procs[p]) procs[p] = { cnt:0, types:{} };
+    procs[p].cnt += 1;
+    procs[p].types[dt] = (procs[p].types[dt]||0) + 1;
   });
   const order = NC_PROC_ORDER.filter(p=>procs[p]).concat(Object.keys(procs).filter(p=>!NC_PROC_ORDER.includes(p)));
-  const won = v => Math.round(v/10000).toLocaleString();
+  const maxProc = Math.max(1, ...order.map(p=>procs[p].cnt));
   el.innerHTML = order.map((p,idx) => {
     const pd = procs[p];
-    const types = Object.entries(pd.types).sort((a,b)=>b[1].cost-a[1].cost);
-    const rows = types.map(([t,v])=>`
-      <tr style="border-top:1px solid rgba(0,0,0,0.05)">
-        <td style="padding:6px 8px;font-size:12px">${t}</td>
-        <td style="padding:6px 8px;text-align:right;font-size:12px">${v.cnt}건</td>
-        <td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:500">${won(v.cost)}만</td>
-      </tr>`).join('');
+    const types = Object.entries(pd.types).sort((a,b)=>b[1]-a[1]);
+    const maxT = Math.max(1, ...types.map(x=>x[1]));
+    const bars = types.map(([t,c])=>{
+      const w = Math.round(c/maxT*100);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:3px 4px">
+        <div style="width:96px;flex-shrink:0;font-size:12px;color:#1d1d1f;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t}">${t}</div>
+        <div style="flex:1;background:#eef0f3;border-radius:5px;height:16px;"><div style="width:${w}%;min-width:3px;background:#378add;height:16px;border-radius:5px;"></div></div>
+        <div style="width:34px;flex-shrink:0;text-align:right;font-size:12px;font-weight:600;color:#185fa5">${c}</div>
+      </div>`;
+    }).join('');
+    const pw = Math.round(pd.cnt/maxProc*100);
     return `
       <div style="border:1px solid rgba(0,0,0,0.07);border-radius:10px;margin-bottom:10px;overflow:hidden">
         <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
-          style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;cursor:pointer;background:#f5f5f7">
-          <div style="font-size:13px;font-weight:600;color:#1d1d1f">${p} <span style="font-weight:400;color:#86868b;font-size:12px">${pd.cnt}건</span></div>
-          <div style="font-size:14px;font-weight:600;color:#0071e3">${won(pd.cost)}만</div>
+          style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:#f5f5f7">
+          <div style="font-size:13px;font-weight:600;color:#1d1d1f;flex-shrink:0;width:64px">${p}</div>
+          <div style="flex:1;background:#e3e6ea;border-radius:5px;height:10px;"><div style="width:${pw}%;background:#0071e3;height:10px;border-radius:5px;"></div></div>
+          <div style="font-size:13px;font-weight:700;color:#0071e3;flex-shrink:0;width:48px;text-align:right">${pd.cnt}건</div>
         </div>
-        <div style="display:${idx===0?'block':'none'};padding:0 6px 6px">
-          <table style="width:100%"><thead><tr>
-            <th style="text-align:left;padding:6px 8px;font-size:11px;color:#6e6e73">불량유형</th>
-            <th style="text-align:right;padding:6px 8px;font-size:11px;color:#6e6e73">건수</th>
-            <th style="text-align:right;padding:6px 8px;font-size:11px;color:#6e6e73">금액</th>
-          </tr></thead><tbody>${rows}</tbody></table>
-        </div>
+        <div style="display:${idx===0?'block':'none'};padding:8px 10px 10px;">${bars}</div>
       </div>`;
   }).join('');
 }
