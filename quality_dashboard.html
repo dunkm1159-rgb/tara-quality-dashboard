@@ -909,7 +909,7 @@
           <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
           <button type="button" class="gj-toggle" id="gjt-need" onclick="toggleGajebonFilter('needGajebon',this)">🛠 가제본 만들 것</button>
-          <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">📅 오늘 가제본 완료</button>
+          <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">🆕 오늘 신규완료</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -2383,7 +2383,7 @@ function renderGajebonTable() {
   const onlyProgress = gajebonFilters.onlyProgress;
   const needGajebon  = gajebonFilters.needGajebon;
   const todayDone    = gajebonFilters.todayDone;
-  const todayKST     = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const newCompletedSet = new Set(((window.GAJEBON_TODAY && window.GAJEBON_TODAY.new_completed) || []).map(x => x['주문번호']));
   const empSel = document.getElementById('gajebon-emp')?.value || '';
 
   // 담당자 드롭다운 채우기 (현재 시트 기준, 선택 유지)
@@ -2419,8 +2419,8 @@ function renderGajebonTable() {
     if (statusFilter && r['진행상태'] !== statusFilter) return false;
     // 담당자 필터
     if (empSel && (r['담당자']||'') !== empSel) return false;
-    // 오늘 가제본 완료한 것만 (가제본 만든 날짜 = 오늘)
-    if (todayDone && gajDate(r['주문번호']||'') !== todayKST) return false;
+    // 어제 대비 신규 완료된 품목만 (진행상태가 새로 완료로 바뀐 것)
+    if (todayDone && !newCompletedSet.has(r['주문번호'])) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
     // 완료만 보이기 = 완료 + 아직 가제본 안 만든 것 (날짜 넣으면 사라짐)
