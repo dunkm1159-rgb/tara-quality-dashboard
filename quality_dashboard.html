@@ -908,7 +908,6 @@
           <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">📑 가제본만</button>
           <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
-          <button type="button" class="gj-toggle" id="gjt-need" onclick="toggleGajebonFilter('needGajebon',this)">🛠 가제본 만들 것</button>
           <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">🆕 오늘 신규완료</button>
         </div>
 
@@ -2499,7 +2498,7 @@ function renderGajebonTable() {
             style="border:1px solid #d2d2d7;border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;">
           ${status==='완료' ? (gajDate(r['주문번호']||'')
             ? '<div style="font-size:10px;color:#248a3d;font-weight:600">✓ 가제본 완료</div>'
-            : ((r['요청내용']||'').includes('가제본') ? '<div style="font-size:10px;color:#c93400;font-weight:600">가제본 만들 것</div>' : '')) : ''}
+            : '') : ''}
         </div>
       </td>
       ${(() => { const order = r['주문번호']||''; const pr = partsProgress(order);
