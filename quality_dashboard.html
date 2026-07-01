@@ -383,6 +383,9 @@
       <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
         <span class="nav-icon">🎯</span> KPI 현황
       </button>
+      <button class="nav-item" id="nav-wip" onclick="showTab('wip',this)">
+        <span class="nav-icon">🏭</span> 작업 진행중
+      </button>
     </div>
 
     <div class="sidebar-section">
@@ -932,6 +935,19 @@
       </div>
     </div>
 
+    <!-- ============ 작업 진행중 ============ -->
+    <div id="tab-wip" class="tab">
+      <div class="section-header">
+        <div class="section-title">🏭 작업 진행중 현황 <span style="font-size:12px;color:#86868b;font-weight:400">(설비별)</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="wip-updated" style="font-size:12px;color:#86868b"></span>
+          <button class="icon-btn primary" onclick="reloadGajebonData()" title="지금 새로고침">🔄</button>
+        </div>
+      </div>
+      <div id="wip-summary" style="margin-bottom:14px;color:#86868b;font-size:13px"></div>
+      <div id="wip-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px"></div>
+    </div>
+
     <!-- ============ 부적합 목표·성과 ============ -->
     <div id="tab-nccost" class="tab">
       <div class="section-header">
@@ -1181,6 +1197,7 @@ const TAB_TITLES = {
   nccost: '부적합 목표·성과',
   claim: '클레임 DB',
   gajebon: '가제본 현황',
+  wip: '작업 진행중',
   docs: '문서 관리',
 };
 
@@ -1203,6 +1220,7 @@ function showTab(name, btn) {
   if (name === 'docs') renderDocsList();
   if (name === 'register') initRegForm();
   if (name === 'nccost') renderNcCost();
+  if (name === 'wip') renderWip();
 }
 
 // ========================
@@ -2367,6 +2385,66 @@ function renderGajebonMetrics() {
     <div class="metric"><div class="label">완료</div><div class="value">${done}</div><div class="sub neutral">진행상태=완료</div></div>
     <div class="metric"><div class="label">진행중</div><div class="value">${progress}</div><div class="sub neutral">진행상태=진행중</div></div>
   `;
+}
+
+// ========================
+// 작업 진행중 (설비별)
+// ========================
+function wipEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function reloadGajebonData() {
+  const upd = document.getElementById('wip-updated');
+  if (upd) upd.textContent = '불러오는 중...';
+  fetch('gajebon_data.js?t=' + Date.now())
+    .then(r => r.text())
+    .then(t => {
+      try { (0, eval)(t); } catch(e) {}
+      if (window.GAJEBON_DATA && window.GAJEBON_DATA.sheets) gajebonSheets = window.GAJEBON_DATA.sheets;
+      renderWip();
+    })
+    .catch(() => renderWip());
+}
+
+function renderWip() {
+  const grid = document.getElementById('wip-grid');
+  const sum  = document.getElementById('wip-summary');
+  const upd  = document.getElementById('wip-updated');
+  if (!grid) return;
+  if (upd) upd.textContent = (window.GAJEBON_DATA && window.GAJEBON_DATA.updated) ? ('기준 ' + window.GAJEBON_DATA.updated) : '';
+
+  const all = [];
+  Object.values(gajebonSheets || {}).forEach(rows => (rows || []).forEach(r => all.push(r)));
+  const prog = all.filter(r => (r['진행상태'] || '') === '진행중');
+
+  const byM = {};
+  prog.forEach(r => {
+    let eqs = (r['설비명'] || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!eqs.length) eqs = ['(설비 미지정)'];
+    eqs.forEach(m => { (byM[m] = byM[m] || []).push(r); });
+  });
+
+  const rank = x => x.indexOf('외부입고') >= 0 ? 2 : (x === '(설비 미지정)' ? 3 : (x.indexOf('호기') >= 0 ? 0 : 1));
+  const keys = Object.keys(byM).sort((a, b) => {
+    const ra = rank(a), rb = rank(b);
+    return ra !== rb ? ra - rb : a.localeCompare(b, 'ko');
+  });
+
+  sum.textContent = '진행중 ' + prog.length + '건 · 설비 ' + keys.length + '곳';
+  if (!prog.length) { grid.innerHTML = '<div style="color:#86868b;padding:20px">현재 진행중인 작업이 없습니다.</div>'; return; }
+
+  grid.innerHTML = keys.map(m => {
+    const items = byM[m].slice().sort((a, b) => (a['날짜'] || '').localeCompare(b['날짜'] || ''));
+    const rowsHtml = items.map(r => `
+      <div style="padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.05)">
+        <div style="font-size:13px;font-weight:600;color:#1d1d1f;line-height:1.35">${wipEsc(r['제품명'] || '')}</div>
+        <div style="font-size:11px;color:#86868b;margin-top:2px">${wipEsc(r['거래처'] || '')} · ${r['날짜'] || ''}${r['담당자'] ? (' · ' + wipEsc(r['담당자'])) : ''}</div>
+      </div>`).join('');
+    return `<div class="card" style="padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:15px;font-weight:700;color:#1d1d1f">${wipEsc(m)}</div>
+        <div style="background:#FFF3E0;color:#E65100;font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px">${items.length}</div>
+      </div>${rowsHtml}</div>`;
+  }).join('');
 }
 
 function renderGajebonTable() {
