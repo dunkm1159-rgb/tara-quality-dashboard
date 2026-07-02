@@ -2415,17 +2415,18 @@ function renderWip() {
     return;
   }
   const fmtDue = s => (s && String(s).length === 8) ? (String(s).slice(4,6)+'/'+String(s).slice(6,8)) : (s||'');
+  const isDone = j => (Number(j.close) >= 1) || (Number(j.qty) > 0 && Number(j.workcnt) >= Number(j.qty));
   const rank = n => /외부입고/.test(n) ? 3 : (/외주|대기/.test(n) ? 2 : (/(문화|제이드)/.test(n) ? 1 : 0));
   const machines = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
   let totRemain = 0;
   const cards = machines.map(m => {
     const jobs = (m.jobs || []).slice().sort((a,b)=>(a.sq||0)-(b.sq||0));
-    const doneN = jobs.filter(j => j.done).length;
-    const remainN = jobs.filter(j => !j.done).length;
+    const doneN = jobs.filter(isDone).length;
+    const remainN = jobs.filter(j => !isDone(j)).length;
     totRemain += remainN;
     let curSeen = false;
     const rowsHtml = jobs.map(j => {
-      if (j.done) {
+      if (isDone(j)) {
         return `<div style="padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
           <div style="font-size:12px;color:#c7c7cc;text-decoration:line-through">${wipEsc(j.product)}</div>
           <div style="font-size:10px;color:#d2d2d7;text-decoration:line-through">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}</div>
