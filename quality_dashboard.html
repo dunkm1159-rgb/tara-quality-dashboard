@@ -2415,7 +2415,7 @@ function renderWip() {
     return;
   }
   const fmtDue = s => (s && String(s).length === 8) ? (String(s).slice(4,6)+'/'+String(s).slice(6,8)) : (s||'');
-  const isDone = j => (Number(j.close) >= 1) || (Number(j.qty) > 0 && Number(j.workcnt) >= Number(j.qty));
+  const isDone = j => (Number(j.close) >= 1);
   const rank = n => /외부입고/.test(n) ? 3 : (/외주|대기/.test(n) ? 2 : (/(문화|제이드)/.test(n) ? 1 : 0));
   const machines = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
   let totRemain = 0;
