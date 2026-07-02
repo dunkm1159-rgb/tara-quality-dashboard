@@ -2402,6 +2402,11 @@ function reloadGajebonData() {
     .catch(() => renderWip());
 }
 
+function toggleWip(id) {
+  const e = document.getElementById(id);
+  if (e) e.style.display = (e.style.display === 'none' || !e.style.display) ? 'block' : 'none';
+}
+
 function renderWip() {
   const grid = document.getElementById('wip-grid');
   const sum  = document.getElementById('wip-summary');
@@ -2419,11 +2424,15 @@ function renderWip() {
   const rank = n => /외부입고/.test(n) ? 3 : (/외주|대기/.test(n) ? 2 : (/(문화|제이드)/.test(n) ? 1 : 0));
   const machines = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
   let totRemain = 0;
-  const cards = machines.map(m => {
+  const cards = machines.map((m, mi) => {
     const jobs = (m.jobs || []).slice().sort((a,b)=>(a.sq||0)-(b.sq||0));
     const doneN = jobs.filter(isDone).length;
     const remainN = jobs.filter(j => !isDone(j)).length;
     totRemain += remainN;
+    const curJob = jobs.find(j => !isDone(j));
+    const curLine = curJob
+      ? `<span style="color:#FF9500;font-weight:700">지금 ▸</span> ${wipEsc(curJob.product)}<span style="color:#86868b"> · ${wipEsc(curJob.config)}</span>`
+      : '<span style="color:#248a3d;font-weight:600">모두 완료 🎉</span>';
     let curSeen = false;
     const rowsHtml = jobs.map(j => {
       if (isDone(j)) {
@@ -2441,16 +2450,22 @@ function renderWip() {
         <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>${dbg}</div>`;
     }).join('');
     return `<div class="card" style="padding:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:15px;font-weight:700">${wipEsc(m.name)}</div>
-        <div style="display:flex;gap:5px">
-          <span style="background:#E8F5E9;color:#248a3d;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">완료 ${doneN}</span>
-          <span style="background:#FFF3E0;color:#E65100;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">남은 ${remainN}</span>
+      <div style="cursor:pointer" onclick="toggleWip('wipd-${mi}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:15px;font-weight:700">${wipEsc(m.name)} <span style="font-size:11px;color:#86868b">▾</span></div>
+          <div style="display:flex;gap:5px">
+            <span style="background:#E8F5E9;color:#248a3d;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">완료 ${doneN}</span>
+            <span style="background:#FFF3E0;color:#E65100;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">남은 ${remainN}</span>
+          </div>
         </div>
+        <div style="font-size:12px;line-height:1.4">${curLine}</div>
       </div>
-      ${rowsHtml || '<div style="color:#86868b;font-size:12px">작업 없음</div>'}</div>`;
+      <div id="wipd-${mi}" style="display:none;margin-top:10px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">
+        ${rowsHtml || '<div style="color:#86868b;font-size:12px">작업 없음</div>'}
+      </div>
+    </div>`;
   });
-  if (sum) sum.textContent = '설비 ' + machines.length + '곳 · 남은 작업 ' + totRemain + '건';
+  if (sum) sum.textContent = '설비 ' + machines.length + '곳 · 남은 작업 ' + totRemain + '건 · (카드 클릭 시 상세)';
   grid.innerHTML = cards.join('');
 }
 
