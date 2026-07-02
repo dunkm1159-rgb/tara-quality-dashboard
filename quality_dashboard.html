@@ -2434,10 +2434,10 @@ function renderWip() {
       const cur = !curSeen; curSeen = true;
       const bg = cur ? 'background:#FFF8E1;border-left:3px solid #FF9500;padding-left:8px' : '';
       const badge = cur ? '<span style="background:#FF9500;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px">지금</span>' : '';
+      const dbg = cur ? `<div style="font-size:9.5px;color:#c93400;margin-top:2px">[확인용] 순부수 ${j.qty} · 통수 ${j.tong} · 작업수 ${j.workcnt} · 페이지 ${j.page}</div>` : '';
       return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);${bg}">
         <div style="font-size:12.5px;font-weight:600">${wipEsc(j.product)}${badge}</div>
-        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>
-      </div>`;
+        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>${dbg}</div>`;
     }).join('');
     return `<div class="card" style="padding:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
