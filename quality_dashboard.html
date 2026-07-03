@@ -2429,6 +2429,9 @@ function renderWip() {
     const doneN = jobs.filter(isDone).length;
     const remainN = jobs.filter(j => !isDone(j)).length;
     totRemain += remainN;
+    const bonmun = jobs.filter(j => (j.config || '').indexOf('본문') >= 0);
+    const bonDone = bonmun.filter(isDone).length;
+    const bonRemain = bonmun.length - bonDone;
     const curJob = jobs.find(j => !isDone(j));
     const curLine = curJob
       ? `<span style="color:#FF9500;font-weight:700">지금 ▸</span> ${wipEsc(curJob.product)}<span style="color:#86868b"> · ${wipEsc(curJob.config)}</span>`
@@ -2444,10 +2447,9 @@ function renderWip() {
       const cur = !curSeen; curSeen = true;
       const bg = cur ? 'background:#FFF8E1;border-left:3px solid #FF9500;padding-left:8px' : '';
       const badge = cur ? '<span style="background:#FF9500;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px">지금</span>' : '';
-      const dbg = cur ? `<div style="font-size:9.5px;color:#c93400;margin-top:2px">[확인용] 순부수 ${j.qty} · 통수 ${j.tong} · 작업수 ${j.workcnt} · 페이지 ${j.page}</div>` : '';
       return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);${bg}">
         <div style="font-size:12.5px;font-weight:600">${wipEsc(j.product)}${badge}</div>
-        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>${dbg}</div>`;
+        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div></div>`;
     }).join('');
     return `<div class="card" style="padding:14px">
       <div style="cursor:pointer" onclick="toggleWip('wipd-${mi}')">
@@ -2459,6 +2461,7 @@ function renderWip() {
           </div>
         </div>
         <div style="font-size:12px;line-height:1.4">${curLine}</div>
+        ${bonmun.length ? `<div style="font-size:11px;color:#86868b;margin-top:3px">📄 본문 완료 ${bonDone} · 남은 ${bonRemain}</div>` : ''}
       </div>
       <div id="wipd-${mi}" style="display:none;margin-top:10px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">
         ${rowsHtml || '<div style="color:#86868b;font-size:12px">작업 없음</div>'}
