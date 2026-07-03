@@ -2420,26 +2420,23 @@ function renderWip() {
     return;
   }
   const fmtDue = s => (s && String(s).length === 8) ? (String(s).slice(4,6)+'/'+String(s).slice(6,8)) : (s||'');
-  const isDone = j => (Number(j.close) >= 1) || (Number(j.tong) > 0 && Number(j.workcnt) >= Number(j.tong));
-  const jobPct = j => (Number(j.tong) > 0) ? Math.min(100, Math.round(Number(j.workcnt) / Number(j.tong) * 100)) : 0;
+  const isDone = j => (Number(j.tong) > 0 && Number(j.retong) === 0);
+  const isProg = j => (Number(j.workcnt) > 0 && Number(j.retong) > 0);
+  const pctOf = j => (Number(j.tong) > 0) ? Math.min(100, Math.round(Number(j.workcnt) / Number(j.tong) * 100)) : 0;
   const rank = n => /외부입고/.test(n) ? 3 : (/외주|대기/.test(n) ? 2 : (/(문화|제이드)/.test(n) ? 1 : 0));
   const machines = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
-  let totRemain = 0;
+  let totProg = 0;
   const cards = machines.map((m, mi) => {
     const jobs = (m.jobs || []).slice().sort((a,b)=>(a.sq||0)-(b.sq||0));
-    const doneN = jobs.filter(isDone).length;
-    const remainN = jobs.filter(j => !isDone(j)).length;
-    totRemain += remainN;
-    const bonmun = jobs.filter(j => (j.config || '').indexOf('본문') >= 0);
-    const bonDone = bonmun.filter(isDone).length;
-    const bonRemain = bonmun.length - bonDone;
-    const curJob = jobs.find(j => !isDone(j));
-    const curPct = curJob ? jobPct(curJob) : 0;
-    const curStat = curJob ? (curPct > 0 ? `<span style="color:#0071e3;font-weight:700"> · 진행중 ${curPct}%</span>` : '<span style="color:#86868b"> · 대기</span>') : '';
-    const curLine = curJob
-      ? `<span style="color:#FF9500;font-weight:700">지금 ▸</span> ${wipEsc(curJob.product)}<span style="color:#86868b"> · ${wipEsc(curJob.config)}</span>${curStat}`
-      : '<span style="color:#248a3d;font-weight:600">모두 완료 🎉</span>';
-    let curSeen = false;
+    const prog = jobs.filter(isProg);
+    const done = jobs.filter(isDone);
+    const waiting = jobs.filter(j => !isDone(j) && !isProg(j));
+    totProg += prog.length;
+    const curLine = prog.length
+      ? prog.map(j => `<span style="color:#0071e3;font-weight:700">▶ ${wipEsc(j.product)}</span><span style="color:#86868b"> · ${wipEsc(j.config)} · <b style="color:#0071e3">${pctOf(j)}%</b></span>`).join('<br>')
+      : (waiting.length
+          ? `<span style="color:#86868b">인쇄중 아님 · 다음 ▸ ${wipEsc(waiting[0].product)}</span>`
+          : '<span style="color:#248a3d;font-weight:600">작업 없음</span>');
     const rowsHtml = jobs.map(j => {
       if (isDone(j)) {
         return `<div style="padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
@@ -2447,32 +2444,34 @@ function renderWip() {
           <div style="font-size:10px;color:#d2d2d7;text-decoration:line-through">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}</div>
         </div>`;
       }
-      const cur = !curSeen; curSeen = true;
-      const bg = cur ? 'background:#FFF8E1;border-left:3px solid #FF9500;padding-left:8px' : '';
-      const pctTxt = cur ? (jobPct(j) > 0 ? (' ' + jobPct(j) + '%') : ' 대기') : '';
-      const badge = cur ? `<span style="background:#FF9500;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px">지금${pctTxt}</span>` : '';
-      return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);${bg}">
-        <div style="font-size:12.5px;font-weight:600">${wipEsc(j.product)}${badge}</div>
-        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div></div>`;
+      if (isProg(j)) {
+        return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);background:#EAF4FF;border-left:3px solid #0071e3;padding-left:8px">
+          <div style="font-size:12.5px;font-weight:600;color:#0071e3">${wipEsc(j.product)} <span style="background:#0071e3;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">진행중 ${pctOf(j)}%</span></div>
+          <div style="font-size:10.5px;color:#5a7fa6">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>
+        </div>`;
+      }
+      return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
+        <div style="font-size:12.5px;font-weight:600">${wipEsc(j.product)}</div>
+        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>
+      </div>`;
     }).join('');
     return `<div class="card" style="padding:14px">
       <div style="cursor:pointer" onclick="toggleWip('wipd-${mi}')">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-size:15px;font-weight:700">${wipEsc(m.name)} <span style="font-size:11px;color:#86868b">▾</span></div>
           <div style="display:flex;gap:5px">
-            <span style="background:#E8F5E9;color:#248a3d;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">완료 ${doneN}</span>
-            <span style="background:#FFF3E0;color:#E65100;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">남은 ${remainN}</span>
+            <span style="background:#EAF4FF;color:#0071e3;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">인쇄중 ${prog.length}</span>
+            <span style="background:#F2F2F7;color:#86868b;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">대기 ${waiting.length}</span>
           </div>
         </div>
-        <div style="font-size:12px;line-height:1.4">${curLine}</div>
-        ${bonmun.length ? `<div style="font-size:11px;color:#86868b;margin-top:3px">📄 본문 완료 ${bonDone} · 남은 ${bonRemain}</div>` : ''}
+        <div style="font-size:12px;line-height:1.5">${curLine}</div>
       </div>
       <div id="wipd-${mi}" style="display:none;margin-top:10px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">
         ${rowsHtml || '<div style="color:#86868b;font-size:12px">작업 없음</div>'}
       </div>
     </div>`;
   });
-  if (sum) sum.textContent = '설비 ' + machines.length + '곳 · 남은 작업 ' + totRemain + '건 · (카드 클릭 시 상세)';
+  if (sum) sum.textContent = '설비 ' + machines.length + '곳 · 인쇄중 ' + totProg + '건 · (카드 클릭 시 상세)';
   grid.innerHTML = cards.join('');
 }
 
