@@ -2420,7 +2420,8 @@ function renderWip() {
     return;
   }
   const fmtDue = s => (s && String(s).length === 8) ? (String(s).slice(4,6)+'/'+String(s).slice(6,8)) : (s||'');
-  const isDone = j => (Number(j.close) >= 1);
+  const isDone = j => (Number(j.close) >= 1) || (Number(j.tong) > 0 && Number(j.workcnt) >= Number(j.tong));
+  const jobPct = j => (Number(j.tong) > 0) ? Math.min(100, Math.round(Number(j.workcnt) / Number(j.tong) * 100)) : 0;
   const rank = n => /외부입고/.test(n) ? 3 : (/외주|대기/.test(n) ? 2 : (/(문화|제이드)/.test(n) ? 1 : 0));
   const machines = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
   let totRemain = 0;
@@ -2433,8 +2434,10 @@ function renderWip() {
     const bonDone = bonmun.filter(isDone).length;
     const bonRemain = bonmun.length - bonDone;
     const curJob = jobs.find(j => !isDone(j));
+    const curPct = curJob ? jobPct(curJob) : 0;
+    const curStat = curJob ? (curPct > 0 ? `<span style="color:#0071e3;font-weight:700"> · 진행중 ${curPct}%</span>` : '<span style="color:#86868b"> · 대기</span>') : '';
     const curLine = curJob
-      ? `<span style="color:#FF9500;font-weight:700">지금 ▸</span> ${wipEsc(curJob.product)}<span style="color:#86868b"> · ${wipEsc(curJob.config)}</span>`
+      ? `<span style="color:#FF9500;font-weight:700">지금 ▸</span> ${wipEsc(curJob.product)}<span style="color:#86868b"> · ${wipEsc(curJob.config)}</span>${curStat}`
       : '<span style="color:#248a3d;font-weight:600">모두 완료 🎉</span>';
     let curSeen = false;
     const rowsHtml = jobs.map(j => {
@@ -2446,7 +2449,8 @@ function renderWip() {
       }
       const cur = !curSeen; curSeen = true;
       const bg = cur ? 'background:#FFF8E1;border-left:3px solid #FF9500;padding-left:8px' : '';
-      const badge = cur ? '<span style="background:#FF9500;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px">지금</span>' : '';
+      const pctTxt = cur ? (jobPct(j) > 0 ? (' ' + jobPct(j) + '%') : ' 대기') : '';
+      const badge = cur ? `<span style="background:#FF9500;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px">지금${pctTxt}</span>` : '';
       return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);${bg}">
         <div style="font-size:12.5px;font-weight:600">${wipEsc(j.product)}${badge}</div>
         <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div></div>`;
