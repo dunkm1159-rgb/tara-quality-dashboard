@@ -2495,6 +2495,24 @@ function renderWip() {
 // ========================
 // 월간 리포트
 // ========================
+function monthlyTrendChart(id, labels, counts, costs) {
+  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch (e) {} }
+  const ctx = document.getElementById(id); if (!ctx) return;
+  chartInstances[id] = new Chart(ctx, {
+    data: { labels, datasets: [
+      { type: 'bar', label: '부적합 건수', data: counts, backgroundColor: '#0071e3', borderRadius: 5, yAxisID: 'y', order: 2 },
+      { type: 'line', label: '품질비용(만)', data: costs, borderColor: '#ff3b30', backgroundColor: '#ff3b30', borderWidth: 2, pointRadius: 2, tension: 0.3, yAxisID: 'y1', order: 1 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } },
+      scales: {
+        y: { beginAtZero: true, position: 'left', ticks: { font: { size: 10 } }, title: { display: true, text: '건수', font: { size: 10 } } },
+        y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10 } }, title: { display: true, text: '비용(만)', font: { size: 10 } } },
+        x: { ticks: { font: { size: 10 } } }
+      } }
+  });
+}
+
 function renderMonthly() {
   const sel = document.getElementById('monthly-sel');
   const body = document.getElementById('monthly-body');
@@ -2534,6 +2552,12 @@ function renderMonthly() {
   Object.values(gajebonSheets || {}).forEach(rows => (rows || []).forEach(r => {
     if ((r['요청내용'] || '').includes('가제본') && String(r['날짜'] || '').slice(0, 7) === curM) { gTotal++; if ((r['진행상태'] || '') === '완료') gDone++; }
   }));
+  // 최근 12개월 추이 시리즈
+  const asc = months.slice().reverse();
+  const last = asc.slice(-12);
+  const tLabels = last.map(mk => mk.slice(2).replace('-', '/'));
+  const tCounts = last.map(mk => cd.filter(r => monthKey(r) === mk).length);
+  const tCosts = last.map(mk => Math.round(cd.filter(r => monthKey(r) === mk).reduce((s, r) => s + cost(r), 0) / 10000));
   const card = (label, val, sub) => `<div class="card" style="padding:16px;flex:1;min-width:150px"><div style="font-size:12px;color:#86868b">${label}</div><div style="font-size:24px;font-weight:700;margin-top:4px">${val}</div><div style="font-size:11px;margin-top:2px">${sub || ''}</div></div>`;
   const tbl = (title, rows) => `<div class="card" style="padding:14px;flex:1;min-width:220px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">${title}</div>${rows.length ? rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.04)"><span>${wipEsc(k)}</span><span style="color:#86868b">${v.c}건 · ${man(v.cost)}만</span></div>`).join('') : '<div style="color:#ccc;font-size:12px">없음</div>'}</div>`;
   body.innerHTML = `
@@ -2542,6 +2566,10 @@ function renderMonthly() {
       ${card('품질비용', man(curCost) + '만원', '전월 대비 ' + delta(curCost, prevCost))}
       ${card('가제본', gTotal + '건', '완료 ' + gDone + ' / 진행 ' + (gTotal - gDone))}
     </div>
+    <div class="card" style="padding:14px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px">📈 월별 추이 (최근 12개월)</div>
+      <div style="height:240px"><canvas id="monthly-trend"></canvas></div>
+    </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
       ${tbl('공정별 TOP', top(curRows, r => claimToProc(r[9]), 6))}
       ${tbl('부적합 유형 TOP', top(curRows, r => r[8], 6))}
@@ -2549,6 +2577,7 @@ function renderMonthly() {
     </div>
     <div style="font-size:11px;color:#a1a1a6">※ 부적합·비용 = 클레임 DB / 가제본 = 해당 월 요청 건 / KPI 상세는 'KPI 현황' 탭. (기초 버전 — 항목 추가 가능)</div>
   `;
+  monthlyTrendChart('monthly-trend', tLabels, tCounts, tCosts);
 }
 
 function renderGajebonTable() {
