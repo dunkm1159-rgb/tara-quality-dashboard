@@ -387,6 +387,9 @@
       <button class="nav-item" id="nav-wip" onclick="showTab('wip',this)">
         <span class="nav-icon">🏭</span> 작업 진행중
       </button>
+      <button class="nav-item" id="nav-monthly" onclick="showTab('monthly',this)">
+        <span class="nav-icon">📅</span> 월간 리포트
+      </button>
     </div>
 
     <div class="sidebar-section">
@@ -936,6 +939,18 @@
       </div>
     </div>
 
+    <!-- ============ 월간 리포트 ============ -->
+    <div id="tab-monthly" class="tab">
+      <div class="section-header">
+        <div class="section-title">📅 월간 품질 리포트</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
+          <button class="icon-btn ghost" onclick="window.print()" title="인쇄/PDF">🖨️</button>
+        </div>
+      </div>
+      <div id="monthly-body"></div>
+    </div>
+
     <!-- ============ 작업 진행중 ============ -->
     <div id="tab-wip" class="tab">
       <div class="section-header">
@@ -1199,6 +1214,7 @@ const TAB_TITLES = {
   claim: '클레임 DB',
   gajebon: '가제본 현황',
   wip: '작업 진행중',
+  monthly: '월간 리포트',
   docs: '문서 관리',
 };
 
@@ -1222,6 +1238,7 @@ function showTab(name, btn) {
   if (name === 'register') initRegForm();
   if (name === 'nccost') renderNcCost();
   if (name === 'wip') renderWip();
+  if (name === 'monthly') renderMonthly();
 }
 
 // ========================
@@ -2473,6 +2490,65 @@ function renderWip() {
   });
   if (sum) sum.textContent = '설비 ' + machines.length + '곳 · 인쇄중 ' + totProg + '건 · (카드 클릭 시 상세)';
   grid.innerHTML = cards.join('');
+}
+
+// ========================
+// 월간 리포트
+// ========================
+function renderMonthly() {
+  const sel = document.getElementById('monthly-sel');
+  const body = document.getElementById('monthly-body');
+  if (!body) return;
+  const cd = (typeof claimData !== 'undefined' ? claimData : []);
+  const monthKey = r => {
+    const y = String(r[14] || '').slice(0, 4);
+    const d = String(r[0] || '');
+    let m;
+    if ((m = d.match(/^(\d{4})[-.\/](\d{1,2})/))) return m[1] + '-' + m[2].padStart(2, '0');
+    if ((m = d.match(/(\d{1,2})\s*월/)) && y) return y + '-' + m[1].padStart(2, '0');
+    if ((m = d.match(/[-.\/](\d{1,2})[-.\/]/)) && y) return y + '-' + m[1].padStart(2, '0');
+    return '';
+  };
+  const cost = r => (Number(r[12]) || 0) + (Number(r[13]) || 0);
+  const man = v => Math.round(v / 10000).toLocaleString();
+  const months = [...new Set(cd.map(monthKey).filter(Boolean))].sort().reverse();
+  if (!months.length) { body.innerHTML = '<div style="color:#86868b;padding:20px">클레임 데이터가 없습니다.</div>'; return; }
+  if (sel.options.length !== months.length) {
+    sel.innerHTML = months.map(m => `<option value="${m}">${m.split('-')[0]}년 ${m.split('-')[1]}월</option>`).join('');
+  }
+  const curM = sel.value || months[0];
+  if (!sel.value) sel.value = curM;
+  const [py, pm] = curM.split('-').map(Number);
+  const pd = new Date(py, pm - 2, 1);
+  const prevM = pd.getFullYear() + '-' + String(pd.getMonth() + 1).padStart(2, '0');
+  const curRows = cd.filter(r => monthKey(r) === curM);
+  const prevRows = cd.filter(r => monthKey(r) === prevM);
+  const curCost = curRows.reduce((s, r) => s + cost(r), 0);
+  const prevCost = prevRows.reduce((s, r) => s + cost(r), 0);
+  const delta = (a, b) => { if (!b) return a ? '<span style="color:#c93400">신규</span>' : '—'; const d = Math.round((a - b) / b * 100); return d > 0 ? `<span style="color:#c93400">▲${d}%</span>` : (d < 0 ? `<span style="color:#248a3d">▼${Math.abs(d)}%</span>` : '—'); };
+  const top = (rows, keyFn, n) => {
+    const m = {}; rows.forEach(r => { const k = keyFn(r) || '(미상)'; if (!m[k]) m[k] = { c: 0, cost: 0 }; m[k].c++; m[k].cost += cost(r); });
+    return Object.entries(m).sort((a, b) => b[1].c - a[1].c).slice(0, n);
+  };
+  let gTotal = 0, gDone = 0;
+  Object.values(gajebonSheets || {}).forEach(rows => (rows || []).forEach(r => {
+    if ((r['요청내용'] || '').includes('가제본') && String(r['날짜'] || '').slice(0, 7) === curM) { gTotal++; if ((r['진행상태'] || '') === '완료') gDone++; }
+  }));
+  const card = (label, val, sub) => `<div class="card" style="padding:16px;flex:1;min-width:150px"><div style="font-size:12px;color:#86868b">${label}</div><div style="font-size:24px;font-weight:700;margin-top:4px">${val}</div><div style="font-size:11px;margin-top:2px">${sub || ''}</div></div>`;
+  const tbl = (title, rows) => `<div class="card" style="padding:14px;flex:1;min-width:220px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">${title}</div>${rows.length ? rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.04)"><span>${wipEsc(k)}</span><span style="color:#86868b">${v.c}건 · ${man(v.cost)}만</span></div>`).join('') : '<div style="color:#ccc;font-size:12px">없음</div>'}</div>`;
+  body.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      ${card('부적합 건수', curRows.length + '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
+      ${card('품질비용', man(curCost) + '만원', '전월 대비 ' + delta(curCost, prevCost))}
+      ${card('가제본', gTotal + '건', '완료 ' + gDone + ' / 진행 ' + (gTotal - gDone))}
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      ${tbl('공정별 TOP', top(curRows, r => claimToProc(r[9]), 6))}
+      ${tbl('부적합 유형 TOP', top(curRows, r => r[8], 6))}
+      ${tbl('거래처 TOP', top(curRows, r => r[2], 6))}
+    </div>
+    <div style="font-size:11px;color:#a1a1a6">※ 부적합·비용 = 클레임 DB / 가제본 = 해당 월 요청 건 / KPI 상세는 'KPI 현황' 탭. (기초 버전 — 항목 추가 가능)</div>
+  `;
 }
 
 function renderGajebonTable() {
