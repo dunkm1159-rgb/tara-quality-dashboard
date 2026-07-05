@@ -2604,10 +2604,11 @@ function renderGajebonTable() {
     if (todayDone && !newCompletedSet.has(r['주문번호'])) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
-    // 완료만 보이기 = 완료 + 아직 가제본 안 만든 것 (날짜 넣으면 사라짐)
+    // 완료만 보이기 = 완료 + (가제본 안 만들었거나, 만든 뒤 다음 영업일까지)
     if (onlyDone) {
       if ((r['진행상태']||'') !== '완료') return false;
-      if (gajDate(r['주문번호']||'')) return false;
+      const gd0 = gajDate(r['주문번호']||'');
+      if (gd0 && !gajWithinGrace(gd0)) return false;
     }
     // 진행중만
     if (onlyProgress && (r['진행상태']||'') !== '진행중') return false;
@@ -2693,6 +2694,16 @@ function renderGajebonTable() {
 // ── 가제본 완료날짜 (구글시트 저장, ERP 자동수집과 무관하게 보존) ──
 let gajebonDateStore = {};   // 주문번호 -> 'YYYY-MM-DD'
 function gajDate(order){ return gajebonDateStore[order] || ''; }
+// 가제본 완료일이 '다음 영업일'까지면 계속 표시 (금요일 완료 → 월요일까지)
+function gajWithinGrace(g){
+  if (!g) return false;
+  const gd = new Date(String(g) + 'T00:00:00');
+  if (isNaN(gd.getTime())) return false;
+  let nb = new Date(gd); nb.setDate(nb.getDate() + 1);
+  while (nb.getDay() === 0 || nb.getDay() === 6) nb.setDate(nb.getDate() + 1); // 주말 건너뛰기
+  const today = new Date(new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }) + 'T00:00:00');
+  return today.getTime() <= nb.getTime();
+}
 function saveGajebonDate(order, date){
   if(!order) return;
   if(date){
