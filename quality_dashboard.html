@@ -2660,14 +2660,14 @@ function renderGajebonTable() {
     if (todayDone && !newCompletedSet.has(r['주문번호'])) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
-    // 완료만 보이기 = 완료 + (가제본 안 만들었거나, 만든 뒤 다음 영업일까지)
+    // 완료만 보이기 = (ERP완료 또는 가제본 완료처리) + 만든 뒤 다음 영업일까지
     if (onlyDone) {
-      if ((r['진행상태']||'') !== '완료') return false;
       const gd0 = gajDate(r['주문번호']||'');
+      if (!gd0 && (r['진행상태']||'') !== '완료') return false;
       if (gd0 && !gajWithinGrace(gd0)) return false;
     }
-    // 진행중만
-    if (onlyProgress && (r['진행상태']||'') !== '진행중') return false;
+    // 진행중만 (가제본 완료처리한 건 제외 - ERP 진행중이어도 완료로 봄)
+    if (onlyProgress && (gajDate(r['주문번호']||'') || (r['진행상태']||'') !== '진행중')) return false;
     // 가제본 만들 것 = 완료 + 가제본요청 있음 + 아직 가제본 안 만듦
     if (needGajebon) {
       if ((r['진행상태']||'') !== '완료') return false;
@@ -2711,7 +2711,7 @@ function renderGajebonTable() {
   const allRows = gajebonSheets[gajebonCurrentSheet] || [];
   tbody.innerHTML = filtered.map(r => {
     const origIdx = allRows.indexOf(r);
-    const status = r['진행상태'] || '';
+    const status = gajDate(r['주문번호']||'') ? '완료' : (r['진행상태'] || '');
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
     return `<tr>
