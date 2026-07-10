@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/tabler-icons.min.css">
 <style>
   /* ── 기본 리셋 ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,7 +45,7 @@
     letter-spacing: -0.02em;
     white-space: nowrap; overflow: hidden;
   }
-  .sidebar-logo .title span { color: #0071e3; }
+  .sidebar-logo .title span { color: #1E3A8A; }
 
   .sidebar-section { padding: 12px 0 4px; flex-shrink: 0; }
   .sidebar-section-label {
@@ -63,7 +64,7 @@
     border-radius: 8px; flex-shrink: 0;
   }
   .nav-item:hover { background: rgba(0,0,0,0.045); color: #1d1d1f; }
-  .nav-item.active { background: rgba(0,113,227,0.12); color: #0071e3; font-weight: 600; }
+  .nav-item.active { background: rgba(30,58,138,0.12); color: #1E3A8A; font-weight: 600; }
   .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
 
   /* ── 메인 영역 ── */
@@ -151,14 +152,14 @@
     background: #fff; color: #424245; font-size: 12px; cursor: pointer;
     transition: all 0.15s;
   }
-  .doc-filter.active { background: #0071e3; color: #fff; border-color: #0071e3; }
+  .doc-filter.active { background: #1E3A8A; color: #fff; border-color: #1E3A8A; }
   .doc-filter:hover:not(.active) { background: #f5f5f7; }
   .btn-blue {
-    padding: 7px 16px; background: #0071e3; color: #fff;
+    padding: 7px 16px; background: #1E3A8A; color: #fff;
     border: none; border-radius: 980px; font-size: 12px; cursor: pointer;
     transition: background 0.15s;
   }
-  .btn-blue:hover { background: #0077ed; }
+  .btn-blue:hover { background: #1e40af; }
   .doc-card {
     background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px;
     padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
@@ -169,7 +170,7 @@
   .doc-card-meta { font-size: 11px; color: #86868b; }
   .doc-card-actions { display: flex; gap: 8px; margin-top: 4px; }
   .doc-btn-open {
-    flex: 1; padding: 6px 0; background: #e3f1fd; color: #0071e3;
+    flex: 1; padding: 6px 0; background: #e3f1fd; color: #1E3A8A;
     border: none; border-radius: 8px; font-size: 12px; cursor: pointer;
   }
   .doc-btn-open:hover { background: #d2e7fc; }
@@ -208,7 +209,7 @@
   .badge-fail { background: #ffe5e3; color: #d70015; }
   .badge-high { background: #ffe5e3; color: #d70015; }
   .badge-mid { background: #ffefd6; color: #c93400; }
-  .badge-low { background: #e3f1fd; color: #0071e3; }
+  .badge-low { background: #e3f1fd; color: #1E3A8A; }
 
   /* ── 폼 ── */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -222,7 +223,7 @@
     background: #fff; color: #1d1d1f; outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #1E3A8A; box-shadow: 0 0 0 3px rgba(30,58,138,0.15); }
   .form-group textarea { resize: vertical; min-height: 70px; }
 
   /* ── 버튼 ── */
@@ -233,8 +234,8 @@
     border: 1px solid transparent; transition: all 0.15s;
     white-space: nowrap;
   }
-  .btn-primary { background: #0071e3; color: #fff; border-color: #0071e3; }
-  .btn-primary:hover { background: #0077ed; }
+  .btn-primary { background: #1E3A8A; color: #fff; border-color: #1E3A8A; }
+  .btn-primary:hover { background: #1e40af; }
   .btn-secondary { background: #f5f5f7; color: #1d1d1f; border-color: transparent; }
   .btn-secondary:hover { background: #e8e8ed; }
   .btn-danger { background: #fff; color: #d70015; border-color: #f5c0bd; }
@@ -281,7 +282,7 @@
     border-radius: 9px; font-size: 13px;
     background: #fff; outline: none;
   }
-  .filter-bar input:focus, .filter-bar select:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: #1E3A8A; box-shadow: 0 0 0 3px rgba(30,58,138,0.15); }
   .filter-bar input { flex: 1; min-width: 120px; }
 
   /* ── 시트/연도 탭 버튼 ── */
@@ -293,7 +294,7 @@
   }
   .gajebon-sheet-btn:hover, .claim-year-btn:hover, .ncr-src-btn:hover { color: #1d1d1f; }
   .gajebon-sheet-btn.active, .claim-year-btn.active, .ncr-src-btn.active {
-    color: #0071e3; border-bottom-color: #0071e3; font-weight: 600;
+    color: #1E3A8A; border-bottom-color: #1E3A8A; font-weight: 600;
   }
 
   /* ── 태그 ── */
@@ -308,8 +309,8 @@
     width: 34px; height: 34px; border-radius: 50%; border: none;
     font-size: 15px; cursor: pointer; flex-shrink: 0; transition: all 0.15s;
   }
-  .icon-btn.primary { background: #0071e3; color: #fff; }
-  .icon-btn.primary:hover { background: #0077ed; }
+  .icon-btn.primary { background: #1E3A8A; color: #fff; }
+  .icon-btn.primary:hover { background: #1e40af; }
   .icon-btn.ghost { background: #f5f5f7; color: #424245; }
   .icon-btn.ghost:hover { background: #e8e8ed; }
   .gj-toggle {
@@ -319,7 +320,7 @@
     cursor: pointer; white-space: nowrap; transition: all 0.15s;
   }
   .gj-toggle:hover { background: #f5f5f7; }
-  .gj-toggle.gj-on { background: #0071e3; color: #fff; border-color: #0071e3; }
+  .gj-toggle.gj-on { background: #1E3A8A; color: #fff; border-color: #1E3A8A; }
 
   /* ── 검사 항목 행 ── */
   .insp-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
@@ -368,53 +369,53 @@
 
     <div class="sidebar-section">
       <button class="nav-item active" id="nav-dashboard" onclick="showTab('dashboard',this)">
-        <span class="nav-icon">🏠</span> 홈
+        <span class="nav-icon"><i class="ti ti-home"></i></span> 홈
       </button>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">생산 현황</div>
       <button class="nav-item" id="nav-wip" onclick="showTab('wip',this)">
-        <span class="nav-icon">🏭</span> 작업 진행중
+        <span class="nav-icon"><i class="ti ti-building-factory-2"></i></span> 작업 진행중
       </button>
       <button class="nav-item" id="nav-gajebon" onclick="showTab('gajebon',this)">
-        <span class="nav-icon">📑</span> 가제본 현황
+        <span class="nav-icon"><i class="ti ti-book"></i></span> 가제본 현황
       </button>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">품질 관리</div>
       <button class="nav-item" id="nav-nccost" onclick="showTab('nccost',this)">
-        <span class="nav-icon">💰</span> 부적합 목표·성과
+        <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 부적합 목표·성과
       </button>
       <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
-        <span class="nav-icon">🎯</span> KPI 현황
+        <span class="nav-icon"><i class="ti ti-target"></i></span> KPI 현황
       </button>
       <button class="nav-item" id="nav-analysis" onclick="showTab('analysis',this)">
-        <span class="nav-icon">📊</span> 분석
+        <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 분석
       </button>
       <button class="nav-item" id="nav-claim" onclick="showTab('claim',this)">
-        <span class="nav-icon">📁</span> 클레임 DB
+        <span class="nav-icon"><i class="ti ti-folder"></i></span> 클레임 DB
       </button>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">리포트</div>
       <button class="nav-item" id="nav-monthly" onclick="showTab('monthly',this)">
-        <span class="nav-icon">📅</span> 월간 리포트
+        <span class="nav-icon"><i class="ti ti-calendar"></i></span> 월간 리포트
       </button>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">입력 · 문서</div>
       <button class="nav-item" id="nav-register" onclick="showTab('register',this)">
-        <span class="nav-icon">✏️</span> 클레임 등록
+        <span class="nav-icon"><i class="ti ti-edit"></i></span> 클레임 등록
       </button>
       <button class="nav-item" id="nav-kpi-reg" onclick="showTab('kpi-reg',this)">
-        <span class="nav-icon">📝</span> KPI 등록
+        <span class="nav-icon"><i class="ti ti-file-text"></i></span> KPI 등록
       </button>
       <button class="nav-item" id="nav-docs" onclick="showTab('docs',this)">
-        <span class="nav-icon">📂</span> 문서 관리
+        <span class="nav-icon"><i class="ti ti-files"></i></span> 문서 관리
       </button>
     </div>
   </aside>
@@ -449,7 +450,7 @@
       <div class="card" style="margin-bottom:16px;padding:16px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div class="card-title" style="margin:0;">📋 오늘 가제본 현황 <span id="gajebon-today-date" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
-          <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:11px;color:#0071e3;background:none;border:none;cursor:pointer;text-decoration:underline;">전체 보기 →</button>
+          <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:11px;color:#1E3A8A;background:none;border:none;cursor:pointer;text-decoration:underline;">전체 보기 →</button>
         </div>
         <div id="gajebon-today-summary" style="display:flex;gap:16px;flex-wrap:wrap;">
           <span style="color:#aaa;font-size:13px;">데이터 로딩 중...</span>
@@ -482,7 +483,7 @@
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div class="card-title" style="margin:0;cursor:pointer;user-select:none" onclick="(function(){var t=document.getElementById('dash-equip-table');var c=document.getElementById('equip-caret');var on=t.style.display==='none';t.style.display=on?'block':'none';c.textContent=on?'▼':'▶';})()">
-            <span id="equip-caret" style="color:#0071e3">▶</span> 설비별 부적합 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 제목 클릭해 펼치기</span>
+            <span id="equip-caret" style="color:#1E3A8A">▶</span> 설비별 부적합 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 제목 클릭해 펼치기</span>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <select id="dash-equip-year" onchange="renderEquipDefect()" style="font-size:12px;padding:3px 8px;border:1px solid #ddd;border-radius:5px;color:#555">
@@ -502,18 +503,18 @@
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#0071e3;margin:0;">KPI 데이터 등록</h2>
+      <h2 style="font-size:18px;font-weight:700;color:#1E3A8A;margin:0;">KPI 데이터 등록</h2>
       <p style="font-size:12px;color:#888;margin:4px 0 0;">품질개선팀 운영전략 엑셀 파일에 직접 저장</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div id="kpi-excel-status" style="font-size:12px;color:#888;">엑셀 미연결</div>
-      <button onclick="connectKpiExcel()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 KPI 엑셀 연결</button>
+      <button onclick="connectKpiExcel()" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 KPI 엑셀 연결</button>
     </div>
   </div>
 
   <!-- 섹션 탭 -->
   <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e5e5e0;">
-    <button class="kpi-reg-tab-btn" id="kbtn-top3" onclick="switchKpiRegTab('top3',this)" style="background:none;border:none;border-bottom:3px solid #0071e3;padding:8px 16px 9px;font-size:13px;font-weight:600;color:#0071e3;cursor:pointer;margin-bottom:-2px;">TOP3 불량</button>
+    <button class="kpi-reg-tab-btn" id="kbtn-top3" onclick="switchKpiRegTab('top3',this)" style="background:none;border:none;border-bottom:3px solid #1E3A8A;padding:8px 16px 9px;font-size:13px;font-weight:600;color:#1E3A8A;cursor:pointer;margin-bottom:-2px;">TOP3 불량</button>
     <button class="kpi-reg-tab-btn" id="kbtn-cost" onclick="switchKpiRegTab('cost',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">품질비용</button>
     <button class="kpi-reg-tab-btn" id="kbtn-sop" onclick="switchKpiRegTab('sop',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">SOP 준수율</button>
     <button class="kpi-reg-tab-btn" id="kbtn-std" onclick="switchKpiRegTab('std',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">표준 위반</button>
@@ -551,7 +552,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="top3-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiTop3()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiTop3()" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="top3-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -599,7 +600,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="cost-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiCost()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiCost()" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="cost-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -627,7 +628,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="sop-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiSop()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiSop()" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="sop-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -655,7 +656,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="std-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiStd()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiStd()" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="std-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -687,7 +688,7 @@
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="color-msg" style="font-size:12px;color:#27ae60;"></span>
-      <button onclick="saveKpiColor()" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="saveKpiColor()" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">저장</button>
     </div>
     <div id="color-reg-log" style="margin-top:16px;"></div>
   </div>
@@ -700,7 +701,7 @@
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#0071e3;margin:0;">클레임 등록</h2>
+      <h2 style="font-size:18px;font-weight:700;color:#1E3A8A;margin:0;">클레임 등록</h2>
       <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 클라우드(구글시트)에 자동 저장</p>
     </div>
   </div>
@@ -802,12 +803,12 @@
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <div id="reg-msg" style="font-size:13px;color:#666;"></div>
       <button type="button" onclick="resetClaimRegForm()" style="background:#f5f5f7;color:#555;border:none;border-radius:6px;padding:9px 18px;font-size:13px;cursor:pointer;">초기화</button>
-      <button type="submit" style="background:#0071e3;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">✅ 등록</button>
+      <button type="submit" style="background:#1E3A8A;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">✅ 등록</button>
     </div>
   </form>
 
   <div style="margin-top:24px;background:#fff;border-radius:10px;border:1px solid #e0e3e8;padding:20px;">
-    <h3 style="font-size:14px;font-weight:700;color:#0071e3;margin:0 0 12px;">이번 세션 등록 내역</h3>
+    <h3 style="font-size:14px;font-weight:700;color:#1E3A8A;margin:0 0 12px;">이번 세션 등록 내역</h3>
     <div id="reg-log" style="font-size:13px;color:#888;">아직 등록된 항목 없음</div>
   </div>
 
@@ -1165,7 +1166,7 @@
       <div id="docs-preview-wrap" style="display:none;margin-top:24px;">
         <div class="card" style="padding:0;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #e8eaed;">
-            <span id="docs-preview-title" style="font-size:14px;font-weight:600;color:#0071e3;"></span>
+            <span id="docs-preview-title" style="font-size:14px;font-weight:600;color:#1E3A8A;"></span>
             <button onclick="closeDocsPreview()" style="background:none;border:none;color:#888;cursor:pointer;font-size:16px;">✕</button>
           </div>
           <div id="docs-preview-body" style="padding:16px;overflow-x:auto;max-height:480px;overflow-y:auto;font-size:13px;"></div>
@@ -1236,7 +1237,7 @@ function renderOpenTabs() {
     const closable = (n !== 'dashboard');
     return `<div onclick="showTab('${n}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;
         font-size:12.5px;padding:6px 10px;border-radius:8px 8px 0 0;user-select:none;
-        ${on ? 'background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-bottom:2px solid #0071e3;font-weight:600;color:#1d1d1f'
+        ${on ? 'background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-bottom:2px solid #1E3A8A;font-weight:600;color:#1d1d1f'
              : 'background:rgba(0,0,0,0.04);color:#6e6e73'}">
       <span>${TAB_TITLES[n] || n}</span>
       ${closable ? `<span onclick="event.stopPropagation();closeTab('${n}')" title="닫기" style="color:#aaa;font-size:14px;line-height:1;padding:0 2px">×</span>` : ''}
@@ -1314,7 +1315,7 @@ function renderHomeSignal() {
       <div style="font-size:11px;color:#86868b;margin-top:2px">${sub}</div>
     </div>`;
   el.innerHTML =
-    card('지금 인쇄중', printing + '<span style="font-size:14px;color:#86868b"> 건</span>', '설비 실시간 진행', printing > 0 ? '#0071e3' : '#86868b') +
+    card('지금 인쇄중', printing + '<span style="font-size:14px;color:#86868b"> 건</span>', '설비 실시간 진행', printing > 0 ? '#1E3A8A' : '#86868b') +
     card('가제본 남은', needGaj + '<span style="font-size:14px;color:#86868b"> 건</span>', '완료됐고 가제본 만들 것', needGaj > 3 ? '#ff9500' : '#34c759') +
     card('이번달 부적합', ncCount + '<span style="font-size:14px;color:#86868b"> 건</span>', now.getMonth() + 1 + '월 클레임/부적합', ncCount > 20 ? '#ff3b30' : ncCount > 10 ? '#ff9500' : '#34c759') +
     card('이번달 품질비용', ncCost.toLocaleString() + '<span style="font-size:14px;color:#86868b"> 만원</span>', now.getMonth() + 1 + '월 누적', ncCost > 600 ? '#ff3b30' : ncCost > 300 ? '#ff9500' : '#34c759');
@@ -1412,7 +1413,7 @@ function renderDashCharts(year) {
   const clientMap = {};
   d.forEach(r=>{ const c=r[2]||'기타'; clientMap[c]=(clientMap[c]||0)+1; });
   const clientS = Object.entries(clientMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if (clientS.length) renderBarH('dash-chartClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#0071e3');
+  if (clientS.length) renderBarH('dash-chartClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#1E3A8A');
 }
 
 // ── 부적합 목표·성과 ──
@@ -1443,7 +1444,7 @@ function renderNcCost(){
   const costs = NC_MONTHS.map(m => (yd.months[m]?.cost||0)/10000);
   ncMixedChart('nccost-chart-trend', NC_MONTHS, costs, goals);
   const procSum = NC_PROCS.map(p => Object.values(yd.months).reduce((s,mv)=>s+(mv.proc?.[p]||0),0)/10000);
-  renderBar('nccost-chart-proc', NC_PROCS, procSum, NC_PROCS.map(()=>'#0071e3'));
+  renderBar('nccost-chart-proc', NC_PROCS, procSum, NC_PROCS.map(()=>'#1E3A8A'));
   const cnts = NC_MONTHS.map(m => yd.months[m]?.cnt||0);
   renderBar('nccost-chart-cnt', NC_MONTHS, cnts, NC_MONTHS.map(()=>'#34c759'));
   ncYearChart('nccost-chart-year', years, years.map(y=>D[y].target/10000), years.map(y=>D[y].totalCost/10000));
@@ -1493,8 +1494,8 @@ function renderNcProcDetail(year){
         <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:#f5f5f7">
           <div style="font-size:13px;font-weight:600;color:#1d1d1f;flex-shrink:0;width:64px">${p}</div>
-          <div style="flex:1;background:#e3e6ea;border-radius:5px;height:10px;"><div style="width:${pw}%;background:#0071e3;height:10px;border-radius:5px;"></div></div>
-          <div style="font-size:13px;font-weight:700;color:#0071e3;flex-shrink:0;width:48px;text-align:right">${pd.cnt}건</div>
+          <div style="flex:1;background:#e3e6ea;border-radius:5px;height:10px;"><div style="width:${pw}%;background:#1E3A8A;height:10px;border-radius:5px;"></div></div>
+          <div style="font-size:13px;font-weight:700;color:#1E3A8A;flex-shrink:0;width:48px;text-align:right">${pd.cnt}건</div>
         </div>
         <div style="display:${idx===0?'block':'none'};padding:8px 10px 10px;">${bars}</div>
       </div>`;
@@ -1505,7 +1506,7 @@ function ncMixedChart(id, labels, costs, goals){
   const ctx = document.getElementById(id); if (!ctx) return;
   chartInstances[id] = new Chart(ctx, {
     data: { labels, datasets: [
-      { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#0071e3', borderRadius:6, order:2 },
+      { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#1E3A8A', borderRadius:6, order:2 },
       { type:'line', label:'목표(만)', data:goals, borderColor:'#ff3b30', backgroundColor:'#ff3b30', borderWidth:2, pointRadius:0, tension:0.3, order:1 }
     ]},
     options: { responsive:true, maintainAspectRatio:false,
@@ -1555,7 +1556,7 @@ function renderEquipDefect() {
   const maxTotal = equipList[0]?.[1].total || 1;
 
   // 부적합유형 색상 매핑
-  const typeColors = ['#0071e3','#c0392b','#d4860a','#1a7a4a','#7B4EA0','#888','#e67e22','#16a085'];
+  const typeColors = ['#1E3A8A','#c0392b','#d4860a','#1a7a4a','#7B4EA0','#888','#e67e22','#16a085'];
 
   // 전체 등장하는 유형 목록
   const allTypes = [...new Set(filtered.map(r=>(r[8]||'').trim()||'기타'))];
@@ -1589,10 +1590,10 @@ function renderEquipDefect() {
     tableHTML += `
       <tr style="border-bottom:1px solid #f0f0ee;cursor:pointer" onclick="toggleEquipDetail('equip-detail-${idx}', this)" title="클릭하여 상세 내역 보기">
         <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#333">${equip}</td>
-        <td style="text-align:center;font-size:14px;font-weight:700;color:#0071e3">${info.total}</td>
+        <td style="text-align:center;font-size:14px;font-weight:700;color:#1E3A8A">${info.total}</td>
         <td style="padding:0 8px">
           <div style="background:#f0f0ee;border-radius:3px;height:8px">
-            <div style="background:#0071e3;height:8px;border-radius:3px;width:${pct}%;opacity:0.75"></div>
+            <div style="background:#1E3A8A;height:8px;border-radius:3px;width:${pct}%;opacity:0.75"></div>
           </div>
         </td>
         ${typeCells}
@@ -1618,7 +1619,7 @@ function renderEquipDefect() {
                     <td style="padding:5px 8px;white-space:nowrap">${r[0]||'-'}</td>
                     <td style="padding:5px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[2]}">${r[2]||'-'}</td>
                     <td style="padding:5px 8px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[4]}">${r[4]||'-'}</td>
-                    <td style="padding:5px 8px"><span style="font-size:10px;background:#e8f0fb;color:#0071e3;border-radius:3px;padding:1px 5px">${r[7]||'-'}</span></td>
+                    <td style="padding:5px 8px"><span style="font-size:10px;background:#e8f0fb;color:#1E3A8A;border-radius:3px;padding:1px 5px">${r[7]||'-'}</span></td>
                     <td style="padding:5px 8px">${r[8]||'-'}</td>
                     <td style="padding:5px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[10]}">${r[10]||'-'}</td>
                     <td style="padding:5px 8px;text-align:right;white-space:nowrap">${typeof r[12]==='number' ? r[12].toLocaleString()+'원' : '-'}</td>
@@ -1749,12 +1750,12 @@ function renderNcrTable() {
 
   const sevLabel = s => s==='high'?'높음':s==='mid'?'중간':'낮음';
   const srcBadge = n => n.source==='claim'
-    ? '<span style="font-size:10px;background:#e8f0fb;color:#0071e3;border-radius:3px;padding:1px 6px">클레임DB</span>'
+    ? '<span style="font-size:10px;background:#e8f0fb;color:#1E3A8A;border-radius:3px;padding:1px 6px">클레임DB</span>'
     : '<span style="font-size:10px;background:#e8f5e9;color:#1a7a4a;border-radius:3px;padding:1px 6px">직접입력</span>';
 
   tbody.innerHTML = filtered.map(n => `
     <tr>
-      <td style="font-weight:500;color:#0071e3;font-size:11px;white-space:nowrap">${n.id}</td>
+      <td style="font-weight:500;color:#1E3A8A;font-size:11px;white-space:nowrap">${n.id}</td>
       <td style="white-space:nowrap;font-size:12px">${n.date||'-'}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${n.process}">${n.process}</td>
       <td style="font-size:12px">${n.type}</td>
@@ -1855,7 +1856,7 @@ function renderInspTable() {
     const rate = i.qty ? (i.defect/i.qty*100).toFixed(1) : '0.0';
     return `
       <tr>
-        <td style="font-weight:500;color:#0071e3">${i.id}</td>
+        <td style="font-weight:500;color:#1E3A8A">${i.id}</td>
         <td>${i.lot}</td>
         <td>${i.product}</td>
         <td>${i.date}</td>
@@ -1961,7 +1962,7 @@ function renderCapaTable() {
   if (!capaList.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">데이터 없음</td></tr>'; return; }
   tbody.innerHTML = capaList.map(c => `
     <tr>
-      <td style="font-weight:500;color:#0071e3">${c.id}</td>
+      <td style="font-weight:500;color:#1E3A8A">${c.id}</td>
       <td>${c.ncr||'-'}</td>
       <td>${c.date}</td>
       <td>${c.due||'-'}</td>
@@ -1997,7 +1998,7 @@ function deleteCapa(id) {
 let chartInstances = {};
 
 // 색상 팔레트
-const CHART_PALETTE = ['#0071e3','#27ae60','#e67e22','#c0392b','#7B4EA0','#16a085','#2980b9','#f39c12','#8e44ad','#1abc9c','#e74c3c','#3498db'];
+const CHART_PALETTE = ['#1E3A8A','#27ae60','#e67e22','#c0392b','#7B4EA0','#16a085','#2980b9','#f39c12','#8e44ad','#1abc9c','#e74c3c','#3498db'];
 
 function renderPie(id, labels, data) {
   if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
@@ -2035,13 +2036,13 @@ function renderLine(id, labels, data) {
       type: 'line',
       data: { labels, datasets: [{
         label: '건수', data,
-        borderColor: '#0071e3',
+        borderColor: '#1E3A8A',
         backgroundColor: ctx2 => {
           const g = ctx2.chart.ctx.createLinearGradient(0,0,0,200);
           g.addColorStop(0,'rgba(24,95,165,0.25)'); g.addColorStop(1,'rgba(24,95,165,0.01)');
           return g;
         },
-        tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#0071e3',
+        tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#1E3A8A',
         pointBorderColor: '#fff', pointBorderWidth: 2, pointHoverRadius: 7
       }]},
       options: {
@@ -2085,7 +2086,7 @@ function renderBarH(id, labels, data, color) {
   if (wrap) wrap.style.height = Math.max(200, labels.length * 34 + 40) + 'px';
 
   const maxVal = Math.max(...data, 1);
-  const base = color || '#0071e3';
+  const base = color || '#1E3A8A';
   const bgColors = data.map(v => {
     const alpha = 0.45 + (v / maxVal) * 0.55;
     return base + Math.round(alpha * 255).toString(16).padStart(2,'0');
@@ -2129,7 +2130,7 @@ function renderBar(id, labels, data, colors) {
   try {
     chartInstances[id] = new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ data, backgroundColor: colors || '#0071e3', borderRadius: 5 }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors || '#1E3A8A', borderRadius: 5 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}건` } } },
@@ -2184,7 +2185,7 @@ function renderCharts() {
     type: 'bar',
     data: { labels: years, datasets: [{
       data: yearCounts,
-      backgroundColor: years.map(y => y===selYear ? '#c0392b' : '#0071e3'),
+      backgroundColor: years.map(y => y===selYear ? '#c0392b' : '#1E3A8A'),
       borderRadius: 7,
       borderSkipped: false,
     }]},
@@ -2260,7 +2261,7 @@ function renderCharts() {
     const clientCnt = {};
     d.forEach(r => { const c = (r[2]||'').trim(); if(c) clientCnt[c]=(clientCnt[c]||0)+1; });
     const clientS = Object.entries(clientCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    if (clientS.length) renderBarH('chartClaimClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#0071e3');
+    if (clientS.length) renderBarH('chartClaimClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#1E3A8A');
   } catch(e) { console.warn('chartClaimClient error', e); }
 }
 
@@ -2553,7 +2554,7 @@ function renderWip() {
     const waiting = jobs.filter(j => !isDone(j) && !isProg(j));
     totProg += prog.length;
     const curLine = prog.length
-      ? prog.map(j => `<span style="color:#0071e3;font-weight:700">▶ ${wipEsc(j.product)}</span><span style="color:#86868b"> · ${wipEsc(j.config)} · <b style="color:#0071e3">${pctOf(j)}%</b></span>`).join('<br>')
+      ? prog.map(j => `<span style="color:#1E3A8A;font-weight:700">▶ ${wipEsc(j.product)}</span><span style="color:#86868b"> · ${wipEsc(j.config)} · <b style="color:#1E3A8A">${pctOf(j)}%</b></span>`).join('<br>')
       : (waiting.length
           ? `<span style="color:#86868b">인쇄중 아님 · 다음 ▸ ${wipEsc(waiting[0].product)}</span>`
           : '<span style="color:#248a3d;font-weight:600">작업 없음</span>');
@@ -2565,8 +2566,8 @@ function renderWip() {
         </div>`;
       }
       if (isProg(j)) {
-        return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);background:#EAF4FF;border-left:3px solid #0071e3;padding-left:8px">
-          <div style="font-size:12.5px;font-weight:600;color:#0071e3">${wipEsc(j.product)} <span style="background:#0071e3;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">진행중 ${pctOf(j)}%</span></div>
+        return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);background:#EAF4FF;border-left:3px solid #1E3A8A;padding-left:8px">
+          <div style="font-size:12.5px;font-weight:600;color:#1E3A8A">${wipEsc(j.product)} <span style="background:#1E3A8A;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">진행중 ${pctOf(j)}%</span></div>
           <div style="font-size:10.5px;color:#5a7fa6">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>
         </div>`;
       }
@@ -2580,7 +2581,7 @@ function renderWip() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-size:15px;font-weight:700">${wipEsc(m.name)} <span style="font-size:11px;color:#86868b">▾</span></div>
           <div style="display:flex;gap:5px">
-            <span style="background:#EAF4FF;color:#0071e3;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">인쇄중 ${prog.length}</span>
+            <span style="background:#EAF4FF;color:#1E3A8A;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">인쇄중 ${prog.length}</span>
             <span style="background:#F2F2F7;color:#86868b;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">대기 ${waiting.length}</span>
           </div>
         </div>
@@ -2603,7 +2604,7 @@ function monthlyTrendChart(id, labels, counts, costs) {
   const ctx = document.getElementById(id); if (!ctx) return;
   chartInstances[id] = new Chart(ctx, {
     data: { labels, datasets: [
-      { type: 'bar', label: '부적합 건수', data: counts, backgroundColor: '#0071e3', borderRadius: 5, yAxisID: 'y', order: 2 },
+      { type: 'bar', label: '부적합 건수', data: counts, backgroundColor: '#1E3A8A', borderRadius: 5, yAxisID: 'y', order: 2 },
       { type: 'line', label: '품질비용(만)', data: costs, borderColor: '#ff3b30', backgroundColor: '#ff3b30', borderWidth: 2, pointRadius: 2, tension: 0.3, yAxisID: 'y1', order: 1 }
     ]},
     options: { responsive: true, maintainAspectRatio: false,
@@ -2933,7 +2934,7 @@ function partCell(order, part) {
   if (gajebonEditOrder === order) {
     const on = isApplicable(order, part);
     return `<td onclick="togglePartApplicable('${order}','${part}')" style="text-align:center;cursor:pointer;padding:6px 4px;background:#eef6ff;">
-      <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#0071e3':'#d2d2d7'};background:${on?'#0071e3':'#fff'};color:#fff;font-size:12px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
+      <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#1E3A8A':'#d2d2d7'};background:${on?'#1E3A8A':'#fff'};color:#fff;font-size:12px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
   }
   // 비해당 파트: 회색 잠금
   if (!isApplicable(order, part))
@@ -2963,7 +2964,7 @@ function renderPartTemplates() {
     const cells = GAJEBON_PARTS.map(p => {
       const on = app.includes(p);
       return `<td onclick="toggleTemplatePart(${i},'${p}')" style="text-align:center;cursor:pointer;padding:8px 4px;">
-        <div style="display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#0071e3':'#d2d2d7'};background:${on?'#0071e3':'#fff'};color:#fff;font-size:13px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
+        <div style="display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#1E3A8A':'#d2d2d7'};background:${on?'#1E3A8A':'#fff'};color:#fff;font-size:13px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
     }).join('');
     return `<tr>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${escAttr(name)}">${escAttr(name)}</td>
@@ -3287,9 +3288,9 @@ function updateRegLog() {
     `<div style="display:flex; gap:12px; align-items:center; padding:6px 0; border-bottom:1px solid #f5f5f7;">
       <span style="color:#aaa; font-size:11px; min-width:20px;">${i+1}</span>
       <span style="color:#555;">${r.date}</span>
-      <span style="font-weight:600; color:#0071e3;">${r.client}</span>
+      <span style="font-weight:600; color:#1E3A8A;">${r.client}</span>
       <span style="color:#555; flex:1;">${r.product.slice(0,30)}${r.product.length>30?'…':''}</span>
-      <span style="background:#e8f0fb; color:#0071e3; border-radius:4px; padding:2px 7px; font-size:11px;">${r.qual}</span>
+      <span style="background:#e8f0fb; color:#1E3A8A; border-radius:4px; padding:2px 7px; font-size:11px;">${r.qual}</span>
       <span style="background:#fdf0e8; color:#c0392b; border-radius:4px; padding:2px 7px; font-size:11px;">${r.def}</span>
       <span style="font-size:11px; color:${r.saved?'#27ae60':'#e67e22'};">${r.saved?'💾 엑셀저장':'📋 메모리만'}</span>
     </div>`
@@ -3325,7 +3326,7 @@ function renderGajebonTodaySummary() {
           ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
         </div>
         <div style="background:#f5f7fa;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #e0e3e8;">
-          <div style="font-size:24px;font-weight:700;color:#0071e3;">${total}</div>
+          <div style="font-size:24px;font-weight:700;color:#1E3A8A;">${total}</div>
           <div style="font-size:12px;color:#555;margin-top:2px;">전체</div>
         </div>
       </div>
@@ -3366,7 +3367,7 @@ function renderGajebonTodaySummary() {
         ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
       </div>
       <div style="background:#f5f7fa;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #e0e3e8;">
-        <div style="font-size:24px;font-weight:700;color:#0071e3;">${total}</div>
+        <div style="font-size:24px;font-weight:700;color:#1E3A8A;">${total}</div>
         <div style="font-size:12px;color:#555;margin-top:2px;">전체</div>
       </div>
     </div>
@@ -3417,8 +3418,8 @@ function switchKpiRegTab(name, btn) {
     b.style.fontWeight = '400';
   });
   document.getElementById('kpi-reg-' + name).style.display = '';
-  btn.style.borderBottomColor = '#0071e3';
-  btn.style.color = '#0071e3';
+  btn.style.borderBottomColor = '#1E3A8A';
+  btn.style.color = '#1E3A8A';
   btn.style.fontWeight = '600';
 }
 
@@ -3935,7 +3936,7 @@ function renderKpi() {
     if(ctx) chartInstances.chartCostMonthly = new Chart(ctx, {
       type:'bar',
       data:{labels:MONS, datasets:[
-        {label:'실제비용', data:costVals, backgroundColor:costVals.map(v=>v>monthTarget?'#c0392b':'#0071e3'), borderRadius:4},
+        {label:'실제비용', data:costVals, backgroundColor:costVals.map(v=>v>monthTarget?'#c0392b':'#1E3A8A'), borderRadius:4},
         {label:'월목표', data:Array(12).fill(monthTarget), type:'line', borderColor:'#e67e22', borderWidth:2, borderDash:[4,4], pointRadius:0, fill:false}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
@@ -3958,7 +3959,7 @@ function renderKpi() {
     const procs = Object.keys(equipCostMap).sort((a,b)=>equipCostMap[b]-equipCostMap[a]).slice(0,7);
     if(!procs.length){procs.push('데이터없음');}
     const pVals = procs.map(p=>equipCostMap[p]||0);
-    const pColors = ['#0071e3','#7B4EA0','#888','#27ae60','#e67e22','#c0392b','#16a085'];
+    const pColors = ['#1E3A8A','#7B4EA0','#888','#27ae60','#e67e22','#c0392b','#16a085'];
     if(ctx) chartInstances.chartCostProcess = new Chart(ctx, {
       type:'doughnut',
       data:{labels:procs, datasets:[{data:pVals, backgroundColor:pColors, borderWidth:2, borderColor:'#fff'}]},
@@ -3978,7 +3979,7 @@ function renderKpi() {
     if(ctx) chartInstances.chartSOP = new Chart(ctx, {
       type:'line',
       data:{labels:sopM, datasets:[
-        {label:'준수율', data:sopA, borderColor:'#0071e3', backgroundColor:'rgba(24,95,165,0.1)', borderWidth:2, pointRadius:4, tension:0.3, fill:true},
+        {label:'준수율', data:sopA, borderColor:'#1E3A8A', backgroundColor:'rgba(24,95,165,0.1)', borderWidth:2, pointRadius:4, tension:0.3, fill:true},
         {label:'목표(95점)', data:Array(sopM.length).fill(95), borderColor:'#27ae60', borderWidth:1.5, borderDash:[5,5], pointRadius:0, fill:false}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
@@ -4177,7 +4178,7 @@ async function previewExcelDoc(file) {
       wb.SheetNames.forEach((sn, i) => {
         html += `<button onclick="switchDocsSheet(this,'${sn.replace(/'/g,"\\'")}',window.__docsWB)" `
               + `style="padding:4px 12px;font-size:12px;border-radius:4px;cursor:pointer;`
-              + (i===0 ? 'background:#0071e3;color:#fff;border:1px solid #0071e3;'
+              + (i===0 ? 'background:#1E3A8A;color:#fff;border:1px solid #1E3A8A;'
                        : 'background:#fff;color:#555;border:1px solid #ccc;')
               + `">${sn}</button>`;
       });
@@ -4195,8 +4196,8 @@ function switchDocsSheet(btn, sheetName, wb) {
   btn.parentElement.querySelectorAll('button').forEach(b => {
     b.style.background='#fff'; b.style.color='#555'; b.style.border='1px solid #ccc';
   });
-  btn.style.background='#0071e3';  btn.style.color = '#fff';
-  btn.style.border = '1px solid #0071e3';
+  btn.style.background='#1E3A8A';  btn.style.color = '#fff';
+  btn.style.border = '1px solid #1E3A8A';
   renderDocsSheet(sheetName, wb);
 }
 
@@ -4217,7 +4218,7 @@ function renderDocsSheet(sheetName, wb) {
       const tag = isHead ? 'th' : 'td';
       const bg = isHead ? '' : (r % 2 === 0 ? 'background:#f8f9fa;' : 'background:#fff;');
       const style = isHead
-        ? 'background:#0071e3;color:#fff;padding:6px 10px;border:1px solid #2d3f6b;white-space:nowrap;text-align:left;'
+        ? 'background:#1E3A8A;color:#fff;padding:6px 10px;border:1px solid #2d3f6b;white-space:nowrap;text-align:left;'
         : bg + 'padding:5px 10px;border:1px solid #e0e0e0;white-space:nowrap;';
       html += '<' + tag + ' style="' + style + '">' + v + '</' + tag + '>';
     }
@@ -4244,7 +4245,7 @@ function renderDocsList() {
     const cardId = 'doc-card-' + doc.id;
     return '<div id="' + cardId + '" class="card" style="padding:16px;cursor:pointer;" onclick="openDocFile(&quot;' + doc.id + '&quot;)">'
       + '<div style="font-size:32px;margin-bottom:8px">' + icon + '</div>'
-      + '<div style="font-size:13px;font-weight:600;color:#0071e3;margin-bottom:4px;word-break:break-all">' + doc.name + '</div>'
+      + '<div style="font-size:13px;font-weight:600;color:#1E3A8A;margin-bottom:4px;word-break:break-all">' + doc.name + '</div>'
       + '<div style="font-size:11px;color:#666;margin-bottom:10px">' + cat + '</div>'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
       +   '<span style="font-size:11px;color:#999">' + size + (size && date ? ' &middot; ' : '') + date + '</span>'
