@@ -96,7 +96,7 @@
 
   /* ── 콘텐츠 영역 ── */
   .content {
-    flex: 1; padding: 20px 24px;
+    flex: 1; padding: 24px 28px;
     overflow-y: auto; overflow-x: hidden;
     min-height: 0;
   }
@@ -112,11 +112,13 @@
     gap: 12px; margin-bottom: 20px;
   }
   .metric {
-    background: #fff; border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 14px; padding: 18px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    background: #fff; border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 16px; padding: 18px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     min-width: 0; overflow: hidden;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
   }
+  .metric:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.07); transform: translateY(-1px); }
   .metric .label { font-size: 12px; color: #86868b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .metric .value { font-size: 28px; font-weight: 600; color: #1d1d1f; white-space: nowrap; letter-spacing: -0.02em; }
   .metric .sub { font-size: 12px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -130,9 +132,9 @@
 
   /* ── 카드 ── */
   .card {
-    background: #fff; border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 14px; padding: 20px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    background: #fff; border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 16px; padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     min-width: 0; overflow: hidden;
   }
   .card-title {
@@ -244,7 +246,7 @@
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
   }
-  .section-title { font-size: 15px; font-weight: 600; white-space: nowrap; }
+  .section-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
 
   /* ── 폼 패널 ── */
   .form-panel {
