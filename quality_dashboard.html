@@ -426,6 +426,9 @@
       <div class="topbar-meta" id="topbar-meta">타라TPS 품질QMS</div>
     </div>
 
+    <!-- 열린 탭 바 (브라우저 탭 방식) -->
+    <div id="open-tabbar" style="display:flex;align-items:center;gap:6px;padding:8px 16px 0;flex-wrap:wrap;background:transparent"></div>
+
     <!-- 콘텐츠 -->
     <main class="content">
 
@@ -1206,7 +1209,7 @@ const monthData = [3,5,4,7,14,4,0,0,0,0,0,0];
 // Tab navigation
 // ========================
 const TAB_TITLES = {
-  dashboard: '대시보드',
+  dashboard: '홈',
   analysis: '분석',
   kpi: 'KPI 현황',
   nccost: '부적합 목표·성과',
@@ -1215,9 +1218,39 @@ const TAB_TITLES = {
   wip: '작업 진행중',
   monthly: '월간 리포트',
   docs: '문서 관리',
+  register: '클레임 등록',
+  'kpi-reg': 'KPI 등록',
 };
 
+let openTabs = ['dashboard'];   // 열려있는 탭 목록 (홈은 항상)
+
+function renderOpenTabs() {
+  const bar = document.getElementById('open-tabbar');
+  if (!bar) return;
+  const active = document.querySelector('.tab.active');
+  const activeName = active ? active.id.replace('tab-', '') : 'dashboard';
+  bar.innerHTML = openTabs.map(n => {
+    const on = (n === activeName);
+    const closable = (n !== 'dashboard');
+    return `<div onclick="showTab('${n}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;
+        font-size:12.5px;padding:6px 10px;border-radius:8px 8px 0 0;user-select:none;
+        ${on ? 'background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-bottom:2px solid #0071e3;font-weight:600;color:#1d1d1f'
+             : 'background:rgba(0,0,0,0.04);color:#6e6e73'}">
+      <span>${TAB_TITLES[n] || n}</span>
+      ${closable ? `<span onclick="event.stopPropagation();closeTab('${n}')" title="닫기" style="color:#aaa;font-size:14px;line-height:1;padding:0 2px">×</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function closeTab(name) {
+  openTabs = openTabs.filter(n => n !== name);
+  const wasActive = document.getElementById('tab-'+name)?.classList.contains('active');
+  if (wasActive) showTab(openTabs[openTabs.length - 1] || 'dashboard');
+  else renderOpenTabs();
+}
+
 function showTab(name, btn) {
+  if (!openTabs.includes(name)) openTabs.push(name);
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
@@ -1225,6 +1258,7 @@ function showTab(name, btn) {
   if (navBtn) navBtn.classList.add('active');
   const titleEl = document.getElementById('topbar-title');
   if (titleEl) titleEl.textContent = TAB_TITLES[name] || name;
+  renderOpenTabs();
   if (name === 'dashboard') refreshDash();
   if (name === 'analysis') renderCharts();
   if (name === 'kpi') renderKpi();
