@@ -365,38 +365,15 @@
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">메인</div>
       <button class="nav-item active" id="nav-dashboard" onclick="showTab('dashboard',this)">
-        <span class="nav-icon">🏠</span> 대시보드
+        <span class="nav-icon">🏠</span> 홈
       </button>
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">분석</div>
-      
-      
-      
-      <button class="nav-item" id="nav-analysis" onclick="showTab('analysis',this)">
-        <span class="nav-icon">📊</span> 분석
-      </button>
-      <button class="nav-item" id="nav-nccost" onclick="showTab('nccost',this)">
-        <span class="nav-icon">💰</span> 부적합 목표·성과
-      </button>
-      <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
-        <span class="nav-icon">🎯</span> KPI 현황
-      </button>
+      <div class="sidebar-section-label">생산 현황</div>
       <button class="nav-item" id="nav-wip" onclick="showTab('wip',this)">
         <span class="nav-icon">🏭</span> 작업 진행중
-      </button>
-      <button class="nav-item" id="nav-monthly" onclick="showTab('monthly',this)">
-        <span class="nav-icon">📅</span> 월간 리포트
-      </button>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-label">데이터</div>
-      <button class="nav-item" id="nav-claim" onclick="showTab('claim',this)">
-        <span class="nav-icon">📁</span> 클레임 DB
       </button>
       <button class="nav-item" id="nav-gajebon" onclick="showTab('gajebon',this)">
         <span class="nav-icon">📑</span> 가제본 현황
@@ -404,17 +381,36 @@
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">입력</div>
+      <div class="sidebar-section-label">품질 관리</div>
+      <button class="nav-item" id="nav-nccost" onclick="showTab('nccost',this)">
+        <span class="nav-icon">💰</span> 부적합 목표·성과
+      </button>
+      <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
+        <span class="nav-icon">🎯</span> KPI 현황
+      </button>
+      <button class="nav-item" id="nav-analysis" onclick="showTab('analysis',this)">
+        <span class="nav-icon">📊</span> 분석
+      </button>
+      <button class="nav-item" id="nav-claim" onclick="showTab('claim',this)">
+        <span class="nav-icon">📁</span> 클레임 DB
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">리포트</div>
+      <button class="nav-item" id="nav-monthly" onclick="showTab('monthly',this)">
+        <span class="nav-icon">📅</span> 월간 리포트
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">입력 · 문서</div>
       <button class="nav-item" id="nav-register" onclick="showTab('register',this)">
         <span class="nav-icon">✏️</span> 클레임 등록
       </button>
       <button class="nav-item" id="nav-kpi-reg" onclick="showTab('kpi-reg',this)">
         <span class="nav-icon">📝</span> KPI 등록
       </button>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-label">문서</div>
       <button class="nav-item" id="nav-docs" onclick="showTab('docs',this)">
         <span class="nav-icon">📂</span> 문서 관리
       </button>
@@ -439,6 +435,8 @@
         <div class="section-title">이번 달 현황 <span style="font-size:12px;color:#aaa;font-weight:400" id="dash-month"></span></div>
         <button class="btn btn-secondary btn-sm" onclick="refreshDash()">↻ 새로고침</button>
       </div>
+
+      <div id="home-signal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px"></div>
 
       <div class="metrics" id="dash-metrics"></div>
 
@@ -1245,7 +1243,49 @@ function showTab(name, btn) {
 // ========================
 // Dashboard
 // ========================
+function renderHomeSignal() {
+  const el = document.getElementById('home-signal');
+  if (!el) return;
+  const now = new Date();
+  const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  // 1) 지금 인쇄중 (작업수>0 & 남은통수>0)
+  let printing = 0;
+  const sd = window.SCHEDULE_DATA;
+  if (sd && sd.machines) sd.machines.forEach(m => (m.jobs || []).forEach(j => {
+    if (Number(j.workcnt) > 0 && Number(j.retong) > 0) printing++;
+  }));
+  // 2) 가제본 남을 것 (완료 + 가제본요청 + 아직 안 만듦)
+  let needGaj = 0;
+  Object.values(gajebonSheets || {}).forEach(rows => (rows || []).forEach(r => {
+    if ((r['진행상태'] || '') === '완료' && (r['요청내용'] || '').includes('가제본') && !gajDate(r['주문번호'] || '')) needGaj++;
+  }));
+  // 3) 이번달 부적합 건수 / 4) 이번달 품질비용
+  const isClaim = r => (r[7] || '').trim() === '클레임';
+  const monthKey = r => {
+    const y = String(r[14] || '').slice(0, 4); const d = String(r[0] || ''); let m;
+    if ((m = d.match(/^(\d{4})[-.\/](\d{1,2})/))) return m[1] + '-' + m[2].padStart(2, '0');
+    if ((m = d.match(/(\d{1,2})\s*월/)) && y) return y + '-' + m[1].padStart(2, '0');
+    return '';
+  };
+  const cd = (typeof claimData !== 'undefined' ? claimData : []);
+  const monRows = cd.filter(r => monthKey(r) === ym);
+  const ncCount = monRows.length;
+  const ncCost = Math.round(monRows.reduce((s, r) => s + (Number(r[12]) || 0) + (Number(r[13]) || 0), 0) / 10000);
+  const card = (label, val, sub, color) =>
+    `<div style="background:var(--surface-1,#f5f5f7);border-radius:12px;padding:14px 16px;border-left:4px solid ${color}">
+      <div style="font-size:12px;color:#86868b;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${color}"></span>${label}</div>
+      <div style="font-size:26px;font-weight:700;margin-top:4px;color:#1d1d1f">${val}</div>
+      <div style="font-size:11px;color:#86868b;margin-top:2px">${sub}</div>
+    </div>`;
+  el.innerHTML =
+    card('지금 인쇄중', printing + '<span style="font-size:14px;color:#86868b"> 건</span>', '설비 실시간 진행', printing > 0 ? '#0071e3' : '#86868b') +
+    card('가제본 남은', needGaj + '<span style="font-size:14px;color:#86868b"> 건</span>', '완료됐고 가제본 만들 것', needGaj > 3 ? '#ff9500' : '#34c759') +
+    card('이번달 부적합', ncCount + '<span style="font-size:14px;color:#86868b"> 건</span>', now.getMonth() + 1 + '월 클레임/부적합', ncCount > 20 ? '#ff3b30' : ncCount > 10 ? '#ff9500' : '#34c759') +
+    card('이번달 품질비용', ncCost.toLocaleString() + '<span style="font-size:14px;color:#86868b"> 만원</span>', now.getMonth() + 1 + '월 누적', ncCost > 600 ? '#ff3b30' : ncCost > 300 ? '#ff9500' : '#34c759');
+}
+
 function refreshDash() {
+  renderHomeSignal();
   const now = new Date();
   const thisYear = String(now.getFullYear());
   const thisMon  = now.getMonth(); // 0-indexed
