@@ -73,14 +73,7 @@
   }
 
   /* ── 상단 바 ── */
-  .topbar {
-    background: rgba(255,255,255,0.8); backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: 1px solid rgba(0,0,0,0.07);
-    padding: 0 28px; height: 52px; min-height: 52px; max-height: 52px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0; overflow: hidden; gap: 16px;
-    position: relative; z-index: 5;
-  }
+  .topbar { display: none; }
   .topbar-title {
     font-size: 15px; font-weight: 600; color: #1d1d1f;
     letter-spacing: -0.02em;
@@ -428,7 +421,7 @@
     </div>
 
     <!-- 열린 탭 바 (브라우저 탭 방식) -->
-    <div id="open-tabbar" style="display:flex;align-items:center;gap:6px;padding:8px 16px 0;flex-wrap:wrap;background:transparent"></div>
+    <div id="open-tabbar" style="display:flex;align-items:center;gap:6px;padding:10px 20px 0;flex-wrap:wrap;background:#fbfbfd;border-bottom:1px solid rgba(0,0,0,0.06)"></div>
 
     <!-- 콘텐츠 -->
     <main class="content">
@@ -957,7 +950,7 @@
         <div class="section-title">📅 월간 품질 리포트</div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
-          <button class="icon-btn ghost" onclick="window.print()" title="인쇄/PDF">🖨️</button>
+          <button class="btn btn-secondary btn-sm" onclick="generateGiahnPdf()"><i class="ti ti-file-text"></i> 기안용 PDF</button>
         </div>
       </div>
       <div id="monthly-body"></div>
@@ -2646,6 +2639,81 @@ function monthlyTrendChart(id, labels, counts, costs) {
         x: { ticks: { font: { size: 10 } } }
       } }
   });
+}
+
+function giahnMonthKey(r) {
+  const y = String(r[14] || '').slice(0, 4); const d = String(r[0] || ''); let m;
+  if ((m = d.match(/^(\d{4})[-.\/](\d{1,2})/))) return m[1] + '-' + m[2].padStart(2, '0');
+  if ((m = d.match(/(\d{1,2})\s*월/)) && y) return y + '-' + m[1].padStart(2, '0');
+  return '';
+}
+
+function generateGiahnPdf() {
+  const sel = document.getElementById('monthly-sel');
+  const curM = sel ? sel.value : '';
+  if (!curM) { alert('먼저 월을 선택하세요.'); return; }
+  const cd = (typeof claimData !== 'undefined' ? claimData : []);
+  const cost = r => (Number(r[12]) || 0) + (Number(r[13]) || 0);
+  const man = v => Math.round(v / 10000).toLocaleString();
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const rows = cd.filter(r => giahnMonthKey(r) === curM);
+  const [yy, mm] = curM.split('-');
+  const pd = new Date(Number(yy), Number(mm) - 2, 1);
+  const prevM = pd.getFullYear() + '-' + String(pd.getMonth() + 1).padStart(2, '0');
+  const prevRows = cd.filter(r => giahnMonthKey(r) === prevM);
+  const curCost = rows.reduce((s, r) => s + cost(r), 0);
+  const prevCost = prevRows.reduce((s, r) => s + cost(r), 0);
+  const delta = (a, b) => !b ? (a ? '신규' : '-') : ((a - b >= 0 ? '▲' : '▼') + Math.abs(Math.round((a - b) / b * 100)) + '%');
+  const top = (keyFn, n) => {
+    const m = {}; rows.forEach(r => { const k = keyFn(r) || '(미상)'; m[k] = m[k] || { c: 0, cost: 0 }; m[k].c++; m[k].cost += cost(r); });
+    return Object.entries(m).sort((a, b) => b[1].c - a[1].c).slice(0, n);
+  };
+  const tbl = (title, arr) => `<h3>${title}</h3><table class="data"><thead><tr><th>구분</th><th>건수</th><th>비용(만원)</th></tr></thead><tbody>${arr.length ? arr.map(([k, v]) => `<tr><td>${esc(k)}</td><td style="text-align:center">${v.c}</td><td style="text-align:right">${man(v.cost)}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:#999">데이터 없음</td></tr>'}</tbody></table>`;
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${yy}년 ${Number(mm)}월 품질 월간보고</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    * { box-sizing: border-box; }
+    body { font-family:'Malgun Gothic','맑은 고딕',sans-serif; color:#1a1a1a; font-size:12px; line-height:1.5; }
+    h1 { text-align:center; font-size:21px; margin:0 0 4px; letter-spacing:-0.5px; }
+    .sub { text-align:center; color:#666; font-size:12px; margin-bottom:6px; }
+    .approve { border-collapse:collapse; float:right; }
+    .approve td { border:1px solid #333; width:64px; text-align:center; font-size:11px; padding:2px; }
+    .approve .h { height:20px; background:#f2f2f2; font-weight:bold; }
+    .approve .s { height:54px; }
+    .info { width:100%; border-collapse:collapse; margin:10px 0 16px; font-size:12px; }
+    .info td { border:1px solid #ddd; padding:5px 10px; }
+    .info .lbl { background:#f7f7f7; width:80px; font-weight:bold; }
+    .kpi { display:flex; gap:12px; margin:12px 0 18px; }
+    .kpi div.b { flex:1; border:1px solid #cfd8dc; border-radius:8px; padding:12px; text-align:center; }
+    .kpi .v { font-size:22px; font-weight:bold; margin:4px 0 2px; }
+    h3 { font-size:14px; margin:18px 0 6px; border-left:4px solid #17A2B8; padding-left:8px; }
+    table.data { width:100%; border-collapse:collapse; font-size:11px; }
+    table.data th, table.data td { border:1px solid #ccc; padding:5px 8px; }
+    table.data th { background:#f2f2f2; }
+    .foot { margin-top:22px; font-size:10.5px; color:#888; border-top:1px solid #eee; padding-top:8px; }
+  </style></head><body>
+  <table class="approve"><tr><td class="h">담당</td><td class="h">검토</td><td class="h">승인</td></tr><tr><td class="s"></td><td class="s"></td><td class="s"></td></tr></table>
+  <div style="clear:both"></div>
+  <h1>${yy}년 ${Number(mm)}월 품질 월간보고서</h1>
+  <div class="sub">타라티피에스 품질관리팀</div>
+  <table class="info">
+    <tr><td class="lbl">대상 월</td><td>${yy}년 ${Number(mm)}월</td><td class="lbl">작성일</td><td>${today}</td></tr>
+    <tr><td class="lbl">작성 부서</td><td>품질관리팀</td><td class="lbl">기준</td><td>클레임/부적합 DB 집계</td></tr>
+  </table>
+  <div class="kpi">
+    <div class="b"><div>부적합 건수</div><div class="v">${rows.length} 건</div><div style="color:#666">전월 대비 ${delta(rows.length, prevRows.length)}</div></div>
+    <div class="b"><div>품질비용</div><div class="v">${man(curCost)} 만원</div><div style="color:#666">전월 대비 ${delta(curCost, prevCost)}</div></div>
+  </div>
+  ${tbl('1. 공정별 부적합 현황 (TOP)', top(r => claimToProc(r[9]), 8))}
+  ${tbl('2. 부적합 유형별 현황 (TOP)', top(r => r[8], 8))}
+  ${tbl('3. 거래처별 현황 (TOP)', top(r => r[2], 8))}
+  <div class="foot">※ 본 보고서는 품질QMS 대시보드의 클레임/부적합 데이터를 자동 집계하여 생성되었습니다.</div>
+  <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { alert('팝업이 차단됐어요. 팝업 허용 후 다시 눌러주세요.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
 }
 
 function renderMonthly() {
