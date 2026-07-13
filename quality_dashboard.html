@@ -19,59 +19,57 @@
   }
 
   /* ── 전체 레이아웃 ── */
-  .app { display: flex; height: 100vh; overflow: hidden; }
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
   /* ── 사이드바 ── */
   .sidebar {
-    width: 230px; min-width: 230px; flex-shrink: 0;
-    background: #fbfbfd;
-    border-right: 1px solid rgba(0,0,0,0.07);
-    display: flex; flex-direction: column;
-    height: 100vh;
-    overflow-y: auto; overflow-x: hidden;
+    width: 100%; flex-shrink: 0;
+    background: #17A2B8;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex; flex-direction: row; align-items: center;
+    height: 54px; min-height: 54px;
+    overflow-x: auto; overflow-y: hidden;
     position: relative; z-index: 10;
+    padding: 0 14px; gap: 1px;
   }
+  .sidebar::-webkit-scrollbar { height: 0; }
   .sidebar-logo {
-    padding: 22px 20px 16px;
-    overflow: hidden; flex-shrink: 0;
+    padding: 0 18px 0 4px; flex-shrink: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    margin-right: 4px;
   }
   .sidebar-logo .brand {
-    font-size: 11px; color: #86868b;
-    letter-spacing: 0.3px; margin-bottom: 3px;
-    white-space: nowrap; overflow: hidden;
+    font-size: 10px; color: rgba(255,255,255,0.72);
+    letter-spacing: 0.3px; margin-bottom: 1px;
+    white-space: nowrap;
   }
   .sidebar-logo .title {
-    font-size: 17px; font-weight: 600; color: #1d1d1f;
-    letter-spacing: -0.02em;
-    white-space: nowrap; overflow: hidden;
+    font-size: 15px; font-weight: 600; color: #fff;
+    letter-spacing: -0.02em; white-space: nowrap;
   }
-  .sidebar-logo .title span { color: #17A2B8; }
+  .sidebar-logo .title span { color: #d7f0f5; }
 
-  .sidebar-section { padding: 12px 0 4px; flex-shrink: 0; }
-  .sidebar-section-label {
-    font-size: 11px; color: #86868b;
-    letter-spacing: 0.2px;
-    padding: 0 22px 6px; font-weight: 600;
-    white-space: nowrap; overflow: hidden;
-  }
+  .sidebar-section { display: flex; flex-direction: row; align-items: center; padding: 0; flex-shrink: 0; gap: 1px; }
+  .sidebar-section + .sidebar-section { margin-left: 8px; padding-left: 9px; border-left: 1px solid rgba(255,255,255,0.22); }
+  .sidebar-section-label { display: none; }
   .nav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px; margin: 1px 10px; color: #424245;
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 12px; margin: 0 1px; color: rgba(255,255,255,0.86);
     cursor: pointer; font-size: 13px; font-weight: 500;
-    border: none; background: none; width: calc(100% - 20px); text-align: left;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border: none; background: none; width: auto; text-align: left;
+    white-space: nowrap;
     transition: background 0.15s, color 0.15s;
     border-radius: 8px; flex-shrink: 0;
   }
-  .nav-item:hover { background: rgba(0,0,0,0.045); color: #1d1d1f; }
-  .nav-item.active { background: rgba(23,162,184,0.12); color: #17A2B8; font-weight: 600; }
-  .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-item:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  .nav-item.active { background: #fff; color: #17A2B8; font-weight: 600; }
+  .nav-icon { font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; }
 
   /* ── 메인 영역 ── */
   .main-area {
-    flex: 1; min-width: 0;
+    flex: 1; min-width: 0; min-height: 0;
     display: flex; flex-direction: column;
-    height: 100vh; overflow: hidden;
+    overflow: hidden;
   }
 
   /* ── 상단 바 ── */
