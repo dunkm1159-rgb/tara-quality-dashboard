@@ -457,6 +457,15 @@
         </div>
       </div>
 
+      <!-- 지금 인쇄 중 -->
+      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="card-title" style="margin:0;"><i class="ti ti-printer"></i> 지금 인쇄 중 <span id="home-wip-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
+          <button onclick="showTab('wip',document.getElementById('nav-wip'))" style="font-size:11px;color:#17A2B8;background:none;border:none;cursor:pointer;text-decoration:underline;">전체 보기 →</button>
+        </div>
+        <div id="home-wip-list"></div>
+      </div>
+
       <div class="grid2" style="margin-bottom:16px;">
         <div class="card">
           <div class="card-title">최근 클레임 <span style="font-size:11px;font-weight:400;color:#aaa">최신 5건</span></div>
@@ -1321,8 +1330,32 @@ function renderHomeSignal() {
     card('이번달 품질비용', ncCost.toLocaleString() + '<span style="font-size:14px;color:#86868b"> 만원</span>', now.getMonth() + 1 + '월 누적', ncCost > 600 ? '#ff3b30' : ncCost > 300 ? '#ff9500' : '#34c759');
 }
 
+function renderHomeWip() {
+  const list = document.getElementById('home-wip-list');
+  const cnt = document.getElementById('home-wip-count');
+  if (!list) return;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const sd = window.SCHEDULE_DATA;
+  const prog = [];
+  if (sd && sd.machines) sd.machines.forEach(m => (m.jobs || []).forEach(j => {
+    if (Number(j.workcnt) > 0 && Number(j.retong) > 0)
+      prog.push({ name: m.name, product: j.product, config: j.config, pct: Math.min(100, Math.round(Number(j.workcnt) / Number(j.tong) * 100)) });
+  }));
+  if (cnt) cnt.textContent = prog.length ? (prog.length + '건 진행 중') : '';
+  if (!prog.length) { list.innerHTML = '<div style="color:#aaa;font-size:13px">지금 인쇄 중인 작업이 없어요</div>'; return; }
+  list.innerHTML = prog.slice(0, 6).map(j => `
+    <div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#17A2B8">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.name)} · ${esc(j.product)}</span>
+        <span style="flex-shrink:0;margin-left:8px">${j.pct}%</span>
+      </div>
+      <div style="height:6px;background:#eef0f2;border-radius:3px;margin-top:3px"><div style="width:${j.pct}%;height:6px;background:#17A2B8;border-radius:3px"></div></div>
+    </div>`).join('');
+}
+
 function refreshDash() {
   renderHomeSignal();
+  renderHomeWip();
   const now = new Date();
   const thisYear = String(now.getFullYear());
   const thisMon  = now.getMonth(); // 0-indexed
