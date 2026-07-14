@@ -1103,6 +1103,7 @@
             <thead><tr>
               <th style="text-align:center">순위</th><th>담당자</th>
               <th style="text-align:center">총 사고</th>
+              <th style="text-align:center">불량금액<br>(만원)</th>
               <th style="text-align:center">면책</th><th style="text-align:center">경고</th>
               <th style="text-align:center">중대경고</th><th style="text-align:center">치명적위반</th>
               <th>주요 설비</th>
@@ -1121,6 +1122,7 @@
               <th style="white-space:nowrap">담당자</th>
               <th style="text-align:center;white-space:nowrap">판정등급</th>
               <th style="white-space:nowrap">설비</th>
+              <th style="text-align:center;white-space:nowrap">금액(만원)</th>
               <th>제품 / 사고 내용</th>
             </tr></thead>
             <tbody id="worker-detail-tbody"></tbody>
@@ -1308,7 +1310,8 @@ function renderWorker(skipTabs) {
 
   // 등급 요약 카드 (연도 전체 기준) — 클릭하면 해당 등급만 필터
   const lvCnt = {1:0,2:0,3:0,4:0};
-  yearRows.forEach(r => { if (r[3]) lvCnt[r[3]] = (lvCnt[r[3]]||0) + 1; });
+  let yearCost = 0;
+  yearRows.forEach(r => { if (r[3]) lvCnt[r[3]] = (lvCnt[r[3]]||0) + 1; yearCost += (r[8]||0); });
   const mcard = (lv, label, val, color) => {
     const on = (workerLevel === lv);
     return `<div class="metric" style="cursor:pointer;padding:10px 12px;${on ? 'outline:2.5px solid '+(color||'#17A2B8')+';outline-offset:-2px' : ''}" onclick="setWorkerLevel(${lv})">
@@ -1320,7 +1323,8 @@ function renderWorker(skipTabs) {
     mcard(1, '면책 (Lv1)', lvCnt[1], LV_COLORS[1]) +
     mcard(2, '경고 (Lv2)', lvCnt[2], LV_COLORS[2]) +
     mcard(3, '중대경고 (Lv3)', lvCnt[3], LV_COLORS[3]) +
-    mcard(4, '치명적위반 (Lv4)', lvCnt[4], LV_COLORS[4]);
+    mcard(4, '치명적위반 (Lv4)', lvCnt[4], LV_COLORS[4]) +
+    `<div class="metric" style="padding:10px 12px"><div class="label" style="font-size:11px;margin-bottom:2px">불량금액 합계</div><div class="value" style="font-size:19px;color:#c0392b">${Math.round(yearCost/10000).toLocaleString()}만원</div></div>`;
 
   // 등급 필터 적용
   const rows = workerLevel ? yearRows.filter(r => r[3] === workerLevel) : yearRows;
@@ -1334,8 +1338,9 @@ function renderWorker(skipTabs) {
   rows.forEach(r => {
     const names = String(r[1]).split(/[,，、\/·]/).map(s => s.trim()).filter(Boolean);
     names.forEach(k => {
-      emp[k] = emp[k] || { total:0, lv:{1:0,2:0,3:0,4:0}, eq:{} };
+      emp[k] = emp[k] || { total:0, lv:{1:0,2:0,3:0,4:0}, eq:{}, cost:0 };
       emp[k].total++; emp[k].lv[r[3]||0] = (emp[k].lv[r[3]||0]||0)+1;
+      emp[k].cost += (r[8]||0);
       if (r[4]) emp[k].eq[r[4]] = (emp[k].eq[r[4]]||0)+1;
     });
   });
@@ -1350,10 +1355,11 @@ function renderWorker(skipTabs) {
       <td style="text-align:center;color:#888">${i+1}</td>
       <td style="font-weight:600">${name}</td>
       <td style="text-align:center;font-weight:700">${v.total}</td>
+      <td style="text-align:right;color:#c0392b;font-weight:600">${v.cost?Math.round(v.cost/10000).toLocaleString():'-'}</td>
       ${cell(v.lv[1],LV_COLORS[1])}${cell(v.lv[2],LV_COLORS[2])}${cell(v.lv[3],LV_COLORS[3])}${cell(v.lv[4],LV_COLORS[4])}
       <td style="color:#666;font-size:12px">${topEq||'-'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
 
   // 사고 상세 목록 (현재 필터 = 연도 + 등급)
   const wEsc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -1365,8 +1371,9 @@ function renderWorker(skipTabs) {
       <td style="white-space:nowrap;font-weight:600">${wEsc(r[1])}</td>
       <td style="text-align:center;white-space:nowrap"><span style="color:${LV_COLORS[r[3]]||'#666'};font-weight:600">${LV_NAMES[r[3]]||r[2]||''}</span></td>
       <td style="white-space:nowrap;color:#666">${wEsc(r[4])}</td>
+      <td style="text-align:right;white-space:nowrap;color:#c0392b">${r[8]?Math.round(r[8]/10000).toLocaleString():'-'}</td>
       <td style="color:#444">${wEsc(r[5])}</td>
-    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">해당 없음</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#999;padding:16px">해당 없음</td></tr>';
   }
   const dnote = document.getElementById('worker-detail-note');
   if (dnote) dnote.textContent = workerLevel ? (LV_NAMES[workerLevel] + ' ' + rows.length + '건') : ('전체 ' + rows.length + '건');
