@@ -1077,7 +1077,7 @@
         <div class="section-title">작업자별 품질사고 현황</div>
         <div style="font-size:12px;color:#888" id="worker-updated"></div>
       </div>
-      <div style="font-size:12.5px;color:#666;margin-bottom:14px">품질사고 관리대장 기준 · 판정등급: <b>면책</b>(Lv1) · <b>주의</b>(Lv2) · <b>견책</b>(Lv3) · <b>엄중경고</b>(Lv4)</div>
+      <div style="font-size:12.5px;color:#666;margin-bottom:14px">품질사고 관리대장 기준 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
 
       <!-- 연도 탭 -->
       <div style="display:flex;gap:4px;margin:0 0 18px;border-bottom:2px solid #e5e5e0" id="worker-year-tabs"></div>
@@ -1097,14 +1097,14 @@
       </div>
 
       <div class="card" style="margin-top:18px">
-        <div class="card-title">작업자별 상세 (사고 많은 순)</div>
+        <div class="card-title">작업자별 상세 (사고 많은 순) <span id="worker-filter-note" style="font-size:12px;font-weight:600;margin-left:8px"></span></div>
         <div style="overflow-x:auto">
           <table class="data-table" id="worker-table" style="width:100%;font-size:13px">
             <thead><tr>
               <th style="text-align:center">순위</th><th>담당자</th>
               <th style="text-align:center">총 사고</th>
-              <th style="text-align:center">면책</th><th style="text-align:center">주의</th>
-              <th style="text-align:center">견책</th><th style="text-align:center">엄중경고</th>
+              <th style="text-align:center">면책</th><th style="text-align:center">경고</th>
+              <th style="text-align:center">중대경고</th><th style="text-align:center">치명적위반</th>
               <th>주요 설비</th>
             </tr></thead>
             <tbody id="worker-tbody"></tbody>
@@ -1258,14 +1258,20 @@ const monthData = [3,5,4,7,14,4,0,0,0,0,0,0];
 // 작업자 사고 현황
 // ========================
 let workerYear = '';
+let workerLevel = 0;   // 0=전체, 1~4=해당 등급만
 const LV_COLORS = { 1:'#94a3b8', 2:'#38bdf8', 3:'#fbbf24', 4:'#ef4444' };
-const LV_NAMES = { 1:'면책', 2:'주의', 3:'견책', 4:'엄중경고' };
+const LV_NAMES = { 1:'면책', 2:'경고', 3:'중대경고', 4:'치명적위반' };   // 2026 판정등급 명칭
 window._wCharts = window._wCharts || {};
 
 function switchWorkerYear(y, btn) {
   workerYear = y;
   document.querySelectorAll('#worker-year-tabs .claim-year-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  renderWorker(true);
+}
+
+function setWorkerLevel(lv) {
+  workerLevel = (workerLevel === lv) ? 0 : lv;   // 같은 등급 다시 누르면 해제
   renderWorker(true);
 }
 
@@ -1281,21 +1287,31 @@ function renderWorker(skipTabs) {
       `<button class="claim-year-btn ${workerYear===''?'active':''}" onclick="switchWorkerYear('',this)">전체</button>` +
       years.map(y => `<button class="claim-year-btn ${workerYear===y?'active':''}" onclick="switchWorkerYear('${y}',this)">${y}</button>`).join('');
   }
-  // 필터 (담당자 있는 행만)
-  const rows = wd.filter(r => r[1] && (!workerYear || r[7] === workerYear));
+  // 연도 필터 (담당자 있는 행)
+  const yearRows = wd.filter(r => r[1] && (!workerYear || r[7] === workerYear));
 
-  // 등급 요약
-  const lvCnt = {1:0,2:0,3:0,4:0,0:0};
-  rows.forEach(r => { lvCnt[r[3]||0] = (lvCnt[r[3]||0]||0) + 1; });
-  const mcard = (label, val, color) =>
-    `<div class="metric"><div class="label">${label}</div><div class="value" style="color:${color||'#1d1d1f'}">${val}</div></div>`;
+  // 등급 요약 카드 (연도 전체 기준) — 클릭하면 해당 등급만 필터
+  const lvCnt = {1:0,2:0,3:0,4:0};
+  yearRows.forEach(r => { if (r[3]) lvCnt[r[3]] = (lvCnt[r[3]]||0) + 1; });
+  const mcard = (lv, label, val, color) => {
+    const on = (workerLevel === lv);
+    return `<div class="metric" style="cursor:pointer;${on ? 'outline:2.5px solid '+(color||'#17A2B8')+';outline-offset:-2px' : ''}" onclick="setWorkerLevel(${lv})">
+      <div class="label">${label}${on ? ' ●' : ''}</div><div class="value" style="color:${color||'#1d1d1f'}">${val}</div></div>`;
+  };
   const mEl = document.getElementById('worker-metrics');
   if (mEl) mEl.innerHTML =
-    mcard('총 사고', rows.length + '건') +
-    mcard('면책 (Lv1)', lvCnt[1], LV_COLORS[1]) +
-    mcard('주의 (Lv2)', lvCnt[2], LV_COLORS[2]) +
-    mcard('견책 (Lv3)', lvCnt[3], LV_COLORS[3]) +
-    mcard('엄중경고 (Lv4)', lvCnt[4], LV_COLORS[4]);
+    mcard(0, '총 사고', yearRows.length + '건') +
+    mcard(1, '면책 (Lv1)', lvCnt[1], LV_COLORS[1]) +
+    mcard(2, '경고 (Lv2)', lvCnt[2], LV_COLORS[2]) +
+    mcard(3, '중대경고 (Lv3)', lvCnt[3], LV_COLORS[3]) +
+    mcard(4, '치명적위반 (Lv4)', lvCnt[4], LV_COLORS[4]);
+
+  // 등급 필터 적용
+  const rows = workerLevel ? yearRows.filter(r => r[3] === workerLevel) : yearRows;
+  const fn = document.getElementById('worker-filter-note');
+  if (fn) fn.innerHTML = workerLevel
+    ? `<span style="color:${LV_COLORS[workerLevel]}">● ${LV_NAMES[workerLevel]}</span> 받은 사람만 표시 <span style="color:#999;cursor:pointer;text-decoration:underline" onclick="setWorkerLevel(0)">해제</span>`
+    : '';
 
   // 담당자 집계
   const emp = {};
