@@ -1300,10 +1300,12 @@ function renderWorker(skipTabs) {
   // 담당자 집계
   const emp = {};
   rows.forEach(r => {
-    const k = r[1];
-    emp[k] = emp[k] || { total:0, lv:{1:0,2:0,3:0,4:0}, eq:{} };
-    emp[k].total++; emp[k].lv[r[3]||0] = (emp[k].lv[r[3]||0]||0)+1;
-    if (r[4]) emp[k].eq[r[4]] = (emp[k].eq[r[4]]||0)+1;
+    const names = String(r[1]).split(/[,，、\/·]/).map(s => s.trim()).filter(Boolean);
+    names.forEach(k => {
+      emp[k] = emp[k] || { total:0, lv:{1:0,2:0,3:0,4:0}, eq:{} };
+      emp[k].total++; emp[k].lv[r[3]||0] = (emp[k].lv[r[3]||0]||0)+1;
+      if (r[4]) emp[k].eq[r[4]] = (emp[k].eq[r[4]]||0)+1;
+    });
   });
   const ranked = Object.entries(emp).sort((a,b) => b[1].total - a[1].total);
 
