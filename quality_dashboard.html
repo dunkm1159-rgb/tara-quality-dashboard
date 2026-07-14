@@ -1088,11 +1088,11 @@
       <div class="grid2">
         <div class="card">
           <div class="card-title">작업자별 사고 건수 (상위)</div>
-          <div class="chart-wrap"><canvas id="chartWorkerBar"></canvas></div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chartWorkerBar"></canvas></div>
         </div>
         <div class="card">
           <div class="card-title">설비별 사고 건수 (상위)</div>
-          <div class="chart-wrap"><canvas id="chartWorkerEquip"></canvas></div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chartWorkerEquip"></canvas></div>
         </div>
       </div>
 
@@ -1295,8 +1295,8 @@ function renderWorker(skipTabs) {
   yearRows.forEach(r => { if (r[3]) lvCnt[r[3]] = (lvCnt[r[3]]||0) + 1; });
   const mcard = (lv, label, val, color) => {
     const on = (workerLevel === lv);
-    return `<div class="metric" style="cursor:pointer;${on ? 'outline:2.5px solid '+(color||'#17A2B8')+';outline-offset:-2px' : ''}" onclick="setWorkerLevel(${lv})">
-      <div class="label">${label}${on ? ' ●' : ''}</div><div class="value" style="color:${color||'#1d1d1f'}">${val}</div></div>`;
+    return `<div class="metric" style="cursor:pointer;padding:10px 12px;${on ? 'outline:2.5px solid '+(color||'#17A2B8')+';outline-offset:-2px' : ''}" onclick="setWorkerLevel(${lv})">
+      <div class="label" style="font-size:11px;margin-bottom:2px">${label}${on ? ' ●' : ''}</div><div class="value" style="font-size:19px;color:${color||'#1d1d1f'}">${val}</div></div>`;
   };
   const mEl = document.getElementById('worker-metrics');
   if (mEl) mEl.innerHTML =
