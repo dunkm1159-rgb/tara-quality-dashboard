@@ -1111,6 +1111,22 @@
           </table>
         </div>
       </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-title">사고 상세 목록 <span id="worker-detail-note" style="font-size:12px;font-weight:600;color:#888;margin-left:6px"></span></div>
+        <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
+          <table style="width:100%;font-size:12.5px">
+            <thead><tr>
+              <th style="text-align:center;white-space:nowrap">날짜</th>
+              <th style="white-space:nowrap">담당자</th>
+              <th style="text-align:center;white-space:nowrap">판정등급</th>
+              <th style="white-space:nowrap">설비</th>
+              <th>제품 / 사고 내용</th>
+            </tr></thead>
+            <tbody id="worker-detail-tbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- ============ KPI 현황 ============ -->
@@ -1338,6 +1354,22 @@ function renderWorker(skipTabs) {
       <td style="color:#666;font-size:12px">${topEq||'-'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
+
+  // 사고 상세 목록 (현재 필터 = 연도 + 등급)
+  const wEsc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const dt = document.getElementById('worker-detail-tbody');
+  if (dt) {
+    const sorted = rows.slice().sort((a, b) => String(b[0]||'').localeCompare(String(a[0]||'')));
+    dt.innerHTML = sorted.map(r => `<tr>
+      <td style="text-align:center;white-space:nowrap;color:#666">${r[0]||''}</td>
+      <td style="white-space:nowrap;font-weight:600">${wEsc(r[1])}</td>
+      <td style="text-align:center;white-space:nowrap"><span style="color:${LV_COLORS[r[3]]||'#666'};font-weight:600">${LV_NAMES[r[3]]||r[2]||''}</span></td>
+      <td style="white-space:nowrap;color:#666">${wEsc(r[4])}</td>
+      <td style="color:#444">${wEsc(r[5])}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">해당 없음</td></tr>';
+  }
+  const dnote = document.getElementById('worker-detail-note');
+  if (dnote) dnote.textContent = workerLevel ? (LV_NAMES[workerLevel] + ' ' + rows.length + '건') : ('전체 ' + rows.length + '건');
 
   // 차트: 담당자 상위 10 (등급 누적)
   const top = ranked.slice(0, 10);
