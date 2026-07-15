@@ -468,7 +468,7 @@
           <div class="card-title" style="margin:0;"><i class="ti ti-file-text"></i> 작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
           <button onclick="copyPrintTargets()" class="btn btn-secondary btn-sm"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
         </div>
-        <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">가제본 완료 + 당일 진행중 품목 · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
+        <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">오늘 완료 + 오늘 새로 진행중된 품목 · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
         <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
       </div>
 
@@ -1595,28 +1595,15 @@ function renderHomeWip() {
 }
 
 function collectPrintTargets() {
-  const all = [];
-  Object.values(gajebonSheets || {}).forEach(rows => (rows || []).forEach(r => all.push(r)));
-  const today = (window.GAJEBON_TODAY || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })).slice(0, 10);
-  const seen = new Set();
-  const done = [], prog = [];
-  all.forEach(r => {
-    const on = r['주문번호'] || '';
-    if (!on) return;
-    const status = (typeof gajDate === 'function' && gajDate(on)) ? '완료' : (r['진행상태'] || '');
-    if (status === '완료') {
-      if (!seen.has('D' + on)) { seen.add('D' + on); done.push(r); }
-    } else if ((r['진행상태'] || '') === '진행중' && String(r['날짜'] || '').slice(0, 10) === today) {
-      if (!seen.has('P' + on)) { seen.add('P' + on); prog.push(r); }
-    }
-  });
-  return { done, prog };
+  // inject_data.py가 만든 오늘 delta 사용: 오늘 완료 + 오늘 새로 진행중
+  const t = (window.GAJEBON_TODAY && typeof window.GAJEBON_TODAY === 'object') ? window.GAJEBON_TODAY : {};
+  return { done: t.new_completed || [], prog: t.new_progress || [] };
 }
 function renderPrintTargets() {
   const el = document.getElementById('print-target-list'); if (!el) return;
   const { done, prog } = collectPrintTargets();
   const cnt = document.getElementById('print-target-count');
-  if (cnt) cnt.textContent = `가제본 완료 ${done.length} · 당일 진행중 ${prog.length}`;
+  if (cnt) cnt.textContent = `오늘 완료 ${done.length} · 오늘 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const rowHtml = (r, color) => `<tr>
      <td style="white-space:nowrap;font-family:monospace;color:${color};padding:2px 8px 2px 0">${esc(r['주문번호'])}</td>
@@ -1625,7 +1612,7 @@ function renderPrintTargets() {
   const section = (title, arr, color) => arr.length
     ? `<div style="font-weight:600;margin:8px 0 4px;color:${color}">${title} (${arr.length})</div><table style="width:100%;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color)).join('')}</tbody></table>` : '';
   el.innerHTML = (done.length || prog.length)
-    ? section('✅ 가제본 완료', done, '#248a3d') + section('🖨 당일 진행중', prog, '#c93400')
+    ? section('✅ 오늘 완료', done, '#248a3d') + section('🖨 오늘 진행중 신규', prog, '#c93400')
     : '<span style="color:#ccc">오늘 출력 대상 없음</span>';
 }
 function copyPrintTargets() {
