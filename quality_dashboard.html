@@ -462,6 +462,16 @@
         <div id="home-wip-list"></div>
       </div>
 
+      <!-- 작업지시서 출력 대상 -->
+      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="card-title" style="margin:0;"><i class="ti ti-file-text"></i> 작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
+          <button onclick="copyPrintTargets()" class="btn btn-secondary btn-sm"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
+        </div>
+        <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">가제본 완료 + 당일 진행중 품목 · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
+        <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
+      </div>
+
       <div class="grid2" style="margin-bottom:16px;">
         <div class="card">
           <div class="card-title">최근 클레임 <span style="font-size:11px;font-weight:400;color:#aaa">최신 5건</span></div>
@@ -1584,9 +1594,59 @@ function renderHomeWip() {
     </div>`).join('');
 }
 
+function collectPrintTargets() {
+  const all = [];
+  Object.values(gajebonSheets || {}).forEach(rows => (rows || []).forEach(r => all.push(r)));
+  const today = (window.GAJEBON_TODAY || new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })).slice(0, 10);
+  const seen = new Set();
+  const done = [], prog = [];
+  all.forEach(r => {
+    const on = r['주문번호'] || '';
+    if (!on) return;
+    const status = (typeof gajDate === 'function' && gajDate(on)) ? '완료' : (r['진행상태'] || '');
+    if (status === '완료') {
+      if (!seen.has('D' + on)) { seen.add('D' + on); done.push(r); }
+    } else if ((r['진행상태'] || '') === '진행중' && String(r['날짜'] || '').slice(0, 10) === today) {
+      if (!seen.has('P' + on)) { seen.add('P' + on); prog.push(r); }
+    }
+  });
+  return { done, prog };
+}
+function renderPrintTargets() {
+  const el = document.getElementById('print-target-list'); if (!el) return;
+  const { done, prog } = collectPrintTargets();
+  const cnt = document.getElementById('print-target-count');
+  if (cnt) cnt.textContent = `가제본 완료 ${done.length} · 당일 진행중 ${prog.length}`;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const rowHtml = (r, color) => `<tr>
+     <td style="white-space:nowrap;font-family:monospace;color:${color};padding:2px 8px 2px 0">${esc(r['주문번호'])}</td>
+     <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;padding:2px 8px 2px 0" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
+     <td style="white-space:nowrap;color:#888">${esc(r['거래처'])}</td></tr>`;
+  const section = (title, arr, color) => arr.length
+    ? `<div style="font-weight:600;margin:8px 0 4px;color:${color}">${title} (${arr.length})</div><table style="width:100%;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color)).join('')}</tbody></table>` : '';
+  el.innerHTML = (done.length || prog.length)
+    ? section('✅ 가제본 완료', done, '#248a3d') + section('🖨 당일 진행중', prog, '#c93400')
+    : '<span style="color:#ccc">오늘 출력 대상 없음</span>';
+}
+function copyPrintTargets() {
+  const { done, prog } = collectPrintTargets();
+  const nums = [...done, ...prog].map(r => r['주문번호']).filter(Boolean);
+  if (!nums.length) { alert('출력 대상이 없습니다.'); return; }
+  const txt = nums.join('\n');
+  const okMsg = () => alert(nums.length + '개 작업번호를 복사했어요. ERP 검색창에 붙여넣으세요.');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(okMsg, () => {
+      const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); okMsg();
+    });
+  } else {
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); okMsg();
+  }
+}
+
 function refreshDash() {
   renderHomeSignal();
   renderHomeWip();
+  renderPrintTargets();
   const now = new Date();
   const thisYear = String(now.getFullYear());
   const thisMon  = now.getMonth(); // 0-indexed
