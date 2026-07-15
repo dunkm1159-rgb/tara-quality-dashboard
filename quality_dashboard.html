@@ -1097,6 +1097,17 @@
         </div>
       </div>
 
+      <div class="grid2" style="margin-top:18px">
+        <div class="card">
+          <div class="card-title">💰 작업자별 불량금액 (상위, 만원)</div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chartWorkerCost"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💰 설비별 불량금액 (상위, 만원)</div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chartEqCost"></canvas></div>
+        </div>
+      </div>
+
       <div class="card" style="margin-top:18px">
         <div class="card-title">작업자별 상세 (사고 많은 순) <span id="worker-filter-note" style="font-size:12px;font-weight:600;margin-left:8px"></span></div>
         <div style="overflow-x:auto">
@@ -1406,6 +1417,32 @@ function renderWorker(skipTabs) {
       datasets:[{ label:'사고', data: eqTop.map(e=>e[1]), backgroundColor:'#17A2B8' }] },
     options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, ticks:{ precision:0 } } } }
+  });
+
+  // 💰 작업자별 불량금액 상위
+  const empCostTop = Object.entries(emp).map(([k,v])=>[k, v.cost||0]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if (window._wCharts.cost) window._wCharts.cost.destroy();
+  const c3 = document.getElementById('chartWorkerCost');
+  if (c3 && window.Chart) window._wCharts.cost = new Chart(c3, {
+    type:'bar', data:{ labels: empCostTop.map(e=>e[0]),
+      datasets:[{ label:'불량금액(만원)', data: empCostTop.map(e=>Math.round(e[1]/10000)), backgroundColor:'#c0392b' }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c=>' '+c.parsed.x.toLocaleString()+'만원' } } },
+      scales:{ x:{ beginAtZero:true, ticks:{ callback:v=>v.toLocaleString() } } } }
+  });
+
+  // 💰 설비별 불량금액 상위
+  const eqCost = {};
+  rows.forEach(r => { if (r[4]) eqCost[r[4]] = (eqCost[r[4]]||0) + (r[8]||0); });
+  const eqCostTop = Object.entries(eqCost).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if (window._wCharts.eqcost) window._wCharts.eqcost.destroy();
+  const c4 = document.getElementById('chartEqCost');
+  if (c4 && window.Chart) window._wCharts.eqcost = new Chart(c4, {
+    type:'bar', data:{ labels: eqCostTop.map(e=>e[0]),
+      datasets:[{ label:'불량금액(만원)', data: eqCostTop.map(e=>Math.round(e[1]/10000)), backgroundColor:'#e67e22' }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c=>' '+c.parsed.x.toLocaleString()+'만원' } } },
+      scales:{ x:{ beginAtZero:true, ticks:{ callback:v=>v.toLocaleString() } } } }
   });
 }
 
