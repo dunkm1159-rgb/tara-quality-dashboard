@@ -1818,7 +1818,7 @@ function ncMixedChart(id, labels, costs, goals){
   chartInstances[id] = new Chart(ctx, {
     data: { labels, datasets: [
       { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#17A2B8', borderRadius:6, order:2 },
-      { type:'line', label:'목표(만)', data:goals, borderColor:'#ff3b30', backgroundColor:'#ff3b30', borderWidth:2, pointRadius:0, tension:0.3, order:1 }
+      { type:'line', label:'목표(만)', data:goals, borderColor:'#C0392B', backgroundColor:'#C0392B', borderWidth:2, borderDash:[5,4], pointRadius:0, tension:0.3, order:1 }
     ]},
     options: { responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 } } },
@@ -2916,7 +2916,7 @@ function monthlyTrendChart(id, labels, counts, costs) {
   chartInstances[id] = new Chart(ctx, {
     data: { labels, datasets: [
       { type: 'bar', label: '부적합 건수', data: counts, backgroundColor: '#17A2B8', borderRadius: 5, yAxisID: 'y', order: 2 },
-      { type: 'line', label: '품질비용(만)', data: costs, borderColor: '#ff3b30', backgroundColor: '#ff3b30', borderWidth: 2, pointRadius: 2, tension: 0.3, yAxisID: 'y1', order: 1 }
+      { type: 'line', label: '품질비용(만)', data: costs, borderColor: '#C0392B', backgroundColor: '#C0392B', borderWidth: 2, pointRadius: 2, tension: 0.35, yAxisID: 'y1', order: 1 }
     ]},
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } },
@@ -4289,9 +4289,9 @@ function renderKpi() {
     if(ctx) chartInstances.chartTop3Monthly = new Chart(ctx, {
       type:'bar',
       data:{labels:mLabels, datasets:[
-        {label:'제판', data:D.top3.monthly.map(r=>r.제판), backgroundColor:'#c0392b', borderRadius:3},
-        {label:'인쇄', data:D.top3.monthly.map(r=>r.인쇄), backgroundColor:'#e67e22', borderRadius:3},
-        {label:'코팅', data:D.top3.monthly.map(r=>r.코팅), backgroundColor:'#7B4EA0', borderRadius:3},
+        {label:'제판', data:D.top3.monthly.map(r=>r.제판), backgroundColor:'#17A2B8', borderRadius:4},
+        {label:'인쇄', data:D.top3.monthly.map(r=>r.인쇄), backgroundColor:'#E67E22', borderRadius:4},
+        {label:'코팅', data:D.top3.monthly.map(r=>r.코팅), backgroundColor:'#7B4EA0', borderRadius:4},
       ]},
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
@@ -4310,10 +4310,10 @@ function renderKpi() {
     const vals = proc.map(p=>D.top3.monthly.reduce((s,r)=>s+(r[p]||0),0));
     if(ctx) chartInstances.chartTop3Process = new Chart(ctx, {
       type:'doughnut',
-      data:{labels:proc, datasets:[{data:vals, backgroundColor:['#c0392b','#e67e22','#7B4EA0'], borderWidth:2, borderColor:'#fff'}]},
+      data:{labels:proc, datasets:[{data:vals, backgroundColor:['#17A2B8','#E67E22','#7B4EA0'], borderWidth:2, borderColor:'#fff'}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
         plugins:{legend:{position:'right',labels:{font:{size:12},boxWidth:14,
-          generateLabels:chart=>proc.map((l,i)=>({text:`${l}  ${vals[i]}건`,fillStyle:['#c0392b','#e67e22','#7B4EA0'][i],strokeStyle:['#c0392b','#e67e22','#7B4EA0'][i],lineWidth:0,index:i,hidden:false}))
+          generateLabels:chart=>proc.map((l,i)=>({text:`${l}  ${vals[i]}건`,fillStyle:['#17A2B8','#E67E22','#7B4EA0'][i],strokeStyle:['#17A2B8','#E67E22','#7B4EA0'][i],lineWidth:0,index:i,hidden:false}))
         }},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}건`}}}}
     });
   } catch(e){}
@@ -4347,7 +4347,7 @@ function renderKpi() {
     const procPairs = NC_PROCS.map(p=>[p, Object.values(nc2026.months||{}).reduce((s,mv)=>s+((mv.selfProc&&mv.selfProc[p])||0),0)]).filter(x=>x[1]>0);
     const procs = procPairs.length ? procPairs.map(x=>x[0]) : ['데이터없음'];
     const pVals = procPairs.length ? procPairs.map(x=>x[1]) : [0];
-    const pColors = ['#17A2B8','#7B4EA0','#888','#27ae60','#e67e22','#c0392b','#16a085'];
+    const pColors = TARA_COLORS;
     if(ctx) chartInstances.chartCostProcess = new Chart(ctx, {
       type:'doughnut',
       data:{labels:procs, datasets:[{data:pVals, backgroundColor:pColors, borderWidth:2, borderColor:'#fff'}]},
@@ -4367,7 +4367,7 @@ function renderKpi() {
     if(ctx) chartInstances.chartSOP = new Chart(ctx, {
       type:'line',
       data:{labels:sopM, datasets:[
-        {label:'준수율', data:sopA, borderColor:'#17A2B8', backgroundColor:'rgba(24,95,165,0.1)', borderWidth:2, pointRadius:4, tension:0.3, fill:true},
+        {label:'준수율', data:sopA, borderColor:'#17A2B8', backgroundColor:'rgba(23,162,184,0.12)', borderWidth:2, pointRadius:4, tension:0.35, fill:true},
         {label:'목표(95점)', data:Array(sopM.length).fill(95), borderColor:'#27ae60', borderWidth:1.5, borderDash:[5,5], pointRadius:0, fill:false}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
@@ -4691,7 +4691,50 @@ async function loadSheetClaims(){
   }catch(e){ console.warn('sheet claims load fail', e); }
 }
 
+// ── 차트 공통 테마 (팔레트 통일 + 고급화) ──
+const TARA_COLORS = ['#17A2B8','#1F5C99','#7B4EA0','#E67E22','#27AE60','#C0392B','#38BDF8','#F1C40F','#16A085','#98A2B3'];
+function applyChartTheme() {
+  if (!window.Chart || !Chart.defaults) return;
+  const D = Chart.defaults;
+  try {
+    D.font.family = "'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+    D.font.size = 11;
+    D.color = '#6e6e73';
+    D.borderColor = 'rgba(0,0,0,0.06)';
+    // 범례: 동그란 포인트 + 여유 간격
+    D.plugins.legend.labels.usePointStyle = true;
+    D.plugins.legend.labels.pointStyle = 'circle';
+    D.plugins.legend.labels.boxWidth = 8;
+    D.plugins.legend.labels.boxHeight = 8;
+    D.plugins.legend.labels.padding = 14;
+    // 툴팁: 어두운 라운드 카드
+    D.plugins.tooltip.backgroundColor = 'rgba(29,29,31,0.92)';
+    D.plugins.tooltip.padding = 10;
+    D.plugins.tooltip.cornerRadius = 8;
+    D.plugins.tooltip.titleFont = { size: 12, weight: '600' };
+    D.plugins.tooltip.bodyFont = { size: 12 };
+    D.plugins.tooltip.boxPadding = 5;
+    D.plugins.tooltip.usePointStyle = true;
+    // 부드러운 애니메이션
+    D.animation.duration = 650;
+    D.animation.easing = 'easeOutQuart';
+    // 요소: 둥근 막대 / 부드러운 선 / 깔끔한 도넛
+    D.elements.bar.borderRadius = 5;
+    D.elements.bar.borderSkipped = false;
+    D.elements.line.tension = 0.35;
+    D.elements.line.borderWidth = 2;
+    D.elements.point.radius = 3;
+    D.elements.point.hoverRadius = 6;
+    D.elements.point.hitRadius = 8;
+    D.elements.arc.borderWidth = 2;
+    D.elements.arc.borderColor = '#fff';
+    if (D.datasets && D.datasets.doughnut) D.datasets.doughnut.cutout = '58%';
+    if (D.scale && D.scale.grid) { D.scale.grid.color = 'rgba(0,0,0,0.05)'; D.scale.grid.drawBorder = false; }
+  } catch (e) { console.warn('chart theme', e); }
+}
+
 function initDashboard() {
+  applyChartTheme();
   initClaim();
   initGajebon();
   renderDocsList();
