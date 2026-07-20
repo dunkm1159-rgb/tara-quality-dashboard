@@ -421,7 +421,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/20 20:02</span>
+      v<span id="build-stamp">07/20 20:41</span>
     </div>
   </aside>
 
@@ -1151,9 +1151,12 @@
 
     <!-- ============ 작업자 사고 현황 ============ -->
     <div id="tab-worker" class="tab">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
         <div class="section-title">작업자별 품질사고 현황</div>
-        <div style="font-size:12px;color:#888" id="worker-updated"></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="gj-toggle" id="worker-anon-btn" onclick="toggleWorkerAnon()" title="시연/공유 시 이름을 가립니다">🕶 익명 모드</button>
+          <div style="font-size:12px;color:#888" id="worker-updated"></div>
+        </div>
       </div>
       <div style="font-size:12.5px;color:#666;margin-bottom:14px">품질사고 관리대장 기준 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
 
@@ -1510,6 +1513,23 @@ function renderErp() {
 // ========================
 let workerYear = '';
 let workerLevel = 0;   // 0=전체, 1~4=해당 등급만
+let workerAnon = false;   // 익명 모드 (시연/공유용)
+function toggleWorkerAnon() {
+  workerAnon = !workerAnon;
+  const b = document.getElementById('worker-anon-btn');
+  if (b) b.classList.toggle('gj-on', workerAnon);
+  renderWorker();
+}
+function anonName(n) {
+  return String(n || '').split(/([,，、/·])/).map(p => {
+    if (/^[,，、/·]$/.test(p)) return p;
+    const t = p.trim();
+    if (t.length <= 1) return t;
+    if (t.length === 2) return t[0] + '○';
+    return t[0] + '○'.repeat(t.length - 2) + t[t.length - 1];
+  }).join('');
+}
+function wname(n) { return workerAnon ? anonName(n) : n; }
 const LV_COLORS = { 1:'#94a3b8', 2:'#38bdf8', 3:'#fbbf24', 4:'#ef4444' };
 const LV_NAMES = { 1:'면책', 2:'경고', 3:'중대경고', 4:'치명적위반' };   // 2026 판정등급 명칭
 window._wCharts = window._wCharts || {};
@@ -1586,7 +1606,7 @@ function renderWorker(skipTabs) {
     const cell = (n,c) => `<td style="text-align:center;${n?('color:'+c+';font-weight:600'):'color:#ccc'}">${n||'-'}</td>`;
     return `<tr>
       <td style="text-align:center;color:#888">${i+1}</td>
-      <td style="font-weight:600">${name}</td>
+      <td style="font-weight:600">${wname(name)}</td>
       <td style="text-align:center;font-weight:700">${v.total}</td>
       <td style="text-align:right;color:#c0392b;font-weight:600">${v.cost?Math.round(v.cost/10000).toLocaleString():'-'}</td>
       ${cell(v.lv[1],LV_COLORS[1])}${cell(v.lv[2],LV_COLORS[2])}${cell(v.lv[3],LV_COLORS[3])}${cell(v.lv[4],LV_COLORS[4])}
@@ -1601,7 +1621,7 @@ function renderWorker(skipTabs) {
     const sorted = rows.slice().sort((a, b) => String(b[0]||'').localeCompare(String(a[0]||'')));
     dt.innerHTML = sorted.map(r => `<tr>
       <td style="text-align:center;white-space:nowrap;color:#666">${r[0]||''}</td>
-      <td style="white-space:nowrap;font-weight:600">${wEsc(r[1])}</td>
+      <td style="white-space:nowrap;font-weight:600">${wEsc(wname(r[1]))}</td>
       <td style="text-align:center;white-space:nowrap"><span style="color:${LV_COLORS[r[3]]||'#666'};font-weight:600">${LV_NAMES[r[3]]||r[2]||''}</span></td>
       <td style="white-space:nowrap;color:#666">${wEsc(r[4])}</td>
       <td style="text-align:right;white-space:nowrap;color:#c0392b">${r[8]?Math.round(r[8]/10000).toLocaleString():'-'}</td>
@@ -1613,7 +1633,7 @@ function renderWorker(skipTabs) {
 
   // 차트: 담당자 상위 10 (등급 누적)
   const top = ranked.slice(0, 10);
-  const labels = top.map(t => t[0]);
+  const labels = top.map(t => wname(t[0]));
   const ds = [1,2,3,4].map(lv => ({
     label: LV_NAMES[lv], data: top.map(t => t[1].lv[lv]),
     backgroundColor: LV_COLORS[lv], stack: 's'
@@ -1645,7 +1665,7 @@ function renderWorker(skipTabs) {
   if (window._wCharts.cost) window._wCharts.cost.destroy();
   const c3 = document.getElementById('chartWorkerCost');
   if (c3 && window.Chart) window._wCharts.cost = new Chart(c3, {
-    type:'bar', data:{ labels: empCostTop.map(e=>e[0]),
+    type:'bar', data:{ labels: empCostTop.map(e=>wname(e[0])),
       datasets:[{ label:'불량금액(만원)', data: empCostTop.map(e=>Math.round(e[1]/10000)), backgroundColor:'#c0392b' }] },
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c=>' '+c.parsed.x.toLocaleString()+'만원' } } },
@@ -1765,21 +1785,36 @@ function renderHomeSignal() {
     if ((m = d.match(/(\d{1,2})\s*월/)) && y) return y + '-' + m[1].padStart(2, '0');
     return '';
   };
+  // 3) 이번달 부적합: ERP 부적합내역 기준, 기준선 = 전년 월평균
+  const EMh = (window.QUALITY_DATA && window.QUALITY_DATA.months) || {};
+  const curErp = (EMh[ym] && EMh[ym].rows) ? EMh[ym].rows.length : null;
+  const prevYr = String(now.getFullYear() - 1);
+  const prevYrMonths = Object.keys(EMh).filter(k => k.startsWith(prevYr) && (EMh[k].rows || []).length);
+  const prevAvg = prevYrMonths.length
+    ? Math.round(prevYrMonths.reduce((s, k) => s + EMh[k].rows.length, 0) / prevYrMonths.length) : 10;
   const cd = (typeof claimData !== 'undefined' ? claimData : []);
-  const monRows = cd.filter(r => monthKey(r) === ym);
-  const ncCount = monRows.length;
-  const ncCost = Math.round(monRows.reduce((s, r) => s + (Number(r[12]) || 0) + (Number(r[13]) || 0), 0) / 10000);
-  const card = (label, val, sub, color) =>
-    `<div style="background:var(--surface-1,#f5f5f7);border-radius:12px;padding:14px 16px;border-left:4px solid ${color}">
+  const ncCount = curErp != null ? curErp : cd.filter(r => monthKey(r) === ym).length;
+  // 4) 이번달 품질비용: 관리대장(NCCOST) 기준, 기준선 = 연간목표/12
+  const NCh = (window.NCCOST_DATA || {})[String(now.getFullYear())] || {};
+  const moKh = (now.getMonth() + 1) + '월';
+  const mvh = (NCh.months || {})[moKh] || {};
+  const ncCost = Math.round((mvh.cost || 0) / 10000);
+  const moTarget = Math.round((NCh.target || 60000000) / 12 / 10000);   // 월할 목표(만원)
+  const card = (label, val, sub, color, tip) =>
+    `<div title="${tip || ''}" style="background:var(--surface-1,#f5f5f7);border-radius:12px;padding:14px 16px;border-left:4px solid ${color};cursor:default">
       <div style="font-size:12px;color:#86868b;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${color}"></span>${label}</div>
       <div style="font-size:26px;font-weight:700;margin-top:4px;color:#1d1d1f">${val}</div>
       <div style="font-size:11px;color:#86868b;margin-top:2px">${sub}</div>
     </div>`;
   el.innerHTML =
-    card('지금 인쇄중', printing + '<span style="font-size:14px;color:#86868b"> 건</span>', '설비 실시간 진행', printing > 0 ? '#17A2B8' : '#86868b') +
-    card('가제본 남은', needGaj + '<span style="font-size:14px;color:#86868b"> 건</span>', '완료됐고 가제본 만들 것', needGaj > 3 ? '#ff9500' : '#34c759') +
-    card('이번달 부적합', ncCount + '<span style="font-size:14px;color:#86868b"> 건</span>', now.getMonth() + 1 + '월 클레임/부적합', ncCount > 20 ? '#ff3b30' : ncCount > 10 ? '#ff9500' : '#34c759') +
-    card('이번달 품질비용', ncCost.toLocaleString() + '<span style="font-size:14px;color:#86868b"> 만원</span>', now.getMonth() + 1 + '월 누적', ncCost > 600 ? '#ff3b30' : ncCost > 300 ? '#ff9500' : '#34c759');
+    card('지금 인쇄중', printing + '<span style="font-size:14px;color:#86868b"> 건</span>', '설비 실시간 진행', printing > 0 ? '#17A2B8' : '#86868b',
+         'ERP 인쇄생산일정 기준: 실적수량>0이고 잔여통수>0인 작업') +
+    card('가제본 남은', needGaj + '<span style="font-size:14px;color:#86868b"> 건</span>', '당일 처리 원칙 · 3건 초과 시 주의', needGaj > 3 ? '#ff9500' : '#34c759',
+         '기준: 생산완료+가제본요청인데 아직 안 만든 것. 당일 처리 원칙에 따라 3건 초과 시 노랑') +
+    card('이번달 부적합', ncCount + '<span style="font-size:14px;color:#86868b"> 건</span>', '전년 월평균 ' + prevAvg + '건 대비', ncCount > prevAvg ? '#ff3b30' : ncCount > prevAvg * 0.8 ? '#ff9500' : '#34c759',
+         'ERP 부적합내역 기준. 기준선 = 전년(' + prevYr + ') 월평균 ' + prevAvg + '건 — 초과 시 빨강, 80% 도달 시 노랑') +
+    card('이번달 품질비용', ncCost.toLocaleString() + '<span style="font-size:14px;color:#86868b"> 만원</span>', '월 목표 ' + moTarget.toLocaleString() + '만 대비', ncCost > moTarget ? '#ff3b30' : ncCost > moTarget * 0.8 ? '#ff9500' : '#34c759',
+         '품질사고 관리대장 기준. 기준선 = 연간 목표 ' + Math.round((NCh.target || 0) / 10000).toLocaleString() + '만원의 월할(' + moTarget.toLocaleString() + '만원) — 초과 시 빨강, 80% 도달 시 노랑');
 }
 
 function renderHomeWip() {
