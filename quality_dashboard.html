@@ -420,7 +420,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/20 19:43</span>
+      v<span id="build-stamp">07/20 19:47</span>
     </div>
   </aside>
 
@@ -1287,7 +1287,10 @@
       </div>
 
       <!-- G7 프루프 색관리 -->
-      <div class="section-title" style="margin:24px 0 12px">🎨 G7 프루프 색관리 <span style="font-size:12px;color:#888;font-weight:400">교정지 ΔE 측정 · 기준 ΔE &lt; 2.0</span></div>
+      <div class="section-header" style="margin:24px 0 6px">
+        <div class="section-title" style="font-size:15px">🎨 G7 프루프 색관리 <span style="font-size:12px;color:#888;font-weight:400">교정지 ΔE 측정 · 기준 ΔE &lt; 2.0</span></div>
+        <div id="proof-dev-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+      </div>
       <div class="metrics" id="proof-metrics" style="margin-bottom:16px"></div>
       <div class="grid2">
         <div class="card">
@@ -4726,6 +4729,8 @@ if (window.KPI_DATA_SRC) {
 // ========================
 let kpiMonth = '';      // 월별 보기: '1월' ~ '12월' (비어있으면 최신 달 자동)
 function setKpiMonth(m) { kpiMonth = m; renderKpi(); }
+let proofDev = '';      // G7 프루프 장비 필터: '' = 전체
+function setProofDev(d) { proofDev = d; renderKpi(); }
 
 function renderKpi() {
   const D = KPI_DATA;
@@ -4872,8 +4877,14 @@ function renderKpi() {
 
   // ── G7 프루프 색관리 ──
   try {
-    const PF = (window.KPI_DATA_SRC && window.KPI_DATA_SRC.proof) || [];
+    const ALL = (window.KPI_DATA_SRC && window.KPI_DATA_SRC.proof) || [];
     const CLR = { 'K(먹)': '#1d1d1f', 'C(청)': '#17A2B8', 'M(적)': '#C0392B', 'Y(황)': '#F1C40F' };
+    // 장비 선택 버튼 (전체 / 엡손 1호기 / 엡손 2호기 …)
+    const devs = [...new Set(ALL.map(x => x.device).filter(Boolean))].sort();
+    const dbw = document.getElementById('proof-dev-btns');
+    if (dbw) dbw.innerHTML = `<button class="claim-year-btn ${proofDev === '' ? 'active' : ''}" onclick="setProofDev('')">전체</button>`
+      + devs.map(d => `<button class="claim-year-btn ${proofDev === d ? 'active' : ''}" onclick="setProofDev('${d}')">${d}</button>`).join('');
+    const PF = proofDev ? ALL.filter(x => x.device === proofDev) : ALL;
     const ng = PF.filter(x => x.judge === 'NG').length;
     const ok = PF.filter(x => x.judge === 'OK').length;
     const dates = [...new Set(PF.map(x => x.date).filter(Boolean))].sort();
