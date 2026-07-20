@@ -965,15 +965,6 @@
         <div class="section-title">📅 월간 품질 리포트</div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
-          <span style="font-size:11.5px;color:#86868b;margin-left:6px">월 목표금액</span>
-          <span style="display:inline-flex;align-items:center;gap:4px">
-            <label for="giahn-t-inner" style="font-size:11px;color:#86868b">내부</label>
-            <input id="giahn-t-inner" type="text" inputmode="numeric" placeholder="0" oninput="fmtGiahnNum(this)" onchange="saveGiahnTargets()" title="내부(자사) 월간 목표금액" style="width:106px;text-align:right;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px">
-          </span>
-          <span style="display:inline-flex;align-items:center;gap:4px">
-            <label for="giahn-t-outer" style="font-size:11px;color:#86868b">외주</label>
-            <input id="giahn-t-outer" type="text" inputmode="numeric" placeholder="0" oninput="fmtGiahnNum(this)" onchange="saveGiahnTargets()" title="외주 월간 목표금액" style="width:106px;text-align:right;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px">
-          </span>
           <button class="btn btn-primary btn-sm" onclick="generateGiahnDoc()"><i class="ti ti-file-text"></i> 기안 문서 생성</button>
         </div>
       </div>
@@ -3144,6 +3135,9 @@ function generateGiahnPdf() {
   w.document.open(); w.document.write(html); w.document.close();
 }
 
+let monthlySub = 'summary';   // 월간 리포트 서브탭: summary | giahn | detail
+function setMonthlySub(s) { monthlySub = s; renderMonthly(); }
+
 function renderMonthly() {
   const sel = document.getElementById('monthly-sel');
   const body = document.getElementById('monthly-body');
@@ -3270,19 +3264,45 @@ function renderMonthly() {
       ${bigCard('가제본 완료율', gPct, '%', `완료 ${gDone} / 전체 ${gTotal}건
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${gPct}%;background:#17A2B8;border-radius:99px"></div></div>`, '#17A2B8')}
     </div>
-    ${gianHtml}
-    <div class="card" style="padding:16px 18px;margin-bottom:16px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📈 월별 추이 (최근 12개월) <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=비용(만원)</span></div>
-      <div style="height:240px"><canvas id="monthly-trend"></canvas></div>
+    <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px">
+      <button class="claim-year-btn ${monthlySub === 'summary' ? 'active' : ''}" onclick="setMonthlySub('summary')">📊 요약</button>
+      <button class="claim-year-btn ${monthlySub === 'giahn' ? 'active' : ''}" onclick="setMonthlySub('giahn')">📄 기안용</button>
+      <button class="claim-year-btn ${monthlySub === 'detail' ? 'active' : ''}" onclick="setMonthlySub('detail')">📋 상세내역 ${detailRows.length}</button>
     </div>
-    <div class="grid2" style="margin-bottom:16px">
-      ${barTbl('공정별 TOP', top(curRows, r => claimToProc(r[9]), 6), '#17A2B8')}
-      ${barTbl('부적합 유형 TOP', top(curRows, r => r[8], 6), '#E67E22')}
+
+    <div style="display:${monthlySub === 'summary' ? 'block' : 'none'}">
+      <div class="card" style="padding:16px 18px;margin-bottom:16px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px">📈 월별 추이 (최근 12개월) <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=비용(만원)</span></div>
+        <div style="height:240px"><canvas id="monthly-trend"></canvas></div>
+      </div>
+      <div class="grid2" style="margin-bottom:16px">
+        ${barTbl('공정별 TOP', top(curRows, r => claimToProc(r[9]), 6), '#17A2B8')}
+        ${barTbl('부적합 유형 TOP', top(curRows, r => r[8], 6), '#E67E22')}
+      </div>
+      <div style="margin-bottom:16px">
+        ${barTbl('거래처 TOP', top(curRows, r => r[2], 8), '#7B4EA0')}
+      </div>
     </div>
-    <div style="margin-bottom:16px">
-      ${barTbl('거래처 TOP', top(curRows, r => r[2], 8), '#7B4EA0')}
+
+    <div style="display:${monthlySub === 'giahn' ? 'block' : 'none'}">
+      <div class="card" style="padding:14px 18px;margin-bottom:14px;background:#fbfbfd">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:12.5px">월 목표금액</span>
+          <span style="display:inline-flex;align-items:center;gap:5px">
+            <label for="giahn-t-inner" style="font-size:11.5px;color:#86868b">내부</label>
+            <input id="giahn-t-inner" type="text" inputmode="numeric" placeholder="0" oninput="fmtGiahnNum(this)" onchange="saveGiahnTargets();renderMonthly()" style="width:112px;text-align:right;border:1px solid #d2d2d7;border-radius:8px;padding:6px 9px;font-size:12.5px">
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:5px">
+            <label for="giahn-t-outer" style="font-size:11.5px;color:#86868b">외주</label>
+            <input id="giahn-t-outer" type="text" inputmode="numeric" placeholder="0" oninput="fmtGiahnNum(this)" onchange="saveGiahnTargets();renderMonthly()" style="width:112px;text-align:right;border:1px solid #d2d2d7;border-radius:8px;padding:6px 9px;font-size:12.5px">
+          </span>
+          <span style="font-size:11px;color:#aaa">한 번 입력하면 이 달에 저장돼요</span>
+        </div>
+      </div>
+      ${gianHtml}
     </div>
-    <div class="card" style="padding:16px 18px;margin-bottom:14px">
+
+    <div class="card" style="padding:16px 18px;margin-bottom:14px;display:${monthlySub === 'detail' ? 'block' : 'none'}">
       <div style="font-weight:700;font-size:13px;margin-bottom:10px">📋 ${curM.split('-')[1]}월 부적합 상세 <span style="font-size:11px;font-weight:400;color:#aaa">금액 큰 순 · ${detailRows.length}건</span></div>
       <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
         <table style="width:100%;font-size:12.5px">
@@ -3304,8 +3324,8 @@ function renderMonthly() {
     </div>
     <div style="font-size:11px;color:#a1a1a6">※ 부적합·비용 = 클레임 DB(관리대장 병합) / 가제본 = 해당 월 요청 건 / KPI 상세는 'KPI 현황' 탭</div>
   `;
-  monthlyTrendChart('monthly-trend', tLabels, tCounts, tCosts);
-  loadGiahnTargets();
+  if (monthlySub === 'summary') monthlyTrendChart('monthly-trend', tLabels, tCounts, tCosts);
+  if (monthlySub === 'giahn') loadGiahnTargets();
 }
 
 let gajebonDateSort = 'desc';   // 가제본 날짜 정렬: desc=최신순, asc=오래된순
