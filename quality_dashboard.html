@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>타라TPS 품질QMS</title>
+<title>타라TPS 품질개선팀 통합품질관리시스템</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -365,8 +365,8 @@
   <!-- ── 사이드바 ── -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="brand">타라TPS</div>
-      <div class="title">품질 <span>QMS</span></div>
+      <div class="brand">타라TPS 품질개선팀</div>
+      <div class="title">통합품질관리<span>시스템</span></div>
     </div>
 
     <div class="sidebar-section">
@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 08:05</span>
+      v<span id="build-stamp">07/21 08:17</span>
     </div>
   </aside>
 
@@ -434,7 +434,7 @@
     <!-- 상단 바 -->
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">대시보드</div>
-      <div class="topbar-meta" id="topbar-meta">타라TPS 품질QMS</div>
+      <div class="topbar-meta" id="topbar-meta">타라TPS 품질개선팀 통합품질관리시스템</div>
     </div>
 
     <!-- 열린 탭 바 (브라우저 탭 방식) -->
@@ -3300,7 +3300,7 @@ function generateGiahnDoc() {
   <h3>4. 첨부</h3>
   <div style="padding-left:14px">- ${yr}년 ${moN}월 품질사고 관리대장</div>
 
-  <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 품질QMS 대시보드에서 자동 생성되었습니다. (생성일 ${today})</div>
+  <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 통합품질관리시스템에서 자동 생성되었습니다. (생성일 ${today})</div>
   <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
   </body></html>`;
   const w = window.open('', '_blank');
@@ -3375,7 +3375,7 @@ function generateGiahnPdf() {
   ${tbl('1. 공정별 부적합 현황 (TOP)', top(r => claimToProc(r[9]), 8))}
   ${tbl('2. 부적합 유형별 현황 (TOP)', top(r => r[8], 8))}
   ${tbl('3. 거래처별 현황 (TOP)', top(r => r[2], 8))}
-  <div class="foot">※ 본 보고서는 품질QMS 대시보드의 클레임/부적합 데이터를 자동 집계하여 생성되었습니다.</div>
+  <div class="foot">※ 본 보고서는 통합품질관리시스템의 클레임/부적합 데이터를 자동 집계하여 생성되었습니다.</div>
   <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
   </body></html>`;
   const w = window.open('', '_blank');
