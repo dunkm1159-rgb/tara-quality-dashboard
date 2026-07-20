@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>타라TPS 품질QMS</title>
+<style>
+  body { font-family: -apple-system, 'Pretendard', sans-serif; display: flex; align-items: center;
+         justify-content: center; height: 100vh; margin: 0; background: #f5f5f7; color: #86868b; }
+</style>
+</head>
+<body>
+<div>품질QMS 최신 화면을 여는 중...</div>
+<script>
+  // 매번 새로운 타임스탬프를 붙여 캐시를 우회 → 항상 최신 대시보드
+  location.replace('quality_dashboard.html?t=' + Date.now());
+</script>
+</body>
+</html>
