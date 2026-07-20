@@ -1221,7 +1221,25 @@
       </div>
 
       <!-- KPI 요약 카드 -->
-      <div id="kpi-summary" class="metrics" style="margin-bottom:24px"></div>
+      <div id="kpi-summary" class="metrics" style="margin-bottom:20px"></div>
+
+      <!-- 월별 종합 현황 -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-title">📅 월별 KPI 현황 <span style="font-size:11px;font-weight:400;color:#aaa">4개 지표 한눈에 · 목표 미달은 빨강</span></div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;font-size:12.5px;white-space:nowrap">
+            <thead><tr>
+              <th style="text-align:center">월</th>
+              <th style="text-align:center">반복불량<br><span style="font-weight:400;color:#aaa">목표 월2건</span></th>
+              <th style="text-align:right">품질비용<br><span style="font-weight:400;color:#aaa">만원</span></th>
+              <th style="text-align:center">SOP 준수율<br><span style="font-weight:400;color:#aaa">목표 95점</span></th>
+              <th style="text-align:center">표준미준수<br><span style="font-weight:400;color:#aaa">목표 0건</span></th>
+              <th>비고</th>
+            </tr></thead>
+            <tbody id="kpi-monthly-tbody"></tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- 반복불량 TOP3 -->
       <div class="section-title" style="margin-bottom:12px">① 반복불량 TOP3 재발율 <span style="font-size:12px;color:#888;font-weight:400">목표: 전년 대비 50% 감소 (연 24건 이하)</span></div>
@@ -4721,6 +4739,34 @@ function renderKpi() {
     kpiCard('품질비용 누적', Math.round(costTotal/10000).toLocaleString(), '만원', `전년 ${Math.round(costPrev/10000).toLocaleString()}만 → 목표 ${Math.round(costTarget/10000).toLocaleString()}만 (${costRate}%)`, costRate<100?'#27ae60':'#c0392b') +
     kpiCard('SOP 준수율 평균', sopAvg, '점', `목표 95점 이상`, sopAvg>=95?'#27ae60':sopAvg>=90?'#e67e22':'#c0392b') +
     kpiCard('표준미준수 사고', stdTotal, '건', '목표 0건', stdTotal===0?'#27ae60':'#c0392b');
+
+  // ── 월별 KPI 종합 표 ──
+  try {
+    const MO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const find = (arr, m) => (arr || []).find(r => r.m === m) || {};
+    const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const tb = document.getElementById('kpi-monthly-tbody');
+    if (tb) {
+      const monTgt = Math.round((D.top3.target || 24) / 12 * 100) / 100;
+      tb.innerHTML = MO.map(m => {
+        const t = find(D.top3.monthly, m), c = find(D.cost.monthly, m),
+              s = find(D.sop.monthly, m), st = find(D.std.monthly, m);
+        const has = (t.total != null) || (c.소계 != null) || (s.actual != null) || (st.actual != null);
+        const anyVal = (t.total || 0) + (c.소계 || 0) + (s.actual || 0) + (st.actual || 0);
+        const dim = !anyVal ? 'color:#ccc' : '';
+        const sop = s.actual;
+        const note = (st.note || t.note || c.note || s.note || '').split('\n')[0];
+        return `<tr>
+          <td style="text-align:center;font-weight:600;${dim}">${m}</td>
+          <td style="text-align:center;${dim};${(t.total||0) > 2 ? 'color:#C0392B;font-weight:600' : ''}">${t.total != null ? t.total + '건' : '-'}</td>
+          <td style="text-align:right;${dim};${(c.소계||0) ? 'color:#C0392B;font-weight:600' : ''}">${c.소계 ? Math.round(c.소계/10000).toLocaleString() : '-'}</td>
+          <td style="text-align:center;font-weight:600;color:${sop == null ? '#ccc' : (sop >= 95 ? '#248a3d' : '#C0392B')}">${sop != null ? sop + '점' : '-'}</td>
+          <td style="text-align:center;font-weight:600;color:${st.actual == null ? '#ccc' : (st.actual === 0 ? '#248a3d' : '#C0392B')}">${st.actual != null ? st.actual + '건' : '-'}</td>
+          <td style="max-width:340px;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;color:#888" title="${esc(st.note || t.note || c.note || s.note)}">${esc(note)}</td>
+        </tr>`;
+      }).join('');
+    }
+  } catch (e) { console.warn('kpi monthly', e); }
 
   const mLabels = D.top3.monthly.map(r=>r.m);
 
