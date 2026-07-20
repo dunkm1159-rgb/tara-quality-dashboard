@@ -371,14 +371,14 @@
 
     <div class="sidebar-section">
       <button class="nav-item active" id="nav-dashboard" onclick="showTab('dashboard',this)">
-        <span class="nav-icon"><i class="ti ti-home"></i></span> 홈
+        <span class="nav-icon"><i class="ti ti-home"></i></span> 대시보드
       </button>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">생산 현황</div>
       <button class="nav-item" id="nav-wip" onclick="showTab('wip',this)">
-        <span class="nav-icon"><i class="ti ti-building-factory-2"></i></span> 작업 진행중
+        <span class="nav-icon"><i class="ti ti-building-factory-2"></i></span> 설비별 작업현황
       </button>
       <button class="nav-item" id="nav-gajebon" onclick="showTab('gajebon',this)">
         <span class="nav-icon"><i class="ti ti-book"></i></span> 가제본 현황
@@ -388,10 +388,10 @@
     <div class="sidebar-section">
       <div class="sidebar-section-label">품질 관리</div>
       <button class="nav-item" id="nav-nccost" onclick="showTab('nccost',this)">
-        <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 부적합 목표·성과
+        <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 품질사고 관리대장
       </button>
       <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
-        <span class="nav-icon"><i class="ti ti-target"></i></span> KPI 현황
+        <span class="nav-icon"><i class="ti ti-target"></i></span> 성과관리
       </button>
       <button class="nav-item" id="nav-analysis" onclick="showTab('analysis',this)">
         <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 분석
@@ -400,7 +400,7 @@
         <span class="nav-icon"><i class="ti ti-folder"></i></span> 클레임 DB
       </button>
       <button class="nav-item" id="nav-worker" onclick="showTab('worker',this)">
-        <span class="nav-icon"><i class="ti ti-users"></i></span> 작업자 사고
+        <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
       </button>
     </div>
 
@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/20 21:20</span>
+      v<span id="build-stamp">07/20 21:29</span>
     </div>
   </aside>
 
@@ -1694,14 +1694,14 @@ function renderWorker(skipTabs) {
 // Tab navigation
 // ========================
 const TAB_TITLES = {
-  dashboard: '홈',
+  dashboard: '대시보드',
   analysis: '분석',
-  kpi: 'KPI 현황',
-  nccost: '부적합 목표·성과',
+  kpi: '성과관리',
+  nccost: '품질사고 관리대장',
   claim: '클레임 DB',
-  worker: '작업자 사고',
+  worker: '공정별 사고',
   gajebon: '가제본 현황',
-  wip: '작업 진행중',
+  wip: '설비별 작업현황',
   monthly: '월간 리포트',
   docs: '문서 관리',
   register: '클레임 등록',
