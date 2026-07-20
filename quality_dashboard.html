@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/20 21:35</span>
+      v<span id="build-stamp">07/20 21:58</span>
     </div>
   </aside>
 
@@ -446,7 +446,7 @@
     <!-- ============ 대시보드 ============ -->
     <div id="tab-dashboard" class="tab active">
       <div class="section-header">
-        <div class="section-title">이번 달 현황 <span style="font-size:12px;color:#aaa;font-weight:400" id="dash-month"></span></div>
+        <div class="section-title">대시보드 <span style="font-size:12px;color:#aaa;font-weight:400" id="dash-month"></span></div>
         <button class="btn btn-secondary btn-sm" onclick="refreshDash()">↻ 새로고침</button>
       </div>
 
@@ -986,7 +986,7 @@
     <!-- ============ 작업 진행중 ============ -->
     <div id="tab-wip" class="tab">
       <div class="section-header">
-        <div class="section-title">🏭 작업 진행중 현황 <span style="font-size:12px;color:#86868b;font-weight:400">(설비별)</span></div>
+        <div class="section-title">🏭 설비별 작업현황</div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="wip-updated" style="font-size:12px;color:#86868b"></span>
           <button class="icon-btn primary" onclick="reloadGajebonData()" title="지금 새로고침">🔄</button>
@@ -999,7 +999,7 @@
     <!-- ============ 부적합 목표·성과 ============ -->
     <div id="tab-nccost" class="tab">
       <div class="section-header">
-        <div class="section-title">부적합 목표·성과</div>
+        <div class="section-title">품질사고 관리대장</div>
         <div id="nccost-year-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
       <p style="font-size:12px;color:#86868b;margin:-6px 0 14px;">연간 품질부적합 비용 목표 대비 발생 현황 (공정별: 제판·매엽·윤전·제본·외주·특재)</p>
@@ -1155,7 +1155,7 @@
     <!-- ============ 작업자 사고 현황 ============ -->
     <div id="tab-worker" class="tab">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
-        <div class="section-title">작업자별 품질사고 현황</div>
+        <div class="section-title">공정별 사고</div>
         <div style="display:flex;align-items:center;gap:10px">
           <button class="gj-toggle" id="worker-anon-btn" onclick="toggleWorkerAnon()" title="시연/공유 시 이름을 가립니다">🕶 익명 모드</button>
           <div style="font-size:12px;color:#888" id="worker-updated"></div>
@@ -1229,7 +1229,7 @@
     <!-- ============ KPI 현황 ============ -->
     <div id="tab-kpi" class="tab">
       <div class="section-header">
-        <div class="section-title">2026년 품질개선팀 KPI 현황</div>
+        <div class="section-title">성과관리 <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
         <span style="font-size:12px;color:#aaa" id="kpi-period">목표 대비 실적</span>
       </div>
 
@@ -3057,15 +3057,14 @@ async function fetchGajebonFromServer() {
 
 function renderGajebonMetrics() {
   const allRows = Object.values(gajebonSheets).flat();
-  const total = allRows.length;
-  const withGajebon = allRows.filter(r => r['요청내용'] && r['요청내용'].trim()).length;
-  const done = allRows.filter(r => r['진행상태'] === '완료').length;
-  const progress = allRows.filter(r => r['진행상태'] === '진행중').length;
+  // 완료 = ERP 완료 또는 웹에서 가제본 완료처리(날짜입력) — 날짜 미입력이어도 완료로 집계
+  const isDone = r => (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '');
+  const done = allRows.filter(isDone).length;
+  const doneNoDate = allRows.filter(r => r['진행상태'] === '완료' && (r['요청내용'] || '').includes('가제본') && !gajDate(r['주문번호'] || '')).length;
+  const progress = allRows.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '')).length;
   document.getElementById('gajebon-metrics').innerHTML = `
-    <div class="metric"><div class="label">전체 주문</div><div class="value">${total.toLocaleString()}</div><div class="sub neutral">누적</div></div>
-    <div class="metric"><div class="label">가제본 주문</div><div class="value">${withGajebon}</div><div class="sub up">가제본 있음</div></div>
-    <div class="metric"><div class="label">완료</div><div class="value">${done}</div><div class="sub neutral">진행상태=완료</div></div>
-    <div class="metric"><div class="label">진행중</div><div class="value">${progress}</div><div class="sub neutral">진행상태=진행중</div></div>
+    <div class="metric"><div class="label">완료</div><div class="value" style="color:#248a3d">${done.toLocaleString()}</div><div class="sub ${doneNoDate ? 'up' : 'neutral'}">${doneNoDate ? '가제본일 미입력 ' + doneNoDate + '건' : '가제본일 입력 완료'}</div></div>
+    <div class="metric"><div class="label">진행중</div><div class="value" style="color:#c93400">${progress.toLocaleString()}</div><div class="sub neutral">현재 생산 진행</div></div>
   `;
 }
 
