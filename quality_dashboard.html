@@ -965,9 +965,15 @@
         <div class="section-title">📅 월간 품질 리포트</div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
-          <span style="font-size:11.5px;color:#86868b">월목표</span>
-          <input id="giahn-t-inner" type="number" placeholder="내부" onchange="saveGiahnTargets()" style="width:96px;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px" title="내부(자사) 월간 목표금액">
-          <input id="giahn-t-outer" type="number" placeholder="외주" onchange="saveGiahnTargets()" style="width:96px;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px" title="외주 월간 목표금액">
+          <span style="font-size:11.5px;color:#86868b;margin-left:6px">월 목표금액</span>
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <label for="giahn-t-inner" style="font-size:11px;color:#86868b">내부</label>
+            <input id="giahn-t-inner" type="text" inputmode="numeric" placeholder="0" oninput="fmtGiahnNum(this)" onchange="saveGiahnTargets()" title="내부(자사) 월간 목표금액" style="width:106px;text-align:right;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px">
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <label for="giahn-t-outer" style="font-size:11px;color:#86868b">외주</label>
+            <input id="giahn-t-outer" type="text" inputmode="numeric" placeholder="0" oninput="fmtGiahnNum(this)" onchange="saveGiahnTargets()" title="외주 월간 목표금액" style="width:106px;text-align:right;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px">
+          </span>
           <button class="btn btn-primary btn-sm" onclick="generateGiahnDoc()"><i class="ti ti-file-text"></i> 기안 문서 생성</button>
         </div>
       </div>
@@ -2933,19 +2939,27 @@ function monthlyTrendChart(id, labels, counts, costs) {
 
 // ── 월별 목표금액 (내부/외주) 저장·복원 ──
 function giahnTgKey(m) { return 'giahn_tg_' + m; }
+function fmtGiahnNum(el) {           // 입력 중 천단위 콤마
+  const raw = String(el.value).replace(/[^0-9]/g, '');
+  el.value = raw ? Number(raw).toLocaleString() : '';
+}
+function giahnNumOf(id) {
+  const el = document.getElementById(id);
+  return Number(String(el && el.value || '').replace(/[^0-9]/g, '')) || 0;
+}
 function loadGiahnTargets() {
   const sel = document.getElementById('monthly-sel'); if (!sel || !sel.value) return;
   let t = {};
   try { t = JSON.parse(localStorage.getItem(giahnTgKey(sel.value)) || '{}'); } catch (e) {}
   const a = document.getElementById('giahn-t-inner'), b = document.getElementById('giahn-t-outer');
-  if (a) a.value = t.inner || '';
-  if (b) b.value = t.outer || '';
+  if (a) a.value = t.inner ? Number(t.inner).toLocaleString() : '';
+  if (b) b.value = t.outer ? Number(t.outer).toLocaleString() : '';
 }
 function saveGiahnTargets() {
   const sel = document.getElementById('monthly-sel'); if (!sel || !sel.value) return;
-  const a = Number(document.getElementById('giahn-t-inner').value) || 0;
-  const b = Number(document.getElementById('giahn-t-outer').value) || 0;
-  localStorage.setItem(giahnTgKey(sel.value), JSON.stringify({ inner: a, outer: b }));
+  localStorage.setItem(giahnTgKey(sel.value), JSON.stringify({
+    inner: giahnNumOf('giahn-t-inner'), outer: giahnNumOf('giahn-t-outer')
+  }));
 }
 
 // ── 기안 문서 한방 생성 (임원 보고용, 관리대장 기준) ──
