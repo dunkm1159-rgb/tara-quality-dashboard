@@ -4781,14 +4781,23 @@ function renderKpi() {
         const anyVal = (t.total || 0) + (c.소계 || 0) + (s.actual || 0) + (st.actual || 0);
         const dim = !anyVal ? 'color:#ccc' : '';
         const sop = s.actual;
-        const note = (st.note || t.note || c.note || s.note || '').split('\n')[0];
+        // 비고: 지표별로 구분해 전체 내용 표시
+        const noteLine = (label, txt, color) => {
+          if (!txt || !String(txt).trim()) return '';
+          const body = esc(String(txt).trim()).replace(/\n/g, '<br>');
+          return `<div style="margin:2px 0"><span style="display:inline-block;min-width:52px;font-size:10px;font-weight:700;color:${color}">${label}</span><span>${body}</span></div>`;
+        };
+        const notes = noteLine('반복불량', t.note, '#17A2B8')
+                    + noteLine('품질비용', c.note, '#C0392B')
+                    + noteLine('SOP', s.note, '#7B4EA0')
+                    + noteLine('표준미준수', st.note, '#E67E22');
         return `<tr>
-          <td style="text-align:center;font-weight:600;${dim}">${m}</td>
-          <td style="text-align:center;${dim};${(t.total||0) > 2 ? 'color:#C0392B;font-weight:600' : ''}">${t.total != null ? t.total + '건' : '-'}</td>
-          <td style="text-align:right;${dim};${(c.소계||0) ? 'color:#C0392B;font-weight:600' : ''}">${c.소계 ? Math.round(c.소계/10000).toLocaleString() : '-'}</td>
-          <td style="text-align:center;font-weight:600;color:${sop == null ? '#ccc' : (sop >= 95 ? '#248a3d' : '#C0392B')}">${sop != null ? sop + '점' : '-'}</td>
-          <td style="text-align:center;font-weight:600;color:${st.actual == null ? '#ccc' : (st.actual === 0 ? '#248a3d' : '#C0392B')}">${st.actual != null ? st.actual + '건' : '-'}</td>
-          <td style="max-width:340px;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;color:#888" title="${esc(st.note || t.note || c.note || s.note)}">${esc(note)}</td>
+          <td style="text-align:center;font-weight:600;vertical-align:top;${dim}">${m}</td>
+          <td style="text-align:center;vertical-align:top;${dim};${(t.total||0) > 2 ? 'color:#C0392B;font-weight:600' : ''}">${t.total != null ? t.total + '건' : '-'}</td>
+          <td style="text-align:right;vertical-align:top;${dim};${(c.소계||0) ? 'color:#C0392B;font-weight:600' : ''}">${c.소계 ? Math.round(c.소계/10000).toLocaleString() : '-'}</td>
+          <td style="text-align:center;font-weight:600;vertical-align:top;color:${sop == null ? '#ccc' : (sop >= 95 ? '#248a3d' : '#C0392B')}">${sop != null ? sop + '점' : '-'}</td>
+          <td style="text-align:center;font-weight:600;vertical-align:top;color:${st.actual == null ? '#ccc' : (st.actual === 0 ? '#248a3d' : '#C0392B')}">${st.actual != null ? st.actual + '건' : '-'}</td>
+          <td style="white-space:normal;word-break:break-word;line-height:1.55;font-size:11.5px;color:#555;min-width:320px;vertical-align:top">${notes || '<span style="color:#ccc">-</span>'}</td>
         </tr>`;
       }).join('');
     }
