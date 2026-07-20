@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 08:17</span>
+      v<span id="build-stamp">07/21 08:24</span>
     </div>
   </aside>
 
@@ -1015,6 +1015,24 @@
           <div class="card-title">공정별 발생비용</div>
           <div class="chart-wrap"><canvas id="nccost-chart-proc"></canvas></div>
         </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">연도별 사내 / 외주 부담 현황 <span style="font-size:11px;font-weight:400;color:#aaa">품질사고 관리대장 기준</span></div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;font-size:12.5px;white-space:nowrap">
+            <thead><tr>
+              <th>연도</th>
+              <th style="text-align:right">발생비용 합계</th>
+              <th style="text-align:right">사내(자사귀책)</th>
+              <th style="text-align:right">외주(협력사)</th>
+              <th style="text-align:center">외주 비중</th>
+              <th style="text-align:center">건수</th>
+            </tr></thead>
+            <tbody id="nccost-inout-tbody"></tbody>
+          </table>
+        </div>
+        <div class="chart-wrap" style="height:230px;margin-top:14px"><canvas id="nccost-chart-inout"></canvas></div>
       </div>
 
       <div class="grid2">
@@ -2008,6 +2026,37 @@ function renderNcCost(){
   const cnts = NC_MONTHS.map(m => yd.months[m]?.cnt||0);
   renderBar('nccost-chart-cnt', NC_MONTHS, cnts, NC_MONTHS.map(()=>'#34c759'));
   ncYearChart('nccost-chart-year', years, years.map(y=>D[y].target/10000), years.map(y=>D[y].totalCost/10000));
+
+  // ── 연도별 사내/외주 부담 ──
+  try {
+    const won = v => Math.round((v || 0) / 10000).toLocaleString();
+    const tb = document.getElementById('nccost-inout-tbody');
+    const inn = years.map(y => (D[y].selfCost || 0));
+    const out = years.map((y, i) => (D[y].totalCost || 0) - inn[i]);
+    if (tb) tb.innerHTML = years.map((y, i) => {
+      const tot = D[y].totalCost || 0, pct = tot ? Math.round(out[i] / tot * 100) : 0;
+      return `<tr${y === nccostYear ? ' style="background:rgba(23,162,184,0.07)"' : ''}>
+        <td style="font-weight:${y === nccostYear ? 700 : 500}">${y}년</td>
+        <td style="text-align:right;font-weight:600">${won(tot)}만</td>
+        <td style="text-align:right;color:#17A2B8;font-weight:600">${won(inn[i])}만</td>
+        <td style="text-align:right;color:#E67E22;font-weight:600">${won(out[i])}만</td>
+        <td style="text-align:center;color:${pct >= 50 ? '#C0392B' : '#86868b'};font-weight:600">${pct}%</td>
+        <td style="text-align:center;color:#666">${D[y].totalCnt || 0}건</td>
+      </tr>`;
+    }).join('');
+    if (chartInstances.nccostInout) chartInstances.nccostInout.destroy();
+    const ci = document.getElementById('nccost-chart-inout');
+    if (ci && window.Chart) chartInstances.nccostInout = new Chart(ci, {
+      type: 'bar',
+      data: { labels: years.map(y => y + '년'), datasets: [
+        { label: '사내(자사귀책)', data: inn.map(v => Math.round(v / 10000)), backgroundColor: '#17A2B8', stack: 's' },
+        { label: '외주(협력사)', data: out.map(v => Math.round(v / 10000)), backgroundColor: '#E67E22', stack: 's' }
+      ] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString() + '만원' } } },
+        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '만' } } } }
+    });
+  } catch (e) { console.warn('inout', e); }
   renderNcProcDetail(nccostYear);
 }
 // 설비명 → 공정 매핑
@@ -4773,6 +4822,24 @@ if (window.KPI_DATA_SRC) {
   if (window.KPI_DATA_SRC.colorClaim && window.KPI_DATA_SRC.colorClaim.length) KPI_DATA.colorClaim = window.KPI_DATA_SRC.colorClaim;
 }
 
+// 품질비용은 '품질사고 관리대장'을 단일 원천으로 사용 (기안 기준과 동일하게 통일)
+(function syncCostWithLedger() {
+  const NC = window.NCCOST_DATA; if (!NC) return;
+  const yr = String(new Date().getFullYear());
+  const cy = NC[yr], py = NC[String(Number(yr) - 1)];
+  if (!cy || !cy.months) return;
+  const PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
+  KPI_DATA.cost.monthly = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'].map(m => {
+    const mv = cy.months[m] || {};
+    const old = (KPI_DATA.cost.monthly || []).find(r => r.m === m) || {};
+    const row = { m: m, 소계: mv.cost || 0, note: old.note || '' };
+    PRC.forEach(p => { row[p === '특재외' ? '기타' : p] = (mv.proc && mv.proc[p]) || 0; });
+    return row;
+  });
+  if (py && py.totalCost) KPI_DATA.cost.actual2025 = py.totalCost;
+  if (cy.target) KPI_DATA.cost.target2026 = cy.target;
+})();
+
 // ========================
 // KPI 렌더
 // ========================
@@ -4802,8 +4869,8 @@ function renderKpi() {
   const NC = window.NCCOST_DATA || {};
   const nc2026 = NC['2026'] || { totalCost: 0, months: {} };
   const nc2025 = NC['2025'] || { totalCost: 0 };
-  const costTotal  = nc2026.selfCost || 0;                     // 자사귀책(외주 제외) — KPI는 팀 통제분만
-  const costPrev   = nc2025.selfCost || 0;                     // 전년(2025) 자사귀책 실적
+  const costTotal  = nc2026.totalCost || 0;                    // 품질사고 관리대장 전체(자사+외주) — 기안 기준과 동일
+  const costPrev   = nc2025.totalCost || 0;                    // 전년(2025) 전체 실적
   const costTarget = Math.round(costPrev * 0.5) || 30000000;    // 전년 대비 50% 감소 목표
   const costRate   = costTarget ? Math.round(costTotal/costTarget*100) : 0;
   const sopVals   = D.sop.monthly.filter(r=>r.actual!=null&&r.actual>0).map(r=>r.actual);
@@ -5021,7 +5088,7 @@ function renderKpi() {
     if(chartInstances.chartCostMonthly){chartInstances.chartCostMonthly.destroy();}
     const ctx = document.getElementById('chartCostMonthly');
     const MONS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    const costVals = MONS.map(m => (nc2026.months && nc2026.months[m] ? nc2026.months[m].selfCost : 0) || 0);
+    const costVals = MONS.map(m => (nc2026.months && nc2026.months[m] ? nc2026.months[m].cost : 0) || 0);
     const monthTarget = Math.round(costTarget/12);
     if(ctx) chartInstances.chartCostMonthly = new Chart(ctx, {
       type:'bar',
@@ -5042,7 +5109,7 @@ function renderKpi() {
     if(chartInstances.chartCostProcess){chartInstances.chartCostProcess.destroy();}
     const ctx = document.getElementById('chartCostProcess');
     const NC_PROCS=['제판','매엽','윤전','제본','외주','특재'];
-    const procPairs = NC_PROCS.map(p=>[p, Object.values(nc2026.months||{}).reduce((s,mv)=>s+((mv.selfProc&&mv.selfProc[p])||0),0)]).filter(x=>x[1]>0);
+    const procPairs = NC_PROCS.map(p=>[p, Object.values(nc2026.months||{}).reduce((s,mv)=>s+((mv.proc&&mv.proc[p])||0),0)]).filter(x=>x[1]>0);
     const procs = procPairs.length ? procPairs.map(x=>x[0]) : ['데이터없음'];
     const pVals = procPairs.length ? procPairs.map(x=>x[1]) : [0];
     const pColors = TARA_COLORS;
