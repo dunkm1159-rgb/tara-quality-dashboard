@@ -3024,7 +3024,10 @@ function renderMonthly() {
   if (sel.options.length !== months.length) {
     sel.innerHTML = months.map(m => `<option value="${m}">${m.split('-')[0]}년 ${m.split('-')[1]}월</option>`).join('');
   }
-  const curM = sel.value || months[0];
+  // 기본 = 지난달(월간 리뷰 대상). 지난달 데이터가 없으면 가장 최근 월
+  const _pd = new Date(); _pd.setMonth(_pd.getMonth() - 1);
+  const prevCal = _pd.getFullYear() + '-' + String(_pd.getMonth() + 1).padStart(2, '0');
+  const curM = sel.value || (months.includes(prevCal) ? prevCal : months[0]);
   if (!sel.value) sel.value = curM;
   const [py, pm] = curM.split('-').map(Number);
   const pd = new Date(py, pm - 2, 1);
@@ -3048,24 +3051,71 @@ function renderMonthly() {
   const tLabels = last.map(mk => mk.slice(2).replace('-', '/'));
   const tCounts = last.map(mk => cd.filter(r => monthKey(r) === mk).length);
   const tCosts = last.map(mk => Math.round(cd.filter(r => monthKey(r) === mk).reduce((s, r) => s + cost(r), 0) / 10000));
-  const card = (label, val, sub) => `<div class="card" style="padding:16px;flex:1;min-width:150px"><div style="font-size:12px;color:#86868b">${label}</div><div style="font-size:24px;font-weight:700;margin-top:4px">${val}</div><div style="font-size:11px;margin-top:2px">${sub || ''}</div></div>`;
-  const tbl = (title, rows) => `<div class="card" style="padding:14px;flex:1;min-width:220px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">${title}</div>${rows.length ? rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.04)"><span>${wipEsc(k)}</span><span style="color:#86868b">${v.c}건 · ${man(v.cost)}만</span></div>`).join('') : '<div style="color:#ccc;font-size:12px">없음</div>'}</div>`;
+  const avgCost = curRows.length ? Math.round(curCost / curRows.length) : 0;
+  const bigCard = (label, val, unit, sub, color) => `
+    <div class="card" style="padding:18px 20px">
+      <div style="font-size:12px;color:#86868b;margin-bottom:6px">${label}</div>
+      <div style="font-size:30px;font-weight:700;letter-spacing:-0.02em;color:${color || '#1d1d1f'};white-space:nowrap">${val}<span style="font-size:14px;font-weight:500;color:#86868b;margin-left:3px">${unit || ''}</span></div>
+      <div style="font-size:12px;margin-top:5px;color:#86868b">${sub || ''}</div>
+    </div>`;
+  const barTbl = (title, rows, colorHex) => {
+    const mx = Math.max(1, ...rows.map(x => x[1].c));
+    return `<div class="card" style="padding:16px 18px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px">${title}</div>
+      ${rows.length ? rows.map(([k, v]) => `
+        <div style="margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:4px;gap:8px">
+            <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${wipEsc(k)}">${wipEsc(k)}</span>
+            <span style="color:#86868b;white-space:nowrap;flex-shrink:0">${v.c}건 · <b style="color:#C0392B">${man(v.cost)}만</b></span>
+          </div>
+          <div style="height:6px;background:#f0f0f3;border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:${Math.round(v.c / mx * 100)}%;background:${colorHex};border-radius:99px"></div>
+          </div>
+        </div>`).join('') : '<div style="color:#ccc;font-size:12px">없음</div>'}
+    </div>`;
+  };
+  const gPct = gTotal ? Math.round(gDone / gTotal * 100) : 0;
+  const detailRows = curRows.slice().sort((a, b) => cost(b) - cost(a));
   body.innerHTML = `
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-      ${card('부적합 건수', curRows.length + '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
-      ${card('품질비용', man(curCost) + '만원', '전월 대비 ' + delta(curCost, prevCost))}
-      ${card('가제본', gTotal + '건', '완료 ' + gDone + ' / 진행 ' + (gTotal - gDone))}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:16px">
+      ${bigCard('부적합 건수', curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
+      ${bigCard('품질비용', man(curCost), '만원', '전월 대비 ' + delta(curCost, prevCost), '#C0392B')}
+      ${bigCard('건당 평균비용', man(avgCost), '만원', curRows.length + '건 기준')}
+      ${bigCard('가제본 완료율', gPct, '%', `완료 ${gDone} / 전체 ${gTotal}건
+        <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${gPct}%;background:#17A2B8;border-radius:99px"></div></div>`, '#17A2B8')}
     </div>
-    <div class="card" style="padding:14px;margin-bottom:14px">
-      <div style="font-weight:700;font-size:13px;margin-bottom:8px">📈 월별 추이 (최근 12개월)</div>
+    <div class="card" style="padding:16px 18px;margin-bottom:16px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📈 월별 추이 (최근 12개월) <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=비용(만원)</span></div>
       <div style="height:240px"><canvas id="monthly-trend"></canvas></div>
     </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-      ${tbl('공정별 TOP', top(curRows, r => claimToProc(r[9]), 6))}
-      ${tbl('부적합 유형 TOP', top(curRows, r => r[8], 6))}
-      ${tbl('거래처 TOP', top(curRows, r => r[2], 6))}
+    <div class="grid2" style="margin-bottom:16px">
+      ${barTbl('공정별 TOP', top(curRows, r => claimToProc(r[9]), 6), '#17A2B8')}
+      ${barTbl('부적합 유형 TOP', top(curRows, r => r[8], 6), '#E67E22')}
     </div>
-    <div style="font-size:11px;color:#a1a1a6">※ 부적합·비용 = 클레임 DB / 가제본 = 해당 월 요청 건 / KPI 상세는 'KPI 현황' 탭. (기초 버전 — 항목 추가 가능)</div>
+    <div style="margin-bottom:16px">
+      ${barTbl('거래처 TOP', top(curRows, r => r[2], 8), '#7B4EA0')}
+    </div>
+    <div class="card" style="padding:16px 18px;margin-bottom:14px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📋 ${curM.split('-')[1]}월 부적합 상세 <span style="font-size:11px;font-weight:400;color:#aaa">금액 큰 순 · ${detailRows.length}건</span></div>
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+        <table style="width:100%;font-size:12.5px">
+          <thead><tr>
+            <th style="white-space:nowrap">접수일</th><th style="white-space:nowrap">거래처</th>
+            <th>제품명</th><th style="white-space:nowrap">부적합유형</th>
+            <th style="white-space:nowrap">설비</th><th style="text-align:right;white-space:nowrap">비용(만)</th>
+          </tr></thead>
+          <tbody>${detailRows.length ? detailRows.map(r => `<tr>
+            <td style="white-space:nowrap;color:#666">${wipEsc(r[0])}</td>
+            <td style="white-space:nowrap">${wipEsc(r[2])}</td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${wipEsc(r[4])}">${wipEsc(r[4])}</td>
+            <td style="white-space:nowrap">${wipEsc(r[8])}</td>
+            <td style="white-space:nowrap;color:#666">${wipEsc(r[9])}</td>
+            <td style="text-align:right;white-space:nowrap;color:#C0392B;font-weight:600">${cost(r) ? man(cost(r)) : '-'}</td>
+          </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:#ccc;padding:16px">해당 월 부적합 없음</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#a1a1a6">※ 부적합·비용 = 클레임 DB(관리대장 병합) / 가제본 = 해당 월 요청 건 / KPI 상세는 'KPI 현황' 탭</div>
   `;
   monthlyTrendChart('monthly-trend', tLabels, tCounts, tCosts);
 }
