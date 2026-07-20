@@ -965,7 +965,10 @@
         <div class="section-title">📅 월간 품질 리포트</div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
-          <button class="btn btn-secondary btn-sm" onclick="generateGiahnPdf()"><i class="ti ti-file-text"></i> 기안용 PDF</button>
+          <span style="font-size:11.5px;color:#86868b">월목표</span>
+          <input id="giahn-t-inner" type="number" placeholder="내부" onchange="saveGiahnTargets()" style="width:96px;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px" title="내부(자사) 월간 목표금액">
+          <input id="giahn-t-outer" type="number" placeholder="외주" onchange="saveGiahnTargets()" style="width:96px;border:1px solid #d2d2d7;border-radius:8px;padding:5px 8px;font-size:12px" title="외주 월간 목표금액">
+          <button class="btn btn-primary btn-sm" onclick="generateGiahnDoc()"><i class="ti ti-file-text"></i> 기안 문서 생성</button>
         </div>
       </div>
       <div id="monthly-body"></div>
@@ -2928,6 +2931,130 @@ function monthlyTrendChart(id, labels, counts, costs) {
   });
 }
 
+// ── 월별 목표금액 (내부/외주) 저장·복원 ──
+function giahnTgKey(m) { return 'giahn_tg_' + m; }
+function loadGiahnTargets() {
+  const sel = document.getElementById('monthly-sel'); if (!sel || !sel.value) return;
+  let t = {};
+  try { t = JSON.parse(localStorage.getItem(giahnTgKey(sel.value)) || '{}'); } catch (e) {}
+  const a = document.getElementById('giahn-t-inner'), b = document.getElementById('giahn-t-outer');
+  if (a) a.value = t.inner || '';
+  if (b) b.value = t.outer || '';
+}
+function saveGiahnTargets() {
+  const sel = document.getElementById('monthly-sel'); if (!sel || !sel.value) return;
+  const a = Number(document.getElementById('giahn-t-inner').value) || 0;
+  const b = Number(document.getElementById('giahn-t-outer').value) || 0;
+  localStorage.setItem(giahnTgKey(sel.value), JSON.stringify({ inner: a, outer: b }));
+}
+
+// ── 기안 문서 한방 생성 (임원 보고용, 관리대장 기준) ──
+function generateGiahnDoc() {
+  const sel = document.getElementById('monthly-sel');
+  const curM = sel ? sel.value : '';
+  if (!curM) { alert('먼저 월을 선택하세요.'); return; }
+  const yr = curM.slice(0, 4), moN = Number(curM.slice(5, 7)), moK = moN + '월';
+  const ND = (window.NCCOST_DATA || {})[yr];
+  if (!ND || !ND.months || !ND.months[moK]) { alert(yr + '년 ' + moN + '월 관리대장 데이터가 없습니다.'); return; }
+  const mv = ND.months[moK];
+  const selfM = mv.selfCost || 0, outM = (mv.cost || 0) - selfM;
+  const PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
+  const PT = ND.procTargets || {};
+  const cum = {}; PRC.forEach(p => cum[p] = { cost: 0, cnt: 0 });
+  Object.values(ND.months).forEach(m => PRC.forEach(p => {
+    cum[p].cost += (m.proc && m.proc[p]) || 0;
+    cum[p].cnt += (m.procCnt && m.procCnt[p]) || 0;
+  }));
+  const tgSum = PRC.reduce((s, p) => s + (PT[p] || 0), 0);
+  const cSum = PRC.reduce((s, p) => s + cum[p].cost, 0);
+  const nSum = PRC.reduce((s, p) => s + cum[p].cnt, 0);
+  let tg = {}; try { tg = JSON.parse(localStorage.getItem(giahnTgKey(curM)) || '{}'); } catch (e) {}
+  const won = v => (v || 0).toLocaleString();
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const rate = (a, b) => b ? (a / b * 100).toFixed(2) + '%' : '-';
+
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${yr}년 ${moN}월 품질사고 보고</title>
+  <style>
+    @page { size: A4; margin: 17mm; }
+    * { box-sizing: border-box; }
+    body { font-family:'Malgun Gothic','맑은 고딕',sans-serif; color:#111; font-size:12px; line-height:1.55; }
+    h1 { text-align:center; font-size:20px; margin:0 0 16px; letter-spacing:-0.5px; }
+    .approve { border-collapse:collapse; float:right; margin-bottom:6px; }
+    .approve td { border:1px solid #333; width:64px; text-align:center; font-size:11px; padding:2px; }
+    .approve .h { height:20px; background:#f2f2f2; font-weight:bold; }
+    .approve .s { height:54px; }
+    .info { width:100%; border-collapse:collapse; margin:8px 0 18px; font-size:11.5px; }
+    .info td { border:1px solid #ddd; padding:5px 9px; }
+    .info .lbl { background:#f7f7f7; width:74px; font-weight:bold; }
+    .lead { margin:14px 0 6px; }
+    .center { text-align:center; font-weight:bold; margin:14px 0 18px; letter-spacing:6px; }
+    h3 { font-size:13px; margin:18px 0 7px; }
+    table.d { width:100%; border-collapse:collapse; font-size:11.5px; }
+    table.d th, table.d td { border:1px solid #999; padding:5px 7px; }
+    table.d th { background:#f2f2f2; text-align:center; }
+    .r { text-align:right; }
+    .c { text-align:center; }
+    .over { color:#c0392b; font-weight:bold; }
+    .foot { margin-top:22px; font-size:10.5px; color:#888; }
+  </style></head><body>
+  <table class="approve"><tr><td class="h">담당</td><td class="h">검토</td><td class="h">승인</td></tr><tr><td class="s"></td><td class="s"></td><td class="s"></td></tr></table>
+  <div style="clear:both"></div>
+  <h1>${yr}년 ${moN}월 품질사고 내역 및 심의결과 보고</h1>
+  <table class="info">
+    <tr><td class="lbl">기안부서</td><td>품질개선팀</td><td class="lbl">기안일</td><td>${today}</td></tr>
+    <tr><td class="lbl">보고대상</td><td>${yr}년 ${moN}월</td><td class="lbl">근거자료</td><td>${yr}년 ${moN}월 품질사고 관리대장</td></tr>
+  </table>
+  <div class="lead">${yr}년 ${moN}월 품질사고 내역 및 심의결과에 대하여 아래와 같이 보고 드리오니 재가하여 주시기 바랍니다.</div>
+  <div class="center">= 아 래 =</div>
+
+  <h3>1. ${moN}월 품질 사고 금액</h3>
+  <table class="d">
+    <thead><tr><th style="width:22%">구분</th><th>내부(자사)</th><th>외주(협력업체)</th><th>합계</th></tr></thead>
+    <tbody>
+      <tr><td class="c">월간 목표금액</td>
+        <td class="r">${tg.inner ? won(tg.inner) : '-'}</td>
+        <td class="r">${tg.outer ? won(tg.outer) : '-'}</td>
+        <td class="r">${(tg.inner || tg.outer) ? won((tg.inner || 0) + (tg.outer || 0)) : '-'}</td></tr>
+      <tr><td class="c">발생 비용</td>
+        <td class="r ${tg.inner && selfM > tg.inner ? 'over' : ''}">${won(selfM)}</td>
+        <td class="r ${tg.outer && outM > tg.outer ? 'over' : ''}">${won(outM)}</td>
+        <td class="r"><b>${won(mv.cost)}</b></td></tr>
+      <tr><td class="c">달성률</td>
+        <td class="r">${tg.inner ? rate(selfM, tg.inner) : '-'}</td>
+        <td class="r">${tg.outer ? rate(outM, tg.outer) : '-'}</td>
+        <td class="r">${(tg.inner || tg.outer) ? rate(mv.cost, (tg.inner || 0) + (tg.outer || 0)) : '-'}</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2. 연간 공정별 품질사고 누적 현황</h3>
+  <table class="d">
+    <thead><tr><th>구 분</th>${PRC.map(p => `<th>${p}</th>`).join('')}<th>합 계</th></tr></thead>
+    <tbody>
+      <tr><td class="c">공정별목표</td>${PRC.map(p => `<td class="r">${won(PT[p])}</td>`).join('')}<td class="r"><b>${won(tgSum)}</b></td></tr>
+      <tr><td class="c">사고비용</td>${PRC.map(p => `<td class="r">${won(cum[p].cost)}</td>`).join('')}<td class="r"><b>${won(cSum)}</b></td></tr>
+      <tr><td class="c">발생건수</td>${PRC.map(p => `<td class="c">${cum[p].cnt}</td>`).join('')}<td class="c"><b>${nSum}</b></td></tr>
+      <tr><td class="c">공정별 실적</td>${PRC.map(p => { const r = PT[p] ? cum[p].cost / PT[p] * 100 : 0; return `<td class="r ${r > 100 ? 'over' : ''}">${PT[p] ? r.toFixed(2) + '%' : '-'}</td>`; }).join('')}<td class="r ${cSum > tgSum ? 'over' : ''}"><b>${rate(cSum, tgSum)}</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3. ${moN}월 품질사고 내역 (첨부파일 참조)</h3>
+  <div style="padding-left:14px">
+    - 협력업체 부담비용 : ${won(outM)} 원<br>
+    - 자사부담 품질비용 : ${won(selfM)} 원<br>
+    - 발생 건수 : ${mv.cnt || 0} 건
+  </div>
+
+  <h3>4. 첨부</h3>
+  <div style="padding-left:14px">- ${yr}년 ${moN}월 품질사고 관리대장</div>
+
+  <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 품질QMS 대시보드에서 자동 생성되었습니다. (생성일 ${today})</div>
+  <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { alert('팝업이 차단됐어요. 팝업 허용 후 다시 눌러주세요.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
 function giahnMonthKey(r) {
   const y = String(r[14] || '').slice(0, 4); const d = String(r[0] || ''); let m;
   if ((m = d.match(/^(\d{4})[-.\/](\d{1,2})/))) return m[1] + '-' + m[2].padStart(2, '0');
@@ -3164,6 +3291,7 @@ function renderMonthly() {
     <div style="font-size:11px;color:#a1a1a6">※ 부적합·비용 = 클레임 DB(관리대장 병합) / 가제본 = 해당 월 요청 건 / KPI 상세는 'KPI 현황' 탭</div>
   `;
   monthlyTrendChart('monthly-trend', tLabels, tCounts, tCosts);
+  loadGiahnTargets();
 }
 
 let gajebonDateSort = 'desc';   // 가제본 날짜 정렬: desc=최신순, asc=오래된순
