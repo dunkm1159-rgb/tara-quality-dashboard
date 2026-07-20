@@ -3076,6 +3076,51 @@ function renderMonthly() {
   };
   const gPct = gTotal ? Math.round(gDone / gTotal * 100) : 0;
   const detailRows = curRows.slice().sort((a, b) => cost(b) - cost(a));
+
+  // ── 기안(품질사고 보고) 요약 : 품질사고 관리대장(NCCOST) 기준 ──
+  const _yr = curM.slice(0, 4), _moK = String(Number(curM.slice(5, 7))) + '월';
+  const ND = (window.NCCOST_DATA || {})[_yr];
+  let gianHtml = '';
+  if (ND && ND.months && ND.months[_moK]) {
+    const mv = ND.months[_moK];
+    const selfM = mv.selfCost || 0, outM = (mv.cost || 0) - selfM;
+    const PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
+    const PT = ND.procTargets || {};
+    const cum = {}; PRC.forEach(p => cum[p] = { cost: 0, cnt: 0 });
+    Object.values(ND.months).forEach(m => PRC.forEach(p => {
+      cum[p].cost += (m.proc && m.proc[p]) || 0;
+      cum[p].cnt += (m.procCnt && m.procCnt[p]) || 0;
+    }));
+    const tgSum = PRC.reduce((s, p) => s + (PT[p] || 0), 0);
+    const cSum = PRC.reduce((s, p) => s + cum[p].cost, 0);
+    const nSum = PRC.reduce((s, p) => s + cum[p].cnt, 0);
+    const won = v => (v || 0).toLocaleString();
+    gianHtml = `
+    <div class="card" style="padding:16px 18px;margin-bottom:16px;border:1.5px solid rgba(23,162,184,0.35)">
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px">📄 기안용 요약 <span style="font-size:11px;font-weight:400;color:#aaa">품질사고 관리대장 기준 · 그대로 기안에 옮겨 쓰세요</span></div>
+      <div style="font-weight:600;font-size:12.5px;margin:4px 0 8px">1. ${Number(curM.slice(5, 7))}월 품질 사고 금액</div>
+      <table style="width:100%;font-size:12.5px;margin-bottom:18px">
+        <thead><tr><th>구분</th><th style="text-align:right">발생 비용</th></tr></thead>
+        <tbody>
+          <tr><td>자사부담 품질비용</td><td style="text-align:right;font-weight:700;color:#C0392B">${won(selfM)} 원</td></tr>
+          <tr><td>협력업체 부담비용</td><td style="text-align:right;font-weight:600">${won(outM)} 원</td></tr>
+          <tr><td style="font-weight:600">합계</td><td style="text-align:right;font-weight:700">${won(mv.cost)} 원</td></tr>
+        </tbody>
+      </table>
+      <div style="font-weight:600;font-size:12.5px;margin:4px 0 8px">2. ${_yr}년 공정별 품질사고 누적 현황</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;font-size:11.5px;white-space:nowrap">
+          <thead><tr><th>구분</th>${PRC.map(p => `<th style="text-align:right">${p}</th>`).join('')}<th style="text-align:right">합계</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#666">공정별 목표</td>${PRC.map(p => `<td style="text-align:right;color:#666">${won(PT[p])}</td>`).join('')}<td style="text-align:right;color:#666;font-weight:600">${won(tgSum)}</td></tr>
+            <tr><td style="font-weight:600">사고비용</td>${PRC.map(p => `<td style="text-align:right;font-weight:600;color:#C0392B">${won(cum[p].cost)}</td>`).join('')}<td style="text-align:right;font-weight:700;color:#C0392B">${won(cSum)}</td></tr>
+            <tr><td>발생건수</td>${PRC.map(p => `<td style="text-align:right">${cum[p].cnt}</td>`).join('')}<td style="text-align:right;font-weight:600">${nSum}</td></tr>
+            <tr><td>공정별 실적</td>${PRC.map(p => { const rt = PT[p] ? cum[p].cost / PT[p] * 100 : 0; return `<td style="text-align:right;font-weight:600;color:${rt > 100 ? '#C0392B' : '#248a3d'}">${PT[p] ? rt.toFixed(2) + '%' : '-'}</td>`; }).join('')}<td style="text-align:right;font-weight:700;color:${cSum > tgSum ? '#C0392B' : '#248a3d'}">${tgSum ? (cSum / tgSum * 100).toFixed(2) + '%' : '-'}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:16px">
       ${bigCard('부적합 건수', curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
@@ -3084,6 +3129,7 @@ function renderMonthly() {
       ${bigCard('가제본 완료율', gPct, '%', `완료 ${gDone} / 전체 ${gTotal}건
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${gPct}%;background:#17A2B8;border-radius:99px"></div></div>`, '#17A2B8')}
     </div>
+    ${gianHtml}
     <div class="card" style="padding:16px 18px;margin-bottom:16px">
       <div style="font-weight:700;font-size:13px;margin-bottom:10px">📈 월별 추이 (최근 12개월) <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=비용(만원)</span></div>
       <div style="height:240px"><canvas id="monthly-trend"></canvas></div>
