@@ -1290,6 +1290,32 @@
         </div>
       </div>
 
+      <!-- G7 프루프 색관리 -->
+      <div class="section-title" style="margin:24px 0 12px">🎨 G7 프루프 색관리 <span style="font-size:12px;color:#888;font-weight:400">교정지 ΔE 측정 · 기준 ΔE &lt; 2.0</span></div>
+      <div class="metrics" id="proof-metrics" style="margin-bottom:16px"></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">ΔE 추이 <span style="font-size:11px;font-weight:400;color:#aaa">점선=기준 2.0</span></div>
+          <div class="chart-wrap" style="height:250px"><canvas id="chartProofDE"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">색상별 NG 발생</div>
+          <div class="chart-wrap" style="height:250px"><canvas id="chartProofNG"></canvas></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">측정 상세 <span id="proof-cnt" style="font-size:11px;font-weight:400;color:#aaa"></span></div>
+        <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
+          <table style="width:100%;font-size:12.5px;white-space:nowrap">
+            <thead><tr>
+              <th>측정일</th><th>장비</th><th>색상</th>
+              <th style="text-align:right">ΔE</th><th style="text-align:right">농도</th><th style="text-align:center">판정</th>
+            </tr></thead>
+            <tbody id="proof-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- 컬러 클레임 -->
       <div class="section-title" style="margin:24px 0 12px">⑤ 컬러 클레임 관리 대장</div>
       <div class="card" style="padding:0">
@@ -4767,6 +4793,54 @@ function renderKpi() {
       }).join('');
     }
   } catch (e) { console.warn('kpi monthly', e); }
+
+  // ── G7 프루프 색관리 ──
+  try {
+    const PF = (window.KPI_DATA_SRC && window.KPI_DATA_SRC.proof) || [];
+    const CLR = { 'K(먹)': '#1d1d1f', 'C(청)': '#17A2B8', 'M(적)': '#C0392B', 'Y(황)': '#F1C40F' };
+    const ng = PF.filter(x => x.judge === 'NG').length;
+    const ok = PF.filter(x => x.judge === 'OK').length;
+    const dates = [...new Set(PF.map(x => x.date).filter(Boolean))].sort();
+    const pm = document.getElementById('proof-metrics');
+    const pcard = (l, v, u, sub, c) => `<div class="metric"><div class="label">${l}</div><div class="value" style="color:${c || '#1d1d1f'}">${v}<span style="font-size:13px;font-weight:400;color:#86868b">${u || ''}</span></div><div class="sub neutral">${sub || ''}</div></div>`;
+    if (pm) pm.innerHTML =
+      pcard('총 측정', PF.length, '건', dates.length + '회 측정') +
+      pcard('적합(OK)', ok, '건', PF.length ? Math.round(ok / PF.length * 100) + '%' : '-', '#248a3d') +
+      pcard('부적합(NG)', ng, '건', PF.length ? Math.round(ng / PF.length * 100) + '%' : '-', '#C0392B') +
+      pcard('최근 측정', dates.length ? dates[dates.length - 1].slice(5) : '-', '', dates.length ? dates[dates.length - 1].slice(0, 4) + '년' : '');
+
+    if (chartInstances.chartProofDE) chartInstances.chartProofDE.destroy();
+    const cde = document.getElementById('chartProofDE');
+    if (cde && window.Chart) chartInstances.chartProofDE = new Chart(cde, {
+      type: 'line',
+      data: { labels: dates.map(d => d.slice(5)), datasets:
+        Object.keys(CLR).map(col => ({
+          label: col, borderColor: CLR[col], backgroundColor: CLR[col],
+          data: dates.map(d => { const hit = PF.filter(x => x.date === d && x.color === col && x.dE != null); return hit.length ? Math.max(...hit.map(x => x.dE)) : null; }),
+          spanGaps: true
+        })).concat([{ label: '기준 2.0', data: dates.map(() => 2.0), borderColor: '#98A2B3', borderDash: [5, 4], pointRadius: 0, borderWidth: 1.5 }])
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'ΔE' } } } }
+    });
+    const ngBy = Object.keys(CLR).map(col => PF.filter(x => x.color === col && x.judge === 'NG').length);
+    if (chartInstances.chartProofNG) chartInstances.chartProofNG.destroy();
+    const cng = document.getElementById('chartProofNG');
+    if (cng && window.Chart) chartInstances.chartProofNG = new Chart(cng, {
+      type: 'bar',
+      data: { labels: Object.keys(CLR), datasets: [{ data: ngBy, backgroundColor: Object.values(CLR) }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+    const pc = document.getElementById('proof-cnt');
+    if (pc) pc.textContent = PF.length + '건 · 최신순';
+    const ptb = document.getElementById('proof-tbody');
+    if (ptb) ptb.innerHTML = PF.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map(x => `<tr>
+        <td style="color:#666">${x.date || '-'}</td><td>${x.device || '-'}</td>
+        <td style="font-weight:600;color:${CLR[x.color] || '#666'}">${x.color}</td>
+        <td style="text-align:right;font-weight:600;color:${(x.dE != null && x.dE >= 2) ? '#C0392B' : '#1d1d1f'}">${x.dE != null ? x.dE : '-'}</td>
+        <td style="text-align:right;color:#666">${x.density != null ? x.density : '-'}</td>
+        <td style="text-align:center"><span class="badge ${x.judge === 'NG' ? 'badge-fail' : 'badge-pass'}">${x.judge || '-'}</span></td>
+      </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#ccc;padding:16px">데이터 없음</td></tr>';
+  } catch (e) { console.warn('proof', e); }
 
   const mLabels = D.top3.monthly.map(r=>r.m);
 
