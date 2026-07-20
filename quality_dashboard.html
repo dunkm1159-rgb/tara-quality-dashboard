@@ -1024,6 +1024,63 @@
 
     <!-- ============ 분석 ============ -->
     <div id="tab-analysis" class="tab">
+      <!-- 분석 소스 서브탭 -->
+      <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px">
+        <button class="claim-year-btn active" id="ansrc-erp" onclick="setAnalysisSrc('erp')">🏭 ERP 부적합 <span style="font-size:10px;color:#aaa">2025~</span></button>
+        <button class="claim-year-btn" id="ansrc-claim" onclick="setAnalysisSrc('claim')">📁 클레임 DB <span style="font-size:10px;color:#aaa">전체기간</span></button>
+      </div>
+
+      <!-- ERP 부적합 분석 -->
+      <div id="an-erp">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+          <div class="section-title">ERP 부적합 분석</div>
+          <div id="erp-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+        </div>
+        <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역(공정검사) 기준 · 공정중 발견 포함 전체 접수 건 <span id="erp-updated" style="color:#ccc"></span></div>
+        <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
+        <div class="card" style="padding:16px 18px;margin-bottom:16px">
+          <div class="card-title">월별 부적합 추이 <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=금액(만원)</span></div>
+          <div class="chart-wrap" style="height:230px"><canvas id="chartErpTrend"></canvas></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">접수유형별</div>
+            <div class="chart-wrap" style="height:220px"><canvas id="chartErpType"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">사내 / 외주</div>
+            <div class="chart-wrap" style="height:220px"><canvas id="chartErpInout"></canvas></div>
+          </div>
+        </div>
+        <div class="grid2" style="margin-top:16px">
+          <div class="card">
+            <div class="card-title">발생공정 TOP</div>
+            <div class="chart-wrap" style="height:240px"><canvas id="chartErpProc"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">부적합 유형 TOP</div>
+            <div class="chart-wrap" style="height:240px"><canvas id="chartErpDefect"></canvas></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">부적합 상세 <span id="erp-detail-cnt" style="font-size:11px;font-weight:400;color:#aaa"></span></div>
+          <div style="overflow-x:auto;max-height:460px;overflow-y:auto">
+            <table style="width:100%;font-size:12.5px">
+              <thead><tr>
+                <th style="white-space:nowrap">접수일</th><th style="white-space:nowrap">번호</th>
+                <th style="white-space:nowrap">접수유형</th><th style="white-space:nowrap">구분</th>
+                <th style="white-space:nowrap">거래처</th><th>제품명</th>
+                <th style="white-space:nowrap">부적합</th><th style="white-space:nowrap">공정/설비</th>
+                <th style="white-space:nowrap">책임부서</th><th style="text-align:right;white-space:nowrap">금액(만)</th>
+              </tr></thead>
+              <tbody id="erp-detail-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 기존 클레임 DB 분석 -->
+      <div id="an-claim" style="display:none">
       <!-- 분석 필터 헤더 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
         <div class="section-title">클레임 DB 분석</div>
@@ -1079,6 +1136,7 @@
           <div class="chart-wrap" id="wrap-chartClaimClient" style="height:320px"><canvas id="chartClaimClient"></canvas></div>
         </div>
       </div>
+      </div><!-- /an-claim -->
     </div>
 
 
@@ -1293,6 +1351,113 @@ let capaSeq = 3;
 
 const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const monthData = [3,5,4,7,14,4,0,0,0,0,0,0];
+
+// ========================
+// ERP 부적합 분석 (QUALITY_DATA)
+// ========================
+let erpYear = '';        // '' = 전체
+window._eCharts = window._eCharts || {};
+function setAnalysisSrc(s) {
+  document.getElementById('an-erp').style.display   = (s === 'erp' ? 'block' : 'none');
+  document.getElementById('an-claim').style.display = (s === 'claim' ? 'block' : 'none');
+  document.getElementById('ansrc-erp').classList.toggle('active', s === 'erp');
+  document.getElementById('ansrc-claim').classList.toggle('active', s === 'claim');
+  if (s === 'erp') renderErp(); else renderCharts();
+}
+function setErpYear(y) { erpYear = y; renderErp(); }
+function erpAllRows() {
+  const Q = window.QUALITY_DATA;
+  if (!Q || !Q.months) return [];
+  const out = [];
+  Object.keys(Q.months).sort().forEach(mk => (Q.months[mk].rows || []).forEach(r => {
+    out.push(Object.assign({ _m: mk }, r));
+  }));
+  return out;
+}
+function renderErp() {
+  const all = erpAllRows();
+  const upd = document.getElementById('erp-updated');
+  if (upd && window.QUALITY_DATA) upd.textContent = '· 갱신 ' + window.QUALITY_DATA.updated;
+  const years = [...new Set(all.map(r => r._m.slice(0, 4)))].sort();
+  const bw = document.getElementById('erp-year-btns');
+  if (bw) bw.innerHTML = `<button class="claim-year-btn ${erpYear === '' ? 'active' : ''}" onclick="setErpYear('')">전체</button>` +
+    years.map(y => `<button class="claim-year-btn ${erpYear === y ? 'active' : ''}" onclick="setErpYear('${y}')">${y}</button>`).join('');
+  const rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const num = r => Number(r['금액'] || 0);
+  const man = v => Math.round(v / 10000).toLocaleString();
+  const inn = rows.filter(r => r['사내외주'] === '사내').length;
+  const out_ = rows.filter(r => r['사내외주'] === '외주').length;
+  const tot = rows.reduce((s, r) => s + num(r), 0);
+  const mEl = document.getElementById('erp-metrics');
+  const card = (l, v, u, sub, c) => `<div class="metric"><div class="label">${l}</div><div class="value" style="color:${c || '#1d1d1f'}">${v}<span style="font-size:13px;font-weight:400;color:#86868b">${u || ''}</span></div><div class="sub neutral">${sub || ''}</div></div>`;
+  if (mEl) mEl.innerHTML =
+    card('부적합 건수', rows.length, '건', erpYear || '전체 기간') +
+    card('사내', inn, '건', rows.length ? Math.round(inn / rows.length * 100) + '%' : '-', '#17A2B8') +
+    card('외주', out_, '건', rows.length ? Math.round(out_ / rows.length * 100) + '%' : '-', '#E67E22') +
+    card('금액 합계', man(tot), '만원', '건당 ' + (rows.length ? man(tot / rows.length) : 0) + '만', '#C0392B');
+
+  // 월별 추이
+  const mks = [...new Set(rows.map(r => r._m))].sort();
+  const mCnt = mks.map(m => rows.filter(r => r._m === m).length);
+  const mAmt = mks.map(m => Math.round(rows.filter(r => r._m === m).reduce((s, r) => s + num(r), 0) / 10000));
+  const mkChart = (id, key, cfg) => {
+    if (window._eCharts[key]) window._eCharts[key].destroy();
+    const c = document.getElementById(id);
+    if (c && window.Chart) window._eCharts[key] = new Chart(c, cfg);
+  };
+  mkChart('chartErpTrend', 'trend', {
+    data: { labels: mks.map(m => m.slice(2).replace('-', '/')), datasets: [
+      { type: 'bar', label: '건수', data: mCnt, backgroundColor: '#17A2B8', yAxisID: 'y', order: 2 },
+      { type: 'line', label: '금액(만)', data: mAmt, borderColor: '#C0392B', backgroundColor: '#C0392B', yAxisID: 'y1', order: 1 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true, position: 'left', ticks: { precision: 0 } },
+                y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } } } }
+  });
+  const cntBy = (fn, n) => {
+    const m = {}; rows.forEach(r => { const k = (fn(r) || '(미상)').toString().trim() || '(미상)'; m[k] = (m[k] || 0) + 1; });
+    return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n);
+  };
+  const tp = cntBy(r => r['접수유형'], 8);
+  mkChart('chartErpType', 'type', {
+    type: 'doughnut',
+    data: { labels: tp.map(x => x[0]), datasets: [{ data: tp.map(x => x[1]), backgroundColor: TARA_COLORS }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+  const io = cntBy(r => r['사내외주'], 5);
+  mkChart('chartErpInout', 'inout', {
+    type: 'doughnut',
+    data: { labels: io.map(x => x[0]), datasets: [{ data: io.map(x => x[1]), backgroundColor: ['#17A2B8', '#E67E22', '#7B4EA0', '#98A2B3'] }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+  const pr = cntBy(r => r['발생공정'] || r['설비명'], 10);
+  mkChart('chartErpProc', 'proc', {
+    type: 'bar', data: { labels: pr.map(x => x[0]), datasets: [{ data: pr.map(x => x[1]), backgroundColor: '#17A2B8' }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+  const df = cntBy(r => r['부적합내역'], 10);
+  mkChart('chartErpDefect', 'defect', {
+    type: 'bar', data: { labels: df.map(x => x[0]), datasets: [{ data: df.map(x => x[1]), backgroundColor: '#E67E22' }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+  // 상세
+  const dc = document.getElementById('erp-detail-cnt');
+  if (dc) dc.textContent = rows.length + '건 · 최신순';
+  const tb = document.getElementById('erp-detail-tbody');
+  if (tb) tb.innerHTML = rows.slice().sort((a, b) => String(b['접수일']).localeCompare(String(a['접수일']))).map(r => `<tr>
+      <td style="white-space:nowrap;color:#666">${esc(r['접수일'])}</td>
+      <td style="white-space:nowrap;font-family:monospace">${esc(r['부적합번호'])}</td>
+      <td style="white-space:nowrap">${esc(r['접수유형'])}</td>
+      <td style="white-space:nowrap;color:${r['사내외주'] === '외주' ? '#E67E22' : '#17A2B8'};font-weight:600">${esc(r['사내외주'])}</td>
+      <td style="white-space:nowrap">${esc(r['거래처'])}</td>
+      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
+      <td style="white-space:nowrap">${esc(r['부적합내역'])}</td>
+      <td style="white-space:nowrap;color:#666">${esc(r['발생공정'] || r['설비명'])}</td>
+      <td style="white-space:nowrap;color:#666">${esc(r['책임부서'])}</td>
+      <td style="text-align:right;white-space:nowrap;color:#C0392B;font-weight:600">${num(r) ? man(num(r)) : '-'}</td>
+    </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;color:#ccc;padding:18px">데이터 없음 — auto_collect_quality.py 실행 필요</td></tr>';
+}
 
 // ========================
 // 작업자 사고 현황
@@ -1512,7 +1677,7 @@ function showTab(name, btn) {
   if (titleEl) titleEl.textContent = TAB_TITLES[name] || name;
   renderOpenTabs();
   if (name === 'dashboard') refreshDash();
-  if (name === 'analysis') renderCharts();
+  if (name === 'analysis') renderErp();
   if (name === 'kpi') renderKpi();
   if (name === 'claim' && claimData.length) renderClaimTable();
   if (name === 'worker') renderWorker();
