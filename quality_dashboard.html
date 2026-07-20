@@ -1223,13 +1223,13 @@
       <!-- KPI 요약 카드 -->
       <div id="kpi-summary" class="metrics" style="margin-bottom:20px"></div>
 
-      <!-- 지표별 상세 보기 -->
+      <!-- 월별 상세 보기 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;flex-wrap:wrap;gap:8px">
-        <div class="section-title" style="font-size:15px">📅 지표별 월간 현황</div>
-        <span style="font-size:11.5px;color:#aaa">지표를 선택하면 추이와 월별 내역이 보여요</span>
+        <div class="section-title" style="font-size:15px">📅 월별 KPI 현황</div>
+        <span style="font-size:11.5px;color:#aaa">월을 선택하면 4개 지표가 한 화면에 보여요</span>
       </div>
-      <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px;flex-wrap:wrap" id="kpi-focus-tabs"></div>
-      <div id="kpi-focus-body" style="margin-bottom:24px"></div>
+      <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px;flex-wrap:wrap" id="kpi-month-tabs"></div>
+      <div id="kpi-month-body" style="margin-bottom:24px"></div>
 
       <!-- 반복불량 TOP3 -->
       <div class="section-title" style="margin-bottom:12px">① 반복불량 TOP3 재발율 <span style="font-size:12px;color:#888;font-weight:400">목표: 전년 대비 50% 감소 (연 24건 이하)</span></div>
@@ -4718,8 +4718,8 @@ if (window.KPI_DATA_SRC) {
 // ========================
 // KPI 렌더
 // ========================
-let kpiFocus = 'sop';   // 지표별 보기: top3 | cost | sop | std
-function setKpiFocus(k) { kpiFocus = k; renderKpi(); }
+let kpiMonth = '';      // 월별 보기: '1월' ~ '12월' (비어있으면 최신 달 자동)
+function setKpiMonth(m) { kpiMonth = m; renderKpi(); }
 
 function renderKpi() {
   const D = KPI_DATA;
@@ -4781,72 +4781,48 @@ function renderKpi() {
               val: r => r.actual, goal: '0건', ok: v => (v || 0) === 0, sum: true,
               desc: '표준 미준수가 원인이 된 품질사고' },
     };
-    const tabsEl = document.getElementById('kpi-focus-tabs');
-    if (tabsEl) tabsEl.innerHTML = Object.keys(METRICS).map(k =>
-      `<button class="claim-year-btn ${kpiFocus === k ? 'active' : ''}" onclick="setKpiFocus('${k}')">${METRICS[k].label}</button>`).join('');
-    const fb = document.getElementById('kpi-focus-body');
-    if (fb) {
-      const M = METRICS[kpiFocus] || METRICS.top3;
-      const rows = (M.arr || []).filter(r => MO.includes(r.m));
-      const vals = rows.map(r => M.val(r));
-      const filled = rows.filter(r => M.val(r) != null && (M.val(r) !== 0 || r.note));
-      const total = M.sum ? vals.reduce((a, b) => a + (b || 0), 0) : null;
-      const nums = vals.filter(v => v != null && v !== 0);
-      const avg = nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length * 10) / 10 : null;
-      const miss = rows.filter(r => M.val(r) != null && (M.val(r) !== 0 || M.label.includes('SOP')) && !M.ok(M.val(r))).length;
-      fb.innerHTML = `
-        <div class="card" style="padding:18px 20px;margin-bottom:14px;border-top:3px solid ${M.color}">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:4px">
-            <div style="font-size:15px;font-weight:700;color:${M.color}">${M.label}</div>
-            <div style="font-size:12px;color:#86868b">목표: ${M.goal}</div>
+    // 데이터가 있는 달만 탭으로
+    const hasM = m => {
+      const t = find(D.top3.monthly, m), c = find(D.cost.monthly, m),
+            s = find(D.sop.monthly, m), st = find(D.std.monthly, m);
+      return (t.total || 0) || (c.소계 || 0) || (s.actual != null) || (st.actual || 0)
+          || t.note || c.note || s.note || st.note;
+    };
+    const avail = MO.filter(hasM);
+    if (avail.length && !avail.includes(kpiMonth)) kpiMonth = avail[avail.length - 1];   // 기본 = 최신 달
+    const tabsEl = document.getElementById('kpi-month-tabs');
+    if (tabsEl) tabsEl.innerHTML = avail.map(m =>
+      `<button class="claim-year-btn ${kpiMonth === m ? 'active' : ''}" onclick="setKpiMonth('${m}')">${m}</button>`).join('');
+
+    const mb = document.getElementById('kpi-month-body');
+    if (mb) {
+      const m = kpiMonth;
+      const t = find(D.top3.monthly, m), c = find(D.cost.monthly, m),
+            s = find(D.sop.monthly, m), st = find(D.std.monthly, m);
+      const box = (M, val, note) => {
+        const items = String(note || '').split('\n').map(x => x.replace(/^[※·\-\s]+/, '').trim()).filter(Boolean);
+        const ok = M.ok(val);
+        return `<div class="card" style="padding:14px 16px;border-top:3px solid ${M.color};display:flex;flex-direction:column">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+            <span style="font-size:12.5px;font-weight:700;color:${M.color}">${M.label}</span>
+            <span style="font-size:11px;color:${val == null ? '#ccc' : (ok ? '#248a3d' : '#C0392B')};font-weight:600">${val == null ? '' : (ok ? '달성' : '미달')}</span>
           </div>
-          <div style="font-size:12px;color:#86868b;margin-bottom:14px">${M.desc}</div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-            <div style="flex:1;min-width:110px;background:#fbfbfd;border-radius:10px;padding:10px 13px">
-              <div style="font-size:11px;color:#86868b">${M.sum ? '누적' : '평균'}</div>
-              <div style="font-size:22px;font-weight:700;color:${M.color}">${M.sum ? (total || 0).toLocaleString() : (avg != null ? avg : '-')}<span style="font-size:11px;font-weight:500;color:#86868b">${M.unit}</span></div>
-            </div>
-            <div style="flex:1;min-width:110px;background:#fbfbfd;border-radius:10px;padding:10px 13px">
-              <div style="font-size:11px;color:#86868b">기록된 달</div>
-              <div style="font-size:22px;font-weight:700">${filled.length}<span style="font-size:11px;font-weight:500;color:#86868b">개월</span></div>
-            </div>
-            <div style="flex:1;min-width:110px;background:#fbfbfd;border-radius:10px;padding:10px 13px">
-              <div style="font-size:11px;color:#86868b">목표 미달</div>
-              <div style="font-size:22px;font-weight:700;color:${miss ? '#C0392B' : '#248a3d'}">${miss}<span style="font-size:11px;font-weight:500;color:#86868b">개월</span></div>
-            </div>
+          <div style="font-size:26px;font-weight:700;margin:4px 0 2px;color:${val == null ? '#ccc' : (ok ? '#248a3d' : '#C0392B')}">
+            ${val == null ? '-' : val.toLocaleString()}<span style="font-size:12px;font-weight:500;color:#86868b;margin-left:2px">${val == null ? '' : M.unit}</span>
           </div>
-          <div style="height:230px"><canvas id="chartKpiFocus"></canvas></div>
-        </div>
-        ${filled.length ? filled.map(r => {
-          const v = M.val(r);
-          const items = String(r.note || '').split('\n').map(x => x.replace(/^[※·\-\s]+/, '').trim()).filter(Boolean);
-          return `<div class="card" style="padding:13px 16px;margin-bottom:9px;border-left:3px solid ${M.ok(v) ? '#248a3d' : '#C0392B'}">
-            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:${items.length ? '7px' : '0'}">
-              <span style="font-size:14px;font-weight:700;min-width:38px">${r.m}</span>
-              <span style="font-size:16px;font-weight:700;color:${M.ok(v) ? '#248a3d' : '#C0392B'}">${v != null ? v.toLocaleString() : '-'}<span style="font-size:11px;font-weight:500;color:#86868b">${M.unit}</span></span>
-              <span style="font-size:11px;color:${M.ok(v) ? '#248a3d' : '#C0392B'}">${M.ok(v) ? '달성' : '미달'}</span>
-            </div>
-            ${items.map(x => `<div style="font-size:12.5px;color:#444;line-height:1.65;padding-left:12px;position:relative">
+          <div style="font-size:11px;color:#aaa;margin-bottom:${items.length ? '9px' : '0'}">목표 ${M.goal}</div>
+          ${items.length ? `<div style="border-top:1px dashed rgba(0,0,0,0.09);padding-top:8px">
+            ${items.map(x => `<div style="font-size:12.5px;color:#444;line-height:1.65;padding-left:12px;position:relative;margin-bottom:4px">
                 <span style="position:absolute;left:0;color:${M.color};font-weight:700">·</span>${esc(x)}</div>`).join('')}
-          </div>`;
-        }).join('') : '<div class="card" style="padding:20px;text-align:center;color:#ccc">기록된 데이터 없음</div>'}
-      `;
-      // 추이 차트
-      if (chartInstances.chartKpiFocus) chartInstances.chartKpiFocus.destroy();
-      const cf = document.getElementById('chartKpiFocus');
-      if (cf && window.Chart) {
-        const tgtLine = kpiFocus === 'sop' ? 95 : (kpiFocus === 'std' ? 0 : (kpiFocus === 'top3' ? 2 : 500));
-        chartInstances.chartKpiFocus = new Chart(cf, {
-          data: { labels: rows.map(r => r.m), datasets: [
-            { type: 'bar', label: M.label, data: rows.map(r => M.val(r)),
-              backgroundColor: rows.map(r => M.ok(M.val(r)) ? M.color : '#C0392B') },
-            { type: 'line', label: '목표', data: rows.map(() => tgtLine), borderColor: '#98A2B3',
-              borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0 }
-          ] },
-          options: { responsive: true, maintainAspectRatio: false,
-            scales: { y: { beginAtZero: kpiFocus !== 'sop', min: kpiFocus === 'sop' ? 80 : undefined } } }
-        });
-      }
+          </div>` : '<div style="font-size:11.5px;color:#ccc;border-top:1px dashed rgba(0,0,0,0.09);padding-top:8px">해당 내역 없음</div>'}
+        </div>`;
+      };
+      mb.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start">
+        ${box(METRICS.top3, t.total != null ? t.total : null, t.note)}
+        ${box(METRICS.cost, c.소계 != null ? Math.round(c.소계 / 10000) : null, c.note)}
+        ${box(METRICS.sop, s.actual != null ? s.actual : null, s.note)}
+        ${box(METRICS.std, st.actual != null ? st.actual : null, st.note)}
+      </div>`;
     }
 
     const wrap = document.getElementById('kpi-monthly-cards');
