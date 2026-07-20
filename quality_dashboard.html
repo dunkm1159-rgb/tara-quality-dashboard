@@ -4762,18 +4762,18 @@ function renderKpi() {
     const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
     const wrap = document.getElementById('kpi-monthly-cards');
     if (wrap) {
-      const stat = (label, val, ok, unit) => `
-        <div style="flex:1;min-width:96px;background:#fbfbfd;border:1px solid rgba(0,0,0,0.05);border-radius:10px;padding:9px 11px">
-          <div style="font-size:10.5px;color:#86868b;margin-bottom:3px">${label}</div>
-          <div style="font-size:17px;font-weight:700;color:${val == null ? '#ccc' : (ok ? '#248a3d' : '#C0392B')}">${val == null ? '-' : val}<span style="font-size:11px;font-weight:500;color:#86868b">${val == null ? '' : (unit || '')}</span></div>
-        </div>`;
-      const noteBox = (label, txt, color) => {
-        if (!txt || !String(txt).trim()) return '';
-        const items = String(txt).split('\n').map(x => x.replace(/^[※·\-\s]+/, '').trim()).filter(Boolean);
-        return `<div style="border-left:3px solid ${color};background:#fcfcfd;border-radius:0 8px 8px 0;padding:9px 12px;margin-top:8px">
-          <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:4px">${label}</div>
-          ${items.map(x => `<div style="font-size:12px;color:#444;line-height:1.6;padding-left:9px;position:relative">
-              <span style="position:absolute;left:0;color:${color}">·</span>${esc(x)}</div>`).join('')}
+      // 지표 하나 = 박스 하나 (값 + 해당 내역)
+      const box = (label, val, unit, ok, txt, color) => {
+        const items = String(txt || '').split('\n').map(x => x.replace(/^[※·\-\s]+/, '').trim()).filter(Boolean);
+        return `<div style="border:1px solid rgba(0,0,0,0.07);border-top:3px solid ${color};border-radius:10px;padding:12px 14px;background:#fff;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:${items.length ? '8px' : '0'}">
+            <span style="font-size:12px;font-weight:700;color:${color}">${label}</span>
+            <span style="font-size:19px;font-weight:700;color:${val == null ? '#ccc' : (ok ? '#248a3d' : '#C0392B')}">${val == null ? '-' : val}<span style="font-size:11px;font-weight:500;color:#86868b;margin-left:1px">${val == null ? '' : (unit || '')}</span></span>
+          </div>
+          ${items.length ? `<div style="border-top:1px dashed rgba(0,0,0,0.08);padding-top:7px">
+            ${items.map(x => `<div style="font-size:12px;color:#444;line-height:1.6;padding-left:11px;position:relative;margin-bottom:3px">
+                <span style="position:absolute;left:0;color:${color};font-weight:700">·</span>${esc(x)}</div>`).join('')}
+          </div>` : '<div style="font-size:11.5px;color:#ccc">해당 내역 없음</div>'}
         </div>`;
       };
       const cards = MO.map(m => {
@@ -4782,22 +4782,17 @@ function renderKpi() {
         const hasData = (t.total || 0) || (c.소계 || 0) || (s.actual != null) || (st.actual || 0)
                       || t.note || c.note || s.note || st.note;
         if (!hasData) return '';
-        const notes = noteBox('반복불량', t.note, '#17A2B8')
-                    + noteBox('품질비용', c.note, '#C0392B')
-                    + noteBox('SOP 준수율', s.note, '#7B4EA0')
-                    + noteBox('표준 미준수', st.note, '#E67E22');
-        return `<div class="card" style="padding:16px 18px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+        return `<div class="card" style="padding:16px 18px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
             <div style="font-size:16px;font-weight:700">${m}</div>
             <div style="flex:1;height:1px;background:rgba(0,0,0,0.06)"></div>
           </div>
-          <div style="display:flex;gap:9px;flex-wrap:wrap">
-            ${stat('반복불량', t.total != null ? t.total : null, (t.total || 0) <= 2, '건')}
-            ${stat('품질비용', c.소계 ? Math.round(c.소계 / 10000).toLocaleString() : (c.소계 === 0 ? '0' : null), (c.소계 || 0) <= 5000000, '만원')}
-            ${stat('SOP 준수율', s.actual != null ? s.actual : null, (s.actual || 0) >= 95, '점')}
-            ${stat('표준 미준수', st.actual != null ? st.actual : null, (st.actual || 0) === 0, '건')}
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start">
+            ${box('반복불량', t.total != null ? t.total : null, '건', (t.total || 0) <= 2, t.note, '#17A2B8')}
+            ${box('품질비용', c.소계 ? Math.round(c.소계 / 10000).toLocaleString() : (c.소계 === 0 ? '0' : null), '만원', (c.소계 || 0) <= 5000000, c.note, '#C0392B')}
+            ${box('SOP 준수율', s.actual != null ? s.actual : null, '점', (s.actual || 0) >= 95, s.note, '#7B4EA0')}
+            ${box('표준 미준수', st.actual != null ? st.actual : null, '건', (st.actual || 0) === 0, st.note, '#E67E22')}
           </div>
-          ${notes}
         </div>`;
       }).join('');
       wrap.innerHTML = cards || '<div class="card" style="padding:20px;text-align:center;color:#ccc">데이터 없음</div>';
