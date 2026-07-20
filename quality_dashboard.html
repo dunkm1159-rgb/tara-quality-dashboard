@@ -1217,7 +1217,7 @@
     <div id="tab-kpi" class="tab">
       <div class="section-header">
         <div class="section-title">2026년 품질개선팀 KPI 현황</div>
-        <span style="font-size:12px;color:#aaa">목표 대비 실적 (2026년 1~5월)</span>
+        <span style="font-size:12px;color:#aaa" id="kpi-period">목표 대비 실적</span>
       </div>
 
       <!-- KPI 요약 카드 -->
@@ -4686,6 +4686,17 @@ if (window.KPI_DATA_SRC) {
 // ========================
 function renderKpi() {
   const D = KPI_DATA;
+
+  // 기간 라벨: 실적이 입력된 마지막 달까지 자동 표시
+  try {
+    const filled = m => (m.total || m.소계 || m.actual || 0) > 0 || m.actual === 0 && m.note;
+    const lastOf = arr => { let last = 0; (arr || []).forEach((r, i) => { if (filled(r)) last = i; }); return last; };
+    const li = Math.max(lastOf(D.top3.monthly), lastOf(D.cost.monthly), lastOf(D.sop.monthly), lastOf(D.std.monthly));
+    const lm = (D.cost.monthly[li] || D.top3.monthly[li] || {}).m || '';
+    const el = document.getElementById('kpi-period');
+    if (el) el.textContent = '목표 대비 실적 (2026년 1월~' + (lm || '') + ')'
+      + (window.KPI_DATA_SRC ? '  ·  자동반영 ' + window.KPI_DATA_SRC.updated : '');
+  } catch (e) {}
 
   // 요약 카드
   const top3Total = D.top3.monthly.reduce((s,r)=>s+(r.total||0),0);
