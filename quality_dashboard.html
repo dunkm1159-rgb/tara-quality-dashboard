@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 09:35</span>
+      v<span id="build-stamp">07/21 09:46</span>
     </div>
   </aside>
 
@@ -4853,7 +4853,14 @@ const KPI_DATA = {
 // 운영전략 결과보고 엑셀(import_kpi.py) 값이 있으면 우선 적용
 if (window.KPI_DATA_SRC) {
   ['top3', 'cost', 'sop', 'std'].forEach(k => { if (window.KPI_DATA_SRC[k]) KPI_DATA[k] = window.KPI_DATA_SRC[k]; });
-  if (window.KPI_DATA_SRC.colorClaim && window.KPI_DATA_SRC.colorClaim.length) KPI_DATA.colorClaim = window.KPI_DATA_SRC.colorClaim;
+  // 컬러클레임은 덮어쓰지 않고 병합 (엑셀에 아직 없는 최신 건 유지)
+  if (window.KPI_DATA_SRC.colorClaim && window.KPI_DATA_SRC.colorClaim.length) {
+    const base = KPI_DATA.colorClaim || [];
+    const key = r => [r.date, r.client, String(r.product || '').replace(/\s+/g, '')].join('|');
+    const seen = new Set(base.map(key));
+    window.KPI_DATA_SRC.colorClaim.forEach(r => { if (!seen.has(key(r))) { seen.add(key(r)); base.push(r); } });
+    KPI_DATA.colorClaim = base;
+  }
 }
 
 // 품질비용은 '품질사고 관리대장'을 단일 원천으로 사용 (기안 기준과 동일하게 통일)
@@ -5206,9 +5213,18 @@ function renderKpi() {
   // ⑤ 컬러 클레임 테이블
   const colorTbody = document.getElementById('kpi-color-tbody');
   if(colorTbody) {
-    const rows = D.color && D.color.monthly ? D.color.monthly : [];
+    const ce = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const rows = (D.colorClaim || (D.color && D.color.monthly) || [])
+      .slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
     colorTbody.innerHTML = rows.length ? rows.map(r=>
-      `<tr><td>${r.date||''}</td><td>${r.client||''}</td><td>${r.product||''}</td><td>${r.defect||''}</td><td>${r.cause||''}</td><td>${r.action||''}</td></tr>`
+      `<tr>
+        <td style="white-space:nowrap;color:#666">${ce(r.date)}</td>
+        <td style="font-weight:500">${ce(r.client)}</td>
+        <td title="${ce(r.product)}">${ce(r.product)}</td>
+        <td style="white-space:normal;line-height:1.5" title="${ce(r.detail || r.defect)}">${ce(r.detail || r.defect)}</td>
+        <td style="white-space:normal;line-height:1.5" title="${ce(r.cause)}">${ce(r.cause)}</td>
+        <td style="white-space:normal;line-height:1.5" title="${ce(r.action)}">${ce(r.action)}</td>
+      </tr>`
     ).join('') : '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:14px;">등록된 컬러 클레임 없음</td></tr>';
   }
 }
