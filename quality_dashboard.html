@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 09:03</span>
+      v<span id="build-stamp">07/21 09:34</span>
     </div>
   </aside>
 
@@ -953,7 +953,7 @@
         <div class="card" style="padding:0">
           <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="gajebon-count"></div>
           <div class="tbl-wrap">
-            <table style="table-layout:fixed;min-width:1470px">
+            <table style="table-layout:fixed;min-width:2050px">
               <thead>
                 <tr>
                   <th style="width:90px;cursor:pointer;user-select:none" onclick="toggleGajebonSort()" title="클릭하면 최신순/오래된순 전환">날짜<span id="gaj-sort-arrow"> ▼</span></th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
@@ -962,6 +962,11 @@
                   <th style="width:62px;text-align:center">표지</th><th style="width:62px;text-align:center">속표지</th>
                   <th style="width:62px;text-align:center">정답표지</th><th style="width:62px;text-align:center">개매본문</th>
                   <th style="width:62px;text-align:center">정매본문</th>
+                  <th style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
+                  <th style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
+                  <th style="width:96px;text-align:center;background:#eef7f9">출고</th>
+                  <th style="width:96px;text-align:center;background:#eef7f9">최종승인</th>
+                  <th style="width:180px;background:#eef7f9">요청사항</th>
                 </tr>
               </thead>
               <tbody id="gajebon-tbody"></tbody>
@@ -3780,7 +3785,7 @@ function renderGajebonTable() {
       </td>
       ${(() => { const order = r['주문번호']||''; const pr = partsProgress(order);
         const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${pr.applicable&&pr.done===pr.applicable?'#248a3d':'#1d1d1f'}">${pr.done}/${pr.applicable}</span></td>`;
-        return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join(''); })()}
+        return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join('') + ovsCells(order); })()}
     </tr>`;
   }).join('');
 }
@@ -3836,6 +3841,32 @@ function updateGajebonField(idx, field, value) {
 // ── 가제본 파트별 진행 (표지/속표지/정답표지/개매본문/정매본문) ──
 // 임시 저장: 이 브라우저(localStorage). 추후 구글시트 서버 저장으로 교체 예정.
 const GAJEBON_PARTS = ['표지','속표지','정답표지','개매본문','정매본문'];
+
+// ── 해외영업본부 전용 항목 (F&G승인일 / 발송견본 / 출고 / 최종승인 / 요청사항) ──
+const OVS_FIELDS = ['fg', 'sample', 'ship', 'final', 'req'];
+let gajebonOvsStore = {};
+try { gajebonOvsStore = JSON.parse(localStorage.getItem('gajebonOvs') || '{}'); } catch (e) { gajebonOvsStore = {}; }
+function saveOvsStore() { try { localStorage.setItem('gajebonOvs', JSON.stringify(gajebonOvsStore)); } catch (e) {} }
+function getOvs(order, key) { return (gajebonOvsStore[order] || {})[key] || ''; }
+function setOvs(order, key, val) {
+  if (!gajebonOvsStore[order]) gajebonOvsStore[order] = {};
+  if (val === '' || val == null) delete gajebonOvsStore[order][key];
+  else gajebonOvsStore[order][key] = val;
+  if (!Object.keys(gajebonOvsStore[order]).length) delete gajebonOvsStore[order];
+  saveOvsStore();
+}
+function ovsCells(order) {
+  const o = String(order || '').replace(/'/g, '');
+  const box = 'border:1px solid #d2d2d7;border-radius:6px;padding:3px 5px;font-size:11px;width:100%;background:#fff';
+  const d = k => `<td style="text-align:center;background:#fcfdfe">
+      <input type="date" value="${getOvs(order, k)}" onchange="setOvs('${o}','${k}',this.value)" style="${box}"></td>`;
+  return d('fg')
+    + `<td style="text-align:center;background:#fcfdfe"><input type="number" min="0" value="${getOvs(order, 'sample')}" placeholder="0"
+         onchange="setOvs('${o}','sample',this.value)" style="${box};text-align:right"></td>`
+    + d('ship') + d('final')
+    + `<td style="background:#fcfdfe"><input type="text" value="${String(getOvs(order, 'req')).replace(/"/g, '&quot;')}" placeholder="요청사항"
+         onchange="setOvs('${o}','req',this.value)" style="${box}"></td>`;
+}
 let gajebonPartStore = {};      // 주문별 파트 완료/날짜 + _app(해당 파트 목록)
 let gajebonPartTemplates = {};  // 제품명 → 해당 파트 목록 (기억)
 let gajebonEditOrder = null;    // 현재 '구성' 편집중인 주문번호
@@ -4811,8 +4842,11 @@ const KPI_DATA = {
   },
   colorClaim: [
     {date:'2026-05-27', client:'(주)그리다작업실', product:'매드 포칼릭 트레이 매트 2종',
-     detail:'견본 대비 색상 농도 미흡, 전체적으로 색상이 약하게 표현됨',
-     cause:'외주협력사 색상 농도관리 미흡', action:'인쇄 작업시 견본 참고하여 진행 예정'},
+     detail:'견본 대비 본 인쇄물의 색상 농도 관리가 미흡하여 전체적으로 색상이 약하게 표현됨',
+     cause:'외주협력사의 색상 농도관리 미흡', action:'인쇄 작업시 견본 참고 유의하여 작업 진행 예정'},
+    {date:'2026-07-13', client:'(주)조선뉴스프레스', product:'2026년 여성조선 7월호 본책 + LA',
+     detail:'표1의 인물 얼굴색이 과도하게 붉게 표현됨',
+     cause:'파악중', action:'7/21 인쇄감리 후 UV코팅에 대한 감리 진행'},
   ]
 };
 
