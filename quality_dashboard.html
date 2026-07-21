@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 13:18</span>
+      v<span id="build-stamp">07/21 13:25</span>
     </div>
   </aside>
 
@@ -873,18 +873,22 @@
       </div>
 
       <div class="card" style="padding:0">
-        <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="claim-count"></div>
+        <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee;display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <span id="claim-count"></span>
+          <button onclick="restoreClaims()" title="삭제 처리한 클레임을 모두 되살립니다"
+            style="border:1px solid #e5e5e5;background:#fff;border-radius:6px;padding:3px 10px;font-size:12px;color:#666;cursor:pointer">삭제 복원</button>
+        </div>
         <div class="tbl-wrap">
           <table style="table-layout:fixed">
             <colgroup>
               <col style="width:90px"><col style="width:80px"><col style="width:120px">
               <col style="width:220px"><col style="width:90px"><col style="width:90px">
-              <col style="width:160px"><col style="width:80px">
+              <col style="width:160px"><col style="width:80px"><col style="width:44px">
             </colgroup>
             <thead>
               <tr>
                 <th>접수일</th><th>연도</th><th>거래처</th><th>제품명</th>
-                <th>품질유형</th><th>부적합유형</th><th>조치사항</th><th>비용(자사)</th>
+                <th>품질유형</th><th>부적합유형</th><th>조치사항</th><th>비용(자사)</th><th></th>
               </tr>
             </thead>
             <tbody id="claim-tbody"></tbody>
@@ -2979,6 +2983,7 @@ function initClaim() {
   mergeLedger();
   if (!window.CLAIM_DATA || !window.CLAIM_DATA.rows) return;
   claimData = normalizeClaimData(window.CLAIM_DATA.rows);
+  claimApplyDeleted();     // 사용자가 삭제 처리한 건 제외
   const upd = window.CLAIM_DATA.updated || '';
   const el = document.getElementById('claim-updated');
   if (el) el.textContent = upd ? '기준: ' + upd : '';
@@ -3030,6 +3035,42 @@ function renderClaimMetrics() {
   `;
 }
 
+// ── 클레임 삭제 (잘못 등록한 건 제외) ──
+// 원본(엑셀/시트)은 건드리지 않고, 삭제한 건의 키를 브라우저에 기억해 계속 숨긴다.
+const CLAIM_DEL_KEY = 'claimDeleted_v1';
+function claimKey(r) { return [r[0] || '', r[1] || '', r[4] || ''].join('|'); }
+function claimDeletedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(CLAIM_DEL_KEY) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function claimApplyDeleted() {
+  const del = claimDeletedSet();
+  if (!del.size) return;
+  claimData = claimData.filter(r => !del.has(claimKey(r)));
+}
+function deleteClaim(key) {
+  const r = claimData.find(x => claimKey(x) === key);
+  if (!r) return;
+  const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}`;
+  if (!confirm('아래 클레임을 목록에서 삭제할까요?\n\n' + label +
+               '\n\n※ 원본 엑셀/시트는 지워지지 않습니다.\n   (되돌리려면 "삭제 복원" 버튼)')) return;
+  const del = claimDeletedSet();
+  del.add(key);
+  try { localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify([...del])); } catch (e) {}
+  claimData = claimData.filter(x => claimKey(x) !== key);
+  if (typeof refreshDash === 'function') refreshDash();
+  if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
+  renderClaimTable();
+  if (typeof renderCharts === 'function') renderCharts();
+}
+function restoreClaims() {
+  const n = claimDeletedSet().size;
+  if (!n) { alert('삭제한 클레임이 없습니다.'); return; }
+  if (!confirm('삭제 처리한 ' + n + '건을 모두 되살릴까요?\n(새로고침 후 다시 나타납니다)')) return;
+  try { localStorage.removeItem(CLAIM_DEL_KEY); } catch (e) {}
+  location.reload();
+}
+
 function renderClaimTable() {
   const search = document.getElementById('claim-search').value.toLowerCase();
   const type   = document.getElementById('claim-type').value;
@@ -3056,7 +3097,7 @@ function renderClaimTable() {
   };
 
   const tbody = document.getElementById('claim-tbody');
-  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="8" class="empty">해당하는 데이터 없음</td></tr>'; return; }
+  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="9" class="empty">해당하는 데이터 없음</td></tr>'; return; }
 
   tbody.innerHTML = filtered.map(r => `
     <tr>
@@ -3068,6 +3109,10 @@ function renderClaimTable() {
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[8]}">${r[8]||'-'}</td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[11]||''}">${r[11]||'-'}</td>
       <td style="text-align:right;font-size:13px">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
+      <td style="text-align:center"><button title="이 클레임 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"
+        style="border:none;background:none;cursor:pointer;color:#c0392b;font-size:15px;padding:2px 6px;line-height:1"
+        onmouseover="this.style.background='#fdeaea';this.style.borderRadius='6px'"
+        onmouseout="this.style.background='none'"><i class="ti ti-trash"></i></button></td>
     </tr>
   `).join('');
 }
@@ -5507,6 +5552,7 @@ async function loadSheetClaims(){
       });
     if(add.length){
       claimData = claimData.concat(add);
+      claimApplyDeleted();     // 시트에서 다시 불러와도 삭제한 건은 계속 숨김
       if(typeof refreshDash==='function') refreshDash();
       if(typeof refreshClaimFilters==='function') refreshClaimFilters(typeof claimCurrentYear!=='undefined'?claimCurrentYear:'');
       if(typeof renderClaimTable==='function') renderClaimTable();
