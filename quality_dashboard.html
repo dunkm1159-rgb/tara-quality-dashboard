@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 13:25</span>
+      v<span id="build-stamp">07/21 13:33</span>
     </div>
   </aside>
 
@@ -957,7 +957,7 @@
         <div class="card" style="padding:0">
           <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="gajebon-count"></div>
           <div class="tbl-wrap">
-            <table style="table-layout:fixed;min-width:2050px">
+            <table id="gajebon-table" style="table-layout:fixed;min-width:2050px">
               <thead>
                 <tr>
                   <th style="width:90px;cursor:pointer;user-select:none" onclick="toggleGajebonSort()" title="클릭하면 최신순/오래된순 전환">날짜<span id="gaj-sort-arrow"> ▼</span></th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
@@ -966,11 +966,11 @@
                   <th style="width:62px;text-align:center">표지</th><th style="width:62px;text-align:center">속표지</th>
                   <th style="width:62px;text-align:center">정답표지</th><th style="width:62px;text-align:center">개매본문</th>
                   <th style="width:62px;text-align:center">정매본문</th>
-                  <th style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
-                  <th style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
-                  <th style="width:96px;text-align:center;background:#eef7f9">출고</th>
-                  <th style="width:96px;text-align:center;background:#eef7f9">최종승인</th>
-                  <th style="width:180px;background:#eef7f9">요청사항</th>
+                  <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
+                  <th class="ovs-col" style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
+                  <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">출고</th>
+                  <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">최종승인</th>
+                  <th class="ovs-col" style="width:180px;background:#eef7f9">요청사항</th>
                 </tr>
               </thead>
               <tbody id="gajebon-tbody"></tbody>
@@ -3703,6 +3703,7 @@ function toggleGajebonSort() {
   renderGajebonTable();
 }
 function renderGajebonTable() {
+  syncOvsCols();     // 해외영업본부 탭에서만 F&G/발송견본 등 컬럼 노출
   const rows = gajebonSheets[gajebonCurrentSheet] || [];
   const search = (document.getElementById('gajebon-search')?.value || '').toLowerCase();
   const statusFilter = document.getElementById('gajebon-filter')?.value || '';
@@ -3789,7 +3790,7 @@ function renderGajebonTable() {
   const tbody = document.getElementById('gajebon-tbody');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + (isOvsSheet() ? 19 : 14) + '" class="empty">데이터 없음</td></tr>';
     return;
   }
   const statusBadge = s => {
@@ -3909,7 +3910,18 @@ function setOvs(order, key, val) {
   if (!Object.keys(gajebonOvsStore[order]).length) delete gajebonOvsStore[order];
   saveOvsStore();
 }
+// 해외영업본부(영문거래처) 탭에서만 사용
+const OVS_SHEET = '영문거래처';
+function isOvsSheet() { return gajebonCurrentSheet === OVS_SHEET; }
+// 해외영업본부 컬럼 표시/숨김 (헤더 + 표 최소너비)
+function syncOvsCols() {
+  const on = isOvsSheet();
+  document.querySelectorAll('.ovs-col').forEach(el => { el.style.display = on ? '' : 'none'; });
+  const tb = document.getElementById('gajebon-table');
+  if (tb) tb.style.minWidth = on ? '2050px' : '1500px';
+}
 function ovsCells(order) {
+  if (!isOvsSheet()) return '';      // 해외영업본부 탭에서만 입력칸 표시
   const o = String(order || '').replace(/'/g, '');
   const box = 'border:1px solid #d2d2d7;border-radius:6px;padding:3px 5px;font-size:11px;width:100%;background:#fff';
   const d = k => `<td style="text-align:center;background:#fcfdfe">
