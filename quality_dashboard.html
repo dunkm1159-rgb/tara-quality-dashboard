@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 12:02</span>
+      v<span id="build-stamp">07/21 13:18</span>
     </div>
   </aside>
 
@@ -1069,7 +1069,10 @@
       <div id="an-erp">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
           <div class="section-title">ERP 부적합 분석</div>
-          <div id="erp-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div id="erp-inout-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+            <div id="erp-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+          </div>
         </div>
         <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역(공정검사) 기준 · 공정중 발견 포함 전체 접수 건 <span id="erp-updated" style="color:#ccc"></span></div>
         <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
@@ -1431,6 +1434,8 @@ const monthData = [3,5,4,7,14,4,0,0,0,0,0,0];
 // ERP 부적합 분석 (QUALITY_DATA)
 // ========================
 let erpYear = '';        // '' = 전체
+let erpInout = '';       // '' = 전체 / '사내' / '외주'
+function setErpInout(v) { erpInout = v; renderErp(); }
 window._eCharts = window._eCharts || {};
 function setAnalysisSrc(s) {
   document.getElementById('an-erp').style.display   = (s === 'erp' ? 'block' : 'none');
@@ -1457,7 +1462,11 @@ function renderErp() {
   const bw = document.getElementById('erp-year-btns');
   if (bw) bw.innerHTML = `<button class="claim-year-btn ${erpYear === '' ? 'active' : ''}" onclick="setErpYear('')">전체</button>` +
     years.map(y => `<button class="claim-year-btn ${erpYear === y ? 'active' : ''}" onclick="setErpYear('${y}')">${y}</button>`).join('');
-  const rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;
+  const bi = document.getElementById('erp-inout-btns');
+  if (bi) bi.innerHTML = [['', '전체'], ['사내', '사내'], ['외주', '외주']].map(([v, l]) =>
+    `<button class="claim-year-btn ${erpInout === v ? 'active' : ''}" onclick="setErpInout('${v}')">${l}</button>`).join('');
+  let rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;
+  if (erpInout) rows = rows.filter(r => r['사내외주'] === erpInout);
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const num = r => Number(r['금액'] || 0);
   const man = v => Math.round(v / 10000).toLocaleString();
@@ -2953,8 +2962,8 @@ function mergeLedger() {
     const k = String(lr[1] || '').trim();
     const ex = idx[k];
     if (ex) {
-      if (!Number(ex[12])) ex[12] = lr[12];        // 비용 자사
-      if (!Number(ex[13])) ex[13] = lr[13];        // 비용 협력사
+      // 비용은 품질사고 관리대장이 정본 — 무조건 덮어쓴다 (1:1 일치 보장)
+      ex[12] = lr[12]; ex[13] = lr[13];
       if (lr[15] && !ex[15]) ex[15] = lr[15];      // 판정등급
       if (!ex[9] && lr[9]) ex[9] = lr[9];          // 설비
       if (!ex[10] && lr[10]) ex[10] = lr[10];      // 조치
