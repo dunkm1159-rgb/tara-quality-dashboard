@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 13:33</span>
+      v<span id="build-stamp">07/21 13:41</span>
     </div>
   </aside>
 
@@ -1079,6 +1079,7 @@
           </div>
         </div>
         <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역(공정검사) 기준 · 공정중 발견 포함 전체 접수 건 <span id="erp-updated" style="color:#ccc"></span></div>
+        <div id="erp-recon"></div>
         <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
         <div class="card" style="padding:16px 18px;margin-bottom:16px">
           <div class="card-title">월별 부적합 추이 <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=금액(만원)</span></div>
@@ -1109,6 +1110,7 @@
           <div style="overflow-x:auto;max-height:460px;overflow-y:auto">
             <table style="width:100%;font-size:12.5px">
               <thead><tr>
+                <th style="white-space:nowrap;text-align:center" title="품질사고 관리대장에 등재된 건(클레임 확정)">대장</th>
                 <th style="white-space:nowrap">접수일</th><th style="white-space:nowrap">번호</th>
                 <th style="white-space:nowrap">접수유형</th><th style="white-space:nowrap">구분</th>
                 <th style="white-space:nowrap">거래처</th><th>제품명</th>
@@ -1458,6 +1460,48 @@ function erpAllRows() {
   }));
   return out;
 }
+// ── ERP ↔ 품질사고 관리대장 대사(對査) ──
+// 관리대장에는 '클레임으로 비용이 확정된 건'만 등재된다.
+// 나머지(공정중 발견·검수중 차단 등)는 ERP에만 존재 → 사내/외주로 나눠 보여준다.
+function ledgerOrderSet(year) {
+  const N = window.NCCOST_DATA || {};
+  const ys = year ? [year] : Object.keys(N);
+  const s = new Set();
+  ys.forEach(y => ((N[y] || {}).orders || []).forEach(o => s.add(String(o).trim())));
+  return s;
+}
+function renderErpRecon(rows) {
+  const el = document.getElementById('erp-recon');
+  if (!el) return;
+  const led = ledgerOrderSet(erpYear);
+  if (!led.size) { el.innerHTML = ''; return; }
+  const inLed  = rows.filter(r => led.has(String(r['주문번호'] || '').trim()));
+  const outLed = rows.filter(r => !led.has(String(r['주문번호'] || '').trim()));
+  const sum = rs => rs.reduce((s, r) => s + Number(r['금액'] || 0), 0);
+  const man = v => Math.round(v / 10000).toLocaleString();
+  const oOut = outLed.filter(r => r['사내외주'] === '외주');
+  const oIn  = outLed.filter(r => r['사내외주'] !== '외주');
+  const bar = (l, c, a, color, note) => `
+    <div style="flex:1;min-width:180px;border-left:3px solid ${color};padding:8px 12px;background:#fafafa;border-radius:0 8px 8px 0">
+      <div style="font-size:11px;color:#86868b">${l}</div>
+      <div style="font-size:18px;font-weight:700;color:${color};margin:2px 0">${man(a)}<span style="font-size:11px;font-weight:400;color:#86868b">만원 · ${c}건</span></div>
+      <div style="font-size:11px;color:#98a2b3">${note}</div></div>`;
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">ERP ↔ 품질사고 관리대장 대사</div>
+      <div style="font-size:11px;color:#86868b;margin-bottom:10px">
+        관리대장에는 <b>클레임으로 비용이 확정된 건만</b> 등재됩니다.
+        공정 중 발견·검수 단계에서 차단한 건은 ERP에만 남으므로 두 숫자는 원래 다릅니다.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${bar('관리대장 등재 (확정)', inLed.length, sum(inLed), '#C0392B', '기안·목표관리 기준 금액')}
+        ${bar('미등재 · 외주', oOut.length, sum(oOut), '#E67E22', '외주처 공정 중 발견 → 클레임 미발생')}
+        ${bar('미등재 · 사내', oIn.length, sum(oIn), '#17A2B8', '사내 공정 중 발견 → 자체 재작업')}
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#86868b">
+        ERP 합계 ${man(sum(rows))}만 = 관리대장 ${man(sum(inLed))}만 + 미등재 ${man(sum(outLed))}만
+        ${inLed.length ? '' : ' · <span style="color:#c0392b">매칭 0건 — 주문번호 형식 확인 필요</span>'}</div>
+    </div>`;
+}
 function renderErp() {
   const all = erpAllRows();
   const upd = document.getElementById('erp-updated');
@@ -1484,6 +1528,8 @@ function renderErp() {
     card('사내', inn, '건', rows.length ? Math.round(inn / rows.length * 100) + '%' : '-', '#17A2B8') +
     card('외주', out_, '건', rows.length ? Math.round(out_ / rows.length * 100) + '%' : '-', '#E67E22') +
     card('금액 합계', man(tot), '만원', '건당 ' + (rows.length ? man(tot / rows.length) : 0) + '만', '#C0392B');
+
+  renderErpRecon(rows);
 
   // 월별 추이
   const mks = [...new Set(rows.map(r => r._m))].sort();
@@ -1533,7 +1579,12 @@ function renderErp() {
   const dc = document.getElementById('erp-detail-cnt');
   if (dc) dc.textContent = rows.length + '건 · 최신순';
   const tb = document.getElementById('erp-detail-tbody');
+  const ledSet = ledgerOrderSet(erpYear);
+  const ledBadge = r => ledSet.has(String(r['주문번호'] || '').trim())
+    ? '<span style="background:#fdeaea;color:#c0392b;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">등재</span>'
+    : '<span style="color:#c8c8c8;font-size:10px">-</span>';
   if (tb) tb.innerHTML = rows.slice().sort((a, b) => String(b['접수일']).localeCompare(String(a['접수일']))).map(r => `<tr>
+      <td style="text-align:center">${ledBadge(r)}</td>
       <td style="white-space:nowrap;color:#666">${esc(r['접수일'])}</td>
       <td style="white-space:nowrap;font-family:monospace">${esc(r['부적합번호'])}</td>
       <td style="white-space:nowrap">${esc(r['접수유형'])}</td>
@@ -1544,7 +1595,7 @@ function renderErp() {
       <td style="white-space:nowrap;color:#666">${esc(r['발생공정'] || r['설비명'])}</td>
       <td style="white-space:nowrap;color:#666">${esc(r['책임부서'])}</td>
       <td style="text-align:right;white-space:nowrap;color:#C0392B;font-weight:600">${num(r) ? man(num(r)) : '-'}</td>
-    </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;color:#ccc;padding:18px">데이터 없음 — auto_collect_quality.py 실행 필요</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;color:#ccc;padding:18px">데이터 없음 — auto_collect_quality.py 실행 필요</td></tr>';
 }
 
 // ========================
