@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/21 15:02</span>
+      v<span id="build-stamp">07/22 17:18</span>
     </div>
   </aside>
 
@@ -962,10 +962,10 @@
                 <tr>
                   <th style="width:90px;cursor:pointer;user-select:none" onclick="toggleGajebonSort()" title="클릭하면 최신순/오래된순 전환">날짜<span id="gaj-sort-arrow"> ▼</span></th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
                   <th style="width:90px">요청내용</th><th style="width:150px">설비명</th><th style="width:124px">진행상태</th>
-                  <th style="width:60px;text-align:center">진행</th>
-                  <th style="width:62px;text-align:center">표지</th><th style="width:62px;text-align:center">속표지</th>
-                  <th style="width:62px;text-align:center">정답표지</th><th style="width:62px;text-align:center">개매본문</th>
-                  <th style="width:62px;text-align:center">정매본문</th>
+                  <th class="part-col" style="width:60px;text-align:center">진행</th>
+                  <th class="part-col" style="width:62px;text-align:center">표지</th><th class="part-col" style="width:62px;text-align:center">속표지</th>
+                  <th class="part-col" style="width:62px;text-align:center">정답표지</th><th class="part-col" style="width:62px;text-align:center">개매본문</th>
+                  <th class="part-col" style="width:62px;text-align:center">정매본문</th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
                   <th class="ovs-col" style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">출고</th>
@@ -3849,7 +3849,7 @@ function renderGajebonTable() {
   const tbody = document.getElementById('gajebon-tbody');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="' + (isOvsSheet() ? 19 : 14) + '" class="empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + (8 + (showParts() ? 6 : 0) + (isOvsSheet() ? 5 : 0)) + '" class="empty">데이터 없음</td></tr>';
     return;
   }
   const statusBadge = s => {
@@ -3897,7 +3897,9 @@ function renderGajebonTable() {
             : '') : ''}
         </div>
       </td>
-      ${(() => { const order = r['주문번호']||''; const pr = partsProgress(order);
+      ${(() => { const order = r['주문번호']||'';
+        if (!showParts()) return ovsCells(order);          // 전략사업본부는 파트 컬럼 미사용
+        const pr = partsProgress(order);
         const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${pr.applicable&&pr.done===pr.applicable?'#248a3d':'#1d1d1f'}">${pr.done}/${pr.applicable}</span></td>`;
         return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join('') + ovsCells(order); })()}
     </tr>`;
@@ -3972,12 +3974,16 @@ function setOvs(order, key, val) {
 // 해외영업본부(영문거래처) 탭에서만 사용
 const OVS_SHEET = '영문거래처';
 function isOvsSheet() { return gajebonCurrentSheet === OVS_SHEET; }
-// 해외영업본부 컬럼 표시/숨김 (헤더 + 표 최소너비)
+// 전략사업본부(대교·정상)는 파트(표지/속표지/…) 구분을 쓰지 않는다
+const NO_PART_SHEETS = ['대교', '정상제이엘에스'];
+function showParts() { return !NO_PART_SHEETS.includes(gajebonCurrentSheet); }
+// 시트별 컬럼 표시/숨김 (헤더 + 표 최소너비)
 function syncOvsCols() {
-  const on = isOvsSheet();
-  document.querySelectorAll('.ovs-col').forEach(el => { el.style.display = on ? '' : 'none'; });
+  const ovs = isOvsSheet(), prt = showParts();
+  document.querySelectorAll('.ovs-col').forEach(el => { el.style.display = ovs ? '' : 'none'; });
+  document.querySelectorAll('.part-col').forEach(el => { el.style.display = prt ? '' : 'none'; });
   const tb = document.getElementById('gajebon-table');
-  if (tb) tb.style.minWidth = on ? '2050px' : '1500px';
+  if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 390 : 0) + 'px';
 }
 function ovsCells(order) {
   if (!isOvsSheet()) return '';      // 해외영업본부 탭에서만 입력칸 표시
