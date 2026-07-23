@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 11:13</span>
+      v<span id="build-stamp">07/23 11:19</span>
     </div>
   </aside>
 
@@ -928,6 +928,7 @@
         <!-- 시트 탭 -->
         <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:0">
           <button class="gajebon-sheet-btn active" onclick="switchGajebonSheet('기타',this)">국내영업본부</button>
+          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(EBS)',this)">국내영업본부(EBS)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('대교',this)">전략사업본부(대교)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('정상제이엘에스',this)">전략사업본부(정상)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('영문거래처',this)">해외영업본부</button>
@@ -3184,10 +3185,23 @@ let gajebonCurrentSheet = '기타';
 const IS_SERVER = location.protocol !== 'file:';
 
 // 우선순위: 1) HTML에 주입된 데이터 2) 서버 API 3) 수동 업로드
+// 국내영업본부(기타)에서 한국교육방송공사(EBS) 건을 별도 탭으로 분리한다.
+const EBS_SHEET = '국내영업본부(EBS)';
+const EBS_CLIENTS = ['한국교육방송공사', 'EBS'];
+function splitEbsSheet() {
+  const base = gajebonSheets['기타'];
+  if (!base) return;
+  const isEbs = r => EBS_CLIENTS.some(k => String(r['거래처'] || '').includes(k));
+  const ebs = base.filter(isEbs);
+  gajebonSheets['기타'] = base.filter(r => !isEbs(r));   // 국내영업본부에서 제외
+  gajebonSheets[EBS_SHEET] = ebs;                        // EBS 전용 탭으로 취합
+}
+
 function initGajebon() {
   if (window.GAJEBON_DATA && window.GAJEBON_DATA.sheets) {
     // inject_data.py가 심어준 데이터 자동 사용
     gajebonSheets = window.GAJEBON_DATA.sheets;
+    splitEbsSheet();
     document.getElementById('gajebon-empty').style.display = 'none';
     document.getElementById('gajebon-content').style.display = 'block';
     document.getElementById('gajebon-file-info').textContent =
@@ -3211,6 +3225,7 @@ async function fetchGajebonFromServer() {
       return;
     }
     gajebonSheets = json.sheets || {};
+    splitEbsSheet();
     document.getElementById('gajebon-empty').style.display = 'none';
     document.getElementById('gajebon-content').style.display = 'block';
     document.getElementById('gajebon-file-info').textContent = '서버 API  |  실시간';
