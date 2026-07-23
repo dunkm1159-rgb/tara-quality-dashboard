@@ -432,7 +432,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 15:08</span>
+      v<span id="build-stamp">07/23 15:47</span>
     </div>
   </aside>
 
@@ -3936,7 +3936,7 @@ function renderGajebonTable() {
           const done = comp.filter(c => c.y).length;
           const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${done === comp.length ? '#248a3d' : '#1d1d1f'}">${done}/${comp.length}</span></td>`;
           let cells = '';
-          for (let i = 0; i < 10; i++) cells += (i < comp.length) ? partCellAuto(comp[i], r['날짜'] || '') : '<td></td>';
+          for (let i = 0; i < 10; i++) cells += (i < comp.length) ? partCellAuto(comp[i], r['날짜'] || '', order, i) : '<td></td>';
           return prog + cells + ovsCells(order);
         }
         const pr = partsProgress(order);
@@ -4158,17 +4158,38 @@ function ebsComp(rowObj) {
   try { const a = (typeof raw === 'string') ? JSON.parse(raw) : raw; return (Array.isArray(a) && a.length) ? a : null; }
   catch (e) { return null; }
 }
-function partCellAuto(item, dateStr) {
+// EBS 파트별 '작업완료' 수동 표시 (ERP 인쇄완료와 별개)
+let gajebonEbsWork = {};
+try { gajebonEbsWork = JSON.parse(localStorage.getItem('gajebonEbsWork') || '{}'); } catch (e) { gajebonEbsWork = {}; }
+function getEbsWork(order, idx) { return (gajebonEbsWork[order] || {})[idx] || null; }
+function toggleEbsWork(order, idx) {
+  const o = String(order);
+  if (!gajebonEbsWork[o]) gajebonEbsWork[o] = {};
+  if (gajebonEbsWork[o][idx]) delete gajebonEbsWork[o][idx];
+  else gajebonEbsWork[o][idx] = { st: 'done', date: new Date().toISOString().slice(0, 10) };
+  if (!Object.keys(gajebonEbsWork[o]).length) delete gajebonEbsWork[o];
+  try { localStorage.setItem('gajebonEbsWork', JSON.stringify(gajebonEbsWork)); } catch (e) {}
+  renderGajebonTable();
+}
+function partCellAuto(item, dateStr, order, idx) {
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const o = String(order).replace(/'/g, "\\'");
   const name = `<div style="font-size:10.5px;color:#1d1d1f;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.n)}">${esc(item.n)}</div>`;
+  const work = getEbsWork(order, idx);
+  const click = `onclick="toggleEbsWork('${o}',${idx})" style="cursor:pointer"`;
   let check;
-  if (item.y) {
-    const dt = (dateStr || '').slice(5);   // 인쇄완료 표시일 = 주문 접수일
-    check = `<div style="display:inline-flex;flex-direction:column;align-items:center">
-      <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#ddf4e2;color:#248a3d;font-size:13px;font-weight:700;">&#10003;</div>
+  if (work) {
+    // 한 번 누르면: 작업완료 (파란 배지 + 날짜)
+    check = `<div ${click} title="클릭하면 해제"><div style="display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:6px;background:#1F5C99;color:#fff;font-size:10px;font-weight:700;white-space:nowrap">작업완료</div>
+      <div style="font-size:9px;color:#86868b;margin-top:1px;white-space:nowrap;">${(work.date || '').slice(5)}</div></div>`;
+  } else if (item.y) {
+    // ERP 인쇄완료 (초록 체크) — 누르면 작업완료로
+    const dt = (dateStr || '').slice(5);
+    check = `<div ${click} title="인쇄완료 · 클릭하면 작업완료 표시"><div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#ddf4e2;color:#248a3d;font-size:13px;font-weight:700;">&#10003;</div>
       <div style="font-size:9px;color:#86868b;margin-top:1px;white-space:nowrap;">${dt}</div></div>`;
   } else {
-    check = `<div style="display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px solid #d2d2d7;"></div>`;
+    // 미인쇄 — 눌러도 작업완료 표시 가능
+    check = `<div ${click} title="클릭하면 작업완료 표시" style="cursor:pointer;display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px solid #d2d2d7;"></div>`;
   }
   return `<td style="text-align:center;padding:5px 4px;vertical-align:top">${name}<div>${check}</div></td>`;
 }
