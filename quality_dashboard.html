@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 09:05</span>
+      v<span id="build-stamp">07/23 11:09</span>
     </div>
   </aside>
 
@@ -3975,7 +3975,7 @@ function setOvs(order, key, val) {
 const OVS_SHEET = '영문거래처';
 function isOvsSheet() { return gajebonCurrentSheet === OVS_SHEET; }
 // 전략사업본부(대교·정상)는 파트(표지/속표지/…) 구분을 쓰지 않는다
-const NO_PART_SHEETS = ['대교', '정상제이엘에스'];
+const NO_PART_SHEETS = ['대교', '정상제이엘에스', '영문거래처'];
 function showParts() { return !NO_PART_SHEETS.includes(gajebonCurrentSheet); }
 // 시트별 컬럼 표시/숨김 (헤더 + 표 최소너비)
 function syncOvsCols() {
