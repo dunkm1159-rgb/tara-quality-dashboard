@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 11:48</span>
+      v<span id="build-stamp">07/23 12:03</span>
     </div>
   </aside>
 
@@ -3213,8 +3213,8 @@ function initGajebon() {
     document.getElementById('gajebon-content').style.display = 'block';
     document.getElementById('gajebon-file-info').textContent =
       `자동 반영  |  기준: ${window.GAJEBON_DATA.updated || '-'}`;
-    renderGajebonMetrics();
     gajebonCurrentSheet = Object.keys(gajebonSheets)[0] || '기타';
+    renderGajebonMetrics();
     renderGajebonTable();
   } else if (IS_SERVER) {
     document.getElementById('gajebon-empty-msg').textContent = '서버에서 데이터 불러오는 중...';
@@ -3236,8 +3236,8 @@ async function fetchGajebonFromServer() {
     document.getElementById('gajebon-empty').style.display = 'none';
     document.getElementById('gajebon-content').style.display = 'block';
     document.getElementById('gajebon-file-info').textContent = '서버 API  |  실시간';
-    renderGajebonMetrics();
     gajebonCurrentSheet = Object.keys(gajebonSheets)[0] || '기타';
+    renderGajebonMetrics();
     renderGajebonTable();
   } catch(e) {
     document.getElementById('gajebon-empty-msg').textContent = '서버 연결 실패. 엑셀 파일을 직접 불러오세요.';
@@ -3245,15 +3245,20 @@ async function fetchGajebonFromServer() {
 }
 
 function renderGajebonMetrics() {
-  const allRows = Object.values(gajebonSheets).flat();
+  // 현재 선택된 탭의 행만 집계 (탭 바뀌면 카운트도 바뀜)
+  const rows = gajebonSheets[gajebonCurrentSheet] || [];
+  const tabName = {
+    '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
+    '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)', '영문거래처': '해외영업본부'
+  }[gajebonCurrentSheet] || gajebonCurrentSheet;
   // 완료 = ERP 완료 또는 웹에서 가제본 완료처리(날짜입력) — 날짜 미입력이어도 완료로 집계
   const isDone = r => (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '');
-  const done = allRows.filter(isDone).length;
-  const doneNoDate = allRows.filter(r => r['진행상태'] === '완료' && (r['요청내용'] || '').includes('가제본') && !gajDate(r['주문번호'] || '')).length;
-  const progress = allRows.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '')).length;
+  const done = rows.filter(isDone).length;
+  const doneNoDate = rows.filter(r => r['진행상태'] === '완료' && (r['요청내용'] || '').includes('가제본') && !gajDate(r['주문번호'] || '')).length;
+  const progress = rows.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '')).length;
   document.getElementById('gajebon-metrics').innerHTML = `
-    <div class="metric"><div class="label">완료</div><div class="value" style="color:#248a3d">${done.toLocaleString()}</div><div class="sub ${doneNoDate ? 'up' : 'neutral'}">${doneNoDate ? '가제본일 미입력 ' + doneNoDate + '건' : '가제본일 입력 완료'}</div></div>
-    <div class="metric"><div class="label">진행중</div><div class="value" style="color:#c93400">${progress.toLocaleString()}</div><div class="sub neutral">현재 생산 진행</div></div>
+    <div class="metric"><div class="label">완료 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#248a3d">${done.toLocaleString()}</div><div class="sub ${doneNoDate ? 'up' : 'neutral'}">${doneNoDate ? '가제본일 미입력 ' + doneNoDate + '건' : '가제본일 입력 완료'}</div></div>
+    <div class="metric"><div class="label">진행중 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#c93400">${progress.toLocaleString()}</div><div class="sub neutral">현재 생산 진행</div></div>
   `;
 }
 
@@ -3993,13 +3998,13 @@ function setPartLabel(sheet, key, val) {
   if (!Object.keys(gajebonPartLabels[sheet]).length) delete gajebonPartLabels[sheet];
   try { localStorage.setItem('gajebonPartLabels', JSON.stringify(gajebonPartLabels)); } catch (e) {}
 }
-// 머리글은 기본 이름표를 옅은 글씨로만 안내 (실제 편집은 각 행에서)
-const PART_DEFAULTS = ['표지','속표지','정답표지','개매본문','정매본문','','','','',''];
+// 머리글·입력칸 모두 기본 글자 없음 (전부 빈칸으로 시작)
+const PART_DEFAULTS = ['','','','','','','','','',''];
 function renderPartHeaders() {
   if (!showParts()) return;
   GAJEBON_PARTS.forEach((key, i) => {
     const th = document.getElementById('parthd-' + i);
-    if (th) th.innerHTML = `<span style="font-size:10px;color:#c0c4cc;font-weight:500">${PART_DEFAULTS[i] || ('칸' + (i + 1))}</span>`;
+    if (th) th.innerHTML = '';
   });
 }
 
@@ -4121,7 +4126,7 @@ function partCell(order, part) {
   const o = String(order).replace(/'/g, "\\'");
   const label = String(rowPartLabel(order, part, idx)).replace(/"/g, '&quot;');
   // 위: 이름표 입력칸 (품목마다 다르게 수정) / 아래: 체크
-  const nameBox = `<input value="${label}" placeholder="${PART_DEFAULTS[idx] || '입력'}"
+  const nameBox = `<input value="${label}" placeholder=""
       onchange="setRowPartLabel('${o}','${part}',this.value)" onclick="event.stopPropagation()"
       style="width:100%;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:5px;
              padding:2px 3px;font-size:10.5px;text-align:center;background:#fbfcfe;margin-bottom:3px"
@@ -4223,6 +4228,7 @@ function switchGajebonSheet(name, btn) {
   gajebonCurrentSheet = name;
   document.querySelectorAll('.gajebon-sheet-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  renderGajebonMetrics();   // 탭별 완료/진행중 카운트 갱신
   renderGajebonTable();
 }
 
