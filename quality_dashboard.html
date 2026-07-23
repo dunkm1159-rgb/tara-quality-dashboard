@@ -432,7 +432,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 16:25</span>
+      v<span id="build-stamp">07/23 16:29</span>
     </div>
   </aside>
 
@@ -1524,26 +1524,25 @@ function renderErp() {
   const bw = document.getElementById('erp-year-btns');
   if (bw) bw.innerHTML = `<button class="claim-year-btn ${erpYear === '' ? 'active' : ''}" onclick="setErpYear('')">전체</button>` +
     years.map(y => `<button class="claim-year-btn ${erpYear === y ? 'active' : ''}" onclick="setErpYear('${y}')">${y}</button>`).join('');
+  // ERP 부적합 분석은 '외주'만 집계 (사내분은 품질사고 관리대장과 동일하여 제외)
   const bi = document.getElementById('erp-inout-btns');
-  if (bi) bi.innerHTML = [['', '전체'], ['사내', '사내'], ['외주', '외주']].map(([v, l]) =>
-    `<button class="claim-year-btn ${erpInout === v ? 'active' : ''}" onclick="setErpInout('${v}')">${l}</button>`).join('');
+  if (bi) bi.innerHTML = '<span style="font-size:11px;color:#E67E22;font-weight:600;background:#fdf1e7;border-radius:6px;padding:3px 9px">외주 전용</span>';
   let rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;
-  if (erpInout) rows = rows.filter(r => r['사내외주'] === erpInout);
+  rows = rows.filter(r => r['사내외주'] === '외주');
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const num = r => Number(r['금액'] || 0);
   const man = v => Math.round(v / 10000).toLocaleString();
-  const inn = rows.filter(r => r['사내외주'] === '사내').length;
-  const out_ = rows.filter(r => r['사내외주'] === '외주').length;
   const tot = rows.reduce((s, r) => s + num(r), 0);
+  const venCnt = new Set(rows.map(r => r['외주처'] || r['거래처'] || '').filter(Boolean)).size;
   const mEl = document.getElementById('erp-metrics');
   const card = (l, v, u, sub, c) => `<div class="metric"><div class="label">${l}</div><div class="value" style="color:${c || '#1d1d1f'}">${v}<span style="font-size:13px;font-weight:400;color:#86868b">${u || ''}</span></div><div class="sub neutral">${sub || ''}</div></div>`;
   if (mEl) mEl.innerHTML =
-    card('부적합 건수', rows.length, '건', erpYear || '전체 기간') +
-    card('사내', inn, '건', rows.length ? Math.round(inn / rows.length * 100) + '%' : '-', '#17A2B8') +
-    card('외주', out_, '건', rows.length ? Math.round(out_ / rows.length * 100) + '%' : '-', '#E67E22') +
-    card('금액 합계', man(tot), '만원', '건당 ' + (rows.length ? man(tot / rows.length) : 0) + '만', '#C0392B');
+    card('외주 부적합 건수', rows.length, '건', erpYear || '전체 기간', '#E67E22') +
+    card('금액 합계', man(tot), '만원', '외주 귀책', '#C0392B') +
+    card('건당 평균', rows.length ? man(tot / rows.length) : 0, '만원', '', '#1F5C99') +
+    card('외주처 수', venCnt, '곳', '부적합 발생 업체', '#7B4EA0');
 
-  renderErpRecon(rows);
+  const rc = document.getElementById('erp-recon'); if (rc) rc.innerHTML = '';
 
   // 월별 추이
   const mks = [...new Set(rows.map(r => r._m))].sort();
