@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 12:59</span>
+      v<span id="build-stamp">07/23 13:18</span>
     </div>
   </aside>
 
@@ -4006,21 +4006,36 @@ function renderPartHeaders() {
 }
 
 // ── 행(품목)별 파트 이름표 ──  gajebonPartRowLabels[주문번호][key] = '표지' 등
+// 같은 제품명은 한 번 입력하면 자동으로 채워지도록 제품명별로도 기억한다.
 let gajebonPartRowLabels = {};
+let gajebonPartNameTpl = {};   // 제품명 → {key: label}
 try { gajebonPartRowLabels = JSON.parse(localStorage.getItem('gajebonPartRowLabels') || '{}'); } catch (e) { gajebonPartRowLabels = {}; }
+try { gajebonPartNameTpl   = JSON.parse(localStorage.getItem('gajebonPartNameTpl') || '{}'); } catch (e) { gajebonPartNameTpl = {}; }
 function rowPartLabel(order, key, idx) {
-  const v = (gajebonPartRowLabels[order] || {})[key];
-  return (v != null) ? v : (PART_DEFAULTS[idx] || '');
+  const own = (gajebonPartRowLabels[order] || {})[key];
+  if (own != null) return own;                          // 이 주문에서 직접 입력/삭제한 값 우선
+  const prod = productOfOrder(order);
+  const tpl = prod && gajebonPartNameTpl[prod];
+  if (tpl && tpl[key] != null) return tpl[key];          // 같은 제품명 기억값
+  return PART_DEFAULTS[idx] || '';
 }
 function setRowPartLabel(order, key, val) {
   val = String(val || '').trim();
   if (!gajebonPartRowLabels[order]) gajebonPartRowLabels[order] = {};
   gajebonPartRowLabels[order][key] = val;      // 빈 값도 저장(기본값 되돌림 방지)
   try { localStorage.setItem('gajebonPartRowLabels', JSON.stringify(gajebonPartRowLabels)); } catch (e) {}
+  // 제품명별 템플릿에도 기억 (다음에 같은 제품 자동 채움)
+  const prod = productOfOrder(order);
+  if (prod) {
+    if (!gajebonPartNameTpl[prod]) gajebonPartNameTpl[prod] = {};
+    if (val) gajebonPartNameTpl[prod][key] = val; else delete gajebonPartNameTpl[prod][key];
+    try { localStorage.setItem('gajebonPartNameTpl', JSON.stringify(gajebonPartNameTpl)); } catch (e) {}
+  }
   // 이름이 지워진 파트의 체크는 자동 해제
   if (!val && gajebonPartStore[order] && gajebonPartStore[order][key]) {
-    delete gajebonPartStore[order][key]; savePartStore(); renderGajebonTable();
+    delete gajebonPartStore[order][key]; savePartStore();
   }
+  renderGajebonTable();
 }
 
 // ── 해외영업본부 전용 항목 (F&G승인일 / 발송견본 / 출고 / 최종승인 / 요청사항) ──
