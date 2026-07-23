@@ -442,7 +442,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 16:55</span>
+      v<span id="build-stamp">07/23 17:10</span>
     </div>
   </aside>
 
@@ -947,6 +947,8 @@
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('대교',this)">전략사업본부(대교)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('정상제이엘에스',this)">전략사업본부(정상)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('영문거래처',this)">해외영업본부</button>
+          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('해외영업본부(우즈벡)',this)">해외영업본부(우즈벡)</button>
+          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('해외영업본부(DNP)',this)">해외영업본부(DNP)</button>
         </div>
 
         <!-- 필터 -->
@@ -3322,13 +3324,24 @@ const IS_SERVER = location.protocol !== 'file:';
 // 국내영업본부(기타)에서 한국교육방송공사(EBS) 건을 별도 탭으로 분리한다.
 const EBS_SHEET = '국내영업본부(EBS)';
 const EBS_CLIENTS = ['한국교육방송공사', 'EBS'];
+// 해외영업본부(영문거래처)에서 우즈벡 · DNP 건을 각각 별도 탭으로 분리한다.
+const UZ_SHEET = '해외영업본부(우즈벡)';
+const DNP_SHEET = '해외영업본부(DNP)';
+const isUz  = r => String(r['거래처'] || '').toUpperCase().includes('OZBEKISTON') || String(r['제품명'] || '').includes('우즈벡');
+const isDnp = r => String(r['거래처'] || '').toUpperCase().includes('DNP');
 function splitEbsSheet() {
   const base = gajebonSheets['기타'];
-  if (!base) return;
-  const isEbs = r => EBS_CLIENTS.some(k => String(r['거래처'] || '').includes(k));
-  const ebs = base.filter(isEbs);
-  gajebonSheets['기타'] = base.filter(r => !isEbs(r));   // 국내영업본부에서 제외
-  gajebonSheets[EBS_SHEET] = ebs;                        // EBS 전용 탭으로 취합
+  if (base) {
+    const isEbs = r => EBS_CLIENTS.some(k => String(r['거래처'] || '').includes(k));
+    gajebonSheets[EBS_SHEET] = base.filter(isEbs);
+    gajebonSheets['기타'] = base.filter(r => !isEbs(r));
+  }
+  const ovs = gajebonSheets['영문거래처'];
+  if (ovs) {
+    gajebonSheets[UZ_SHEET]  = ovs.filter(isUz);
+    gajebonSheets[DNP_SHEET] = ovs.filter(r => !isUz(r) && isDnp(r));
+    gajebonSheets['영문거래처'] = ovs.filter(r => !isUz(r) && !isDnp(r));
+  }
 }
 
 function initGajebon() {
@@ -3377,7 +3390,7 @@ function renderGajebonMetrics() {
   const tabName = {
     '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
     '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)', '영문거래처': '해외영업본부'
-  }[gajebonCurrentSheet] || gajebonCurrentSheet;
+  }[gajebonCurrentSheet] || gajebonCurrentSheet;   // 우즈벡·DNP는 시트명 그대로 표시
   // 완료 = ERP 완료 또는 웹에서 가제본 완료처리(날짜입력) — 날짜 미입력이어도 완료로 집계
   const isDone = r => (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '');
   const done = rows.filter(isDone).length;
@@ -4190,10 +4203,10 @@ function setOvs(order, key, val) {
   saveOvsStore();
 }
 // 해외영업본부(영문거래처) 탭에서만 사용
-const OVS_SHEET = '영문거래처';
-function isOvsSheet() { return gajebonCurrentSheet === OVS_SHEET; }
-// 전략사업본부(대교·정상)는 파트(표지/속표지/…) 구분을 쓰지 않는다
-const NO_PART_SHEETS = ['기타', '대교', '정상제이엘에스', '영문거래처'];
+const OVS_SHEETS = ['영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
+function isOvsSheet() { return OVS_SHEETS.includes(gajebonCurrentSheet); }
+// 파트(표지/속표지/…) 구분을 쓰지 않는 시트 — EBS만 파트 사용
+const NO_PART_SHEETS = ['기타', '대교', '정상제이엘에스', '영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
 function showParts() { return !NO_PART_SHEETS.includes(gajebonCurrentSheet); }
 // 시트별 컬럼 표시/숨김 (헤더 + 표 최소너비)
 function syncOvsCols() {
