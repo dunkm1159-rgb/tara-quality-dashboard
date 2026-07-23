@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 11:31</span>
+      v<span id="build-stamp">07/23 11:44</span>
     </div>
   </aside>
 
@@ -963,17 +963,17 @@
                 <tr>
                   <th style="width:90px;cursor:pointer;user-select:none" onclick="toggleGajebonSort()" title="클릭하면 최신순/오래된순 전환">날짜<span id="gaj-sort-arrow"> ▼</span></th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
                   <th style="width:90px">요청내용</th><th style="width:150px">설비명</th><th style="width:124px">진행상태</th>
-                  <th class="part-col" style="width:60px;text-align:center">진행</th>
-                  <th class="part-col" id="parthd-0" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-1" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-2" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-3" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-4" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-5" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-6" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-7" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-8" style="width:62px;text-align:center;padding:2px"></th>
-                  <th class="part-col" id="parthd-9" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" style="width:56px;text-align:center">진행</th>
+                  <th class="part-col" id="parthd-0" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-1" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-2" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-3" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-4" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-5" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-6" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-7" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-8" style="width:74px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-9" style="width:74px;text-align:center;padding:2px"></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
                   <th class="ovs-col" style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">출고</th>
@@ -3993,20 +3993,32 @@ function setPartLabel(sheet, key, val) {
   if (!Object.keys(gajebonPartLabels[sheet]).length) delete gajebonPartLabels[sheet];
   try { localStorage.setItem('gajebonPartLabels', JSON.stringify(gajebonPartLabels)); } catch (e) {}
 }
+// 머리글은 기본 이름표를 옅은 글씨로만 안내 (실제 편집은 각 행에서)
+const PART_DEFAULTS = ['표지','속표지','정답표지','개매본문','정매본문','','','','',''];
 function renderPartHeaders() {
   if (!showParts()) return;
-  const sh = gajebonCurrentSheet;
   GAJEBON_PARTS.forEach((key, i) => {
     const th = document.getElementById('parthd-' + i);
-    if (!th) return;
-    const v = String(partLabel(sh, key)).replace(/"/g, '&quot;');
-    th.innerHTML = `<input value="${v}" title="이름표를 원하는 대로 바꾸세요"
-      onchange="setPartLabel('${sh.replace(/'/g,"\\'")}','${key}',this.value)"
-      style="width:100%;box-sizing:border-box;border:1px solid transparent;border-radius:5px;
-             padding:3px 2px;font-size:11px;font-weight:600;text-align:center;background:#f6f8fa;color:#1d1d1f"
-      onfocus="this.style.borderColor='#17A2B8';this.style.background='#fff'"
-      onblur="this.style.borderColor='transparent';this.style.background='#f6f8fa'">`;
+    if (th) th.innerHTML = `<span style="font-size:10px;color:#c0c4cc;font-weight:500">${PART_DEFAULTS[i] || ('칸' + (i + 1))}</span>`;
   });
+}
+
+// ── 행(품목)별 파트 이름표 ──  gajebonPartRowLabels[주문번호][key] = '표지' 등
+let gajebonPartRowLabels = {};
+try { gajebonPartRowLabels = JSON.parse(localStorage.getItem('gajebonPartRowLabels') || '{}'); } catch (e) { gajebonPartRowLabels = {}; }
+function rowPartLabel(order, key, idx) {
+  const v = (gajebonPartRowLabels[order] || {})[key];
+  return (v != null) ? v : (PART_DEFAULTS[idx] || '');
+}
+function setRowPartLabel(order, key, val) {
+  val = String(val || '').trim();
+  if (!gajebonPartRowLabels[order]) gajebonPartRowLabels[order] = {};
+  gajebonPartRowLabels[order][key] = val;      // 빈 값도 저장(기본값 되돌림 방지)
+  try { localStorage.setItem('gajebonPartRowLabels', JSON.stringify(gajebonPartRowLabels)); } catch (e) {}
+  // 이름이 지워진 파트의 체크는 자동 해제
+  if (!val && gajebonPartStore[order] && gajebonPartStore[order][key]) {
+    delete gajebonPartStore[order][key]; savePartStore(); renderGajebonTable();
+  }
 }
 
 // ── 해외영업본부 전용 항목 (F&G승인일 / 발송견본 / 출고 / 최종승인 / 요청사항) ──
@@ -4034,8 +4046,8 @@ function syncOvsCols() {
   document.querySelectorAll('.ovs-col').forEach(el => { el.style.display = ovs ? '' : 'none'; });
   document.querySelectorAll('.part-col').forEach(el => { el.style.display = prt ? '' : 'none'; });
   const tb = document.getElementById('gajebon-table');
-  // 파트 컬럼 = 진행(60) + 10칸×62 = 680
-  if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 680 : 0) + 'px';
+  // 파트 컬럼 = 진행(56) + 10칸×74 = 796
+  if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 796 : 0) + 'px';
   if (prt) renderPartHeaders();   // 시트별 편집 가능한 파트 이름표 채우기
 }
 function ovsCells(order) {
@@ -4064,15 +4076,14 @@ function productOfOrder(order) {
   const r = rows.find(x => (x['주문번호']||'') === order);
   return r ? (r['제품명']||'') : '';
 }
-// 해당 파트 목록: 주문 설정 > 제품명 기억 > 기본(전체)
+// 이름표가 채워진 파트만 '해당'으로 본다 (품목마다 다른 칸을 쓰므로)
 function applicableParts(order) {
-  const s = gajebonPartStore[order];
-  if (s && Array.isArray(s._app)) return s._app;
-  const tpl = gajebonPartTemplates[productOfOrder(order)];
-  if (Array.isArray(tpl)) return tpl;
-  return GAJEBON_PARTS.slice();
+  return GAJEBON_PARTS.filter((k, i) => String(rowPartLabel(order, k, i)).trim() !== '');
 }
-function isApplicable(order, part) { return applicableParts(order).includes(part); }
+function isApplicable(order, part) {
+  const i = GAJEBON_PARTS.indexOf(part);
+  return String(rowPartLabel(order, part, i)).trim() !== '';
+}
 function partsProgress(order) {
   const app = applicableParts(order);
   const m = gajebonPartStore[order] || {};
@@ -4106,19 +4117,31 @@ function cyclePart(order, part) {
   renderGajebonTable();
 }
 function partCell(order, part) {
-  // 구성 편집 모드: 해당 여부 체크박스
-  if (gajebonEditOrder === order) {
-    const on = isApplicable(order, part);
-    return `<td onclick="togglePartApplicable('${order}','${part}')" style="text-align:center;cursor:pointer;padding:6px 4px;background:#eef6ff;">
-      <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;border:1px solid ${on?'#17A2B8':'#d2d2d7'};background:${on?'#17A2B8':'#fff'};color:#fff;font-size:12px;font-weight:700;">${on?'&#10003;':''}</div></td>`;
+  const idx = GAJEBON_PARTS.indexOf(part);
+  const o = String(order).replace(/'/g, "\\'");
+  const label = String(rowPartLabel(order, part, idx)).replace(/"/g, '&quot;');
+  // 위: 이름표 입력칸 (품목마다 다르게 수정) / 아래: 체크
+  const nameBox = `<input value="${label}" placeholder="${PART_DEFAULTS[idx] || '입력'}"
+      onchange="setRowPartLabel('${o}','${part}',this.value)" onclick="event.stopPropagation()"
+      style="width:100%;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:5px;
+             padding:2px 3px;font-size:10.5px;text-align:center;background:#fbfcfe;margin-bottom:3px"
+      onfocus="this.style.borderColor='#17A2B8';this.style.background='#fff'"
+      onblur="this.style.borderColor='#e5e7eb';this.style.background='#fbfcfe'">`;
+  const hasName = String(rowPartLabel(order, part, idx)).trim() !== '';
+  let check;
+  if (!hasName) {
+    // 이름 없으면 체크 비활성 (회색)
+    check = `<div style="display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px dashed #e0e0e0;"></div>`;
+  } else {
+    const p = getPart(order, part);
+    if (p.st === 'done')
+      check = `<div onclick="cyclePart('${o}','${part}')" style="cursor:pointer;display:inline-flex;flex-direction:column;align-items:center">
+        <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#ddf4e2;color:#248a3d;font-size:13px;font-weight:700;">&#10003;</div>
+        <div style="font-size:9px;color:#86868b;margin-top:1px;white-space:nowrap;">${(p.date||'').slice(5)}</div></div>`;
+    else
+      check = `<div onclick="cyclePart('${o}','${part}')" style="cursor:pointer;display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px solid #d2d2d7;"></div>`;
   }
-  // 비해당 파트: 회색 잠금
-  if (!isApplicable(order, part))
-    return `<td style="text-align:center;padding:6px 4px;background:#fafafa;"><span style="color:#d2d2d7;font-size:14px;">&ndash;</span></td>`;
-  const p = getPart(order, part);
-  const base = `onclick="cyclePart('${order}','${part}')" style="text-align:center;cursor:pointer;padding:6px 4px;"`;
-  if (p.st === 'done') return `<td ${base}><div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#ddf4e2;color:#248a3d;font-size:13px;font-weight:700;">&#10003;</div><div style="font-size:10px;color:#86868b;margin-top:2px;white-space:nowrap;">${(p.date||'').slice(5)}</div></td>`;
-  return `<td ${base}><div style="display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px solid #d2d2d7;"></div></td>`;
+  return `<td style="text-align:center;padding:5px 4px;vertical-align:top">${nameBox}<div>${check}</div></td>`;
 }
 
 
