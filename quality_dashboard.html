@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 11:29</span>
+      v<span id="build-stamp">07/23 11:31</span>
     </div>
   </aside>
 
@@ -969,6 +969,11 @@
                   <th class="part-col" id="parthd-2" style="width:62px;text-align:center;padding:2px"></th>
                   <th class="part-col" id="parthd-3" style="width:62px;text-align:center;padding:2px"></th>
                   <th class="part-col" id="parthd-4" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-5" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-6" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-7" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-8" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-9" style="width:62px;text-align:center;padding:2px"></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
                   <th class="ovs-col" style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">출고</th>
@@ -3866,7 +3871,7 @@ function renderGajebonTable() {
   const tbody = document.getElementById('gajebon-tbody');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="' + (8 + (showParts() ? 6 : 0) + (isOvsSheet() ? 5 : 0)) + '" class="empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + (8 + (showParts() ? 11 : 0) + (isOvsSheet() ? 5 : 0)) + '" class="empty">데이터 없음</td></tr>';
     return;
   }
   const statusBadge = s => {
@@ -3973,7 +3978,7 @@ function updateGajebonField(idx, field, value) {
 
 // ── 가제본 파트별 진행 (표지/속표지/정답표지/개매본문/정매본문) ──
 // 임시 저장: 이 브라우저(localStorage). 추후 구글시트 서버 저장으로 교체 예정.
-const GAJEBON_PARTS = ['표지','속표지','정답표지','개매본문','정매본문'];  // 내부 키(고정). 화면 이름표는 아래에서 시트별로 변경 가능.
+const GAJEBON_PARTS = ['표지','속표지','정답표지','개매본문','정매본문','항목6','항목7','항목8','항목9','항목10'];  // 내부 키(고정). 화면 이름표는 아래에서 시트별로 변경 가능.
 
 // ── 파트 컬럼 머리글(이름표) 시트별 편집 ──
 // 예: EBS 탭에서 '표지' → 원하는 글자로 바꿔 저장. 체크 데이터는 내부 키로 유지돼 안 깨진다.
@@ -4029,7 +4034,8 @@ function syncOvsCols() {
   document.querySelectorAll('.ovs-col').forEach(el => { el.style.display = ovs ? '' : 'none'; });
   document.querySelectorAll('.part-col').forEach(el => { el.style.display = prt ? '' : 'none'; });
   const tb = document.getElementById('gajebon-table');
-  if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 390 : 0) + 'px';
+  // 파트 컬럼 = 진행(60) + 10칸×62 = 680
+  if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 680 : 0) + 'px';
   if (prt) renderPartHeaders();   // 시트별 편집 가능한 파트 이름표 채우기
 }
 function ovsCells(order) {
