@@ -410,6 +410,9 @@
       <button class="nav-item" id="nav-worker" onclick="showTab('worker',this)">
         <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
       </button>
+      <button class="nav-item" id="nav-vendor" onclick="showTab('vendor',this)">
+        <span class="nav-icon"><i class="ti ti-truck"></i></span> 외주처 사고 분석
+      </button>
     </div>
 
     <div class="sidebar-section">
@@ -432,7 +435,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 16:29</span>
+      v<span id="build-stamp">07/23 16:40</span>
     </div>
   </aside>
 
@@ -1092,7 +1095,7 @@
             <div id="erp-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           </div>
         </div>
-        <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역(공정검사) 기준 · 공정중 발견 포함 전체 접수 건 <span id="erp-updated" style="color:#ccc"></span></div>
+        <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역 중 <b>외주 귀책분만</b> 집계 (사내분은 품질사고 관리대장과 동일하여 제외) <span id="erp-updated" style="color:#ccc"></span></div>
         <div id="erp-recon"></div>
         <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
         <div class="card" style="padding:16px 18px;margin-bottom:16px">
@@ -1197,6 +1200,39 @@
       </div><!-- /an-claim -->
     </div>
 
+    <!-- ============ 외주처 사고 분석 ============ -->
+    <div id="tab-vendor" class="tab">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+        <div class="section-title">외주처 사고 분석</div>
+        <div id="vendor-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+      </div>
+      <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역 중 <b>외주 귀책분</b>을 외주처별로 집계 <span id="vendor-updated" style="color:#ccc"></span></div>
+      <div class="metrics" id="vendor-metrics"></div>
+      <div class="card" style="margin-top:14px">
+        <div class="section-title" style="font-size:14px;margin-bottom:10px">외주처별 발생 순위</div>
+        <div style="overflow-x:auto"><canvas id="chartVendorRank" height="150"></canvas></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+        <div class="card"><div class="section-title" style="font-size:14px;margin-bottom:10px">공정별</div><canvas id="chartVendorProc" height="170"></canvas></div>
+        <div class="card"><div class="section-title" style="font-size:14px;margin-bottom:10px">부적합 유형 TOP</div><canvas id="chartVendorType" height="170"></canvas></div>
+      </div>
+      <div class="card" style="margin-top:14px;padding:0">
+        <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="vendor-tbl-cnt"></div>
+        <div style="overflow-x:auto;max-height:460px;overflow-y:auto">
+          <table style="width:100%;font-size:12.5px">
+            <thead><tr>
+              <th style="white-space:nowrap;text-align:left">외주처</th>
+              <th style="white-space:nowrap;text-align:right">건수</th>
+              <th style="white-space:nowrap;text-align:right">금액(만)</th>
+              <th style="white-space:nowrap;text-align:right">건당(만)</th>
+              <th style="white-space:nowrap;text-align:left">주요 공정</th>
+              <th style="white-space:nowrap;text-align:left">주요 유형</th>
+            </tr></thead>
+            <tbody id="vendor-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- ============ 작업자 사고 현황 ============ -->
     <div id="tab-worker" class="tab">
@@ -1612,6 +1648,82 @@ function renderErp() {
 }
 
 // ========================
+// 외주처 사고 분석 (ERP 외주 부적합)
+// ========================
+let vendorYear = '';
+function setVendorYear(y) { vendorYear = y; renderVendor(); }
+function renderVendor() {
+  const all = erpAllRows().filter(r => r['사내외주'] === '외주');
+  const upd = document.getElementById('vendor-updated');
+  if (upd && window.QUALITY_DATA) upd.textContent = '· 갱신 ' + window.QUALITY_DATA.updated;
+  const years = [...new Set(all.map(r => r._m.slice(0, 4)))].sort();
+  const bw = document.getElementById('vendor-year-btns');
+  if (bw) bw.innerHTML = `<button class="claim-year-btn ${vendorYear === '' ? 'active' : ''}" onclick="setVendorYear('')">전체</button>` +
+    years.map(y => `<button class="claim-year-btn ${vendorYear === y ? 'active' : ''}" onclick="setVendorYear('${y}')">${y}</button>`).join('');
+  const rows = vendorYear ? all.filter(r => r._m.slice(0, 4) === vendorYear) : all;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const num = r => Number(r['금액'] || 0);
+  const man = v => Math.round(v / 10000).toLocaleString();
+  const vname = r => (r['외주처'] || r['거래처'] || '(미상)').trim();
+
+  // 외주처별 집계
+  const V = {};
+  rows.forEach(r => {
+    const k = vname(r);
+    const v = V[k] || (V[k] = { cnt: 0, cost: 0, proc: {}, type: {} });
+    v.cnt++; v.cost += num(r);
+    const p = (r['발생공정'] || r['설비명'] || '기타').trim(); v.proc[p] = (v.proc[p] || 0) + 1;
+    const t = (r['부적합내역'] || '기타').trim(); v.type[t] = (v.type[t] || 0) + 1;
+  });
+  const list = Object.entries(V).map(([k, v]) => ({ name: k, ...v })).sort((a, b) => b.cost - a.cost);
+  const top = (o) => { const e = Object.entries(o).sort((a, b) => b[1] - a[1])[0]; return e ? e[0] : '-'; };
+
+  const tot = rows.reduce((s, r) => s + num(r), 0);
+  const mEl = document.getElementById('vendor-metrics');
+  const card = (l, val, u, sub, c) => `<div class="metric"><div class="label">${l}</div><div class="value" style="color:${c || '#1d1d1f'}">${val}<span style="font-size:13px;font-weight:400;color:#86868b">${u || ''}</span></div><div class="sub neutral">${sub || ''}</div></div>`;
+  if (mEl) mEl.innerHTML =
+    card('외주처 수', list.length, '곳', vendorYear || '전체 기간', '#7B4EA0') +
+    card('외주 부적합', rows.length, '건', '', '#E67E22') +
+    card('금액 합계', man(tot), '만원', '외주 귀책', '#C0392B') +
+    card('최다 발생', list.length ? list[0].name : '-', '', list.length ? list[0].cnt + '건 · ' + man(list[0].cost) + '만' : '', '#1F5C99');
+
+  const mkChart = (id, key, cfg) => {
+    window._eCharts = window._eCharts || {};
+    if (window._eCharts[key]) window._eCharts[key].destroy();
+    const c = document.getElementById(id);
+    if (c && window.Chart) window._eCharts[key] = new Chart(c, cfg);
+  };
+  // 순위 (상위 12)
+  const rk = list.slice(0, 12);
+  mkChart('chartVendorRank', 'vRank', {
+    type: 'bar',
+    data: { labels: rk.map(v => v.name), datasets: [
+      { label: '금액(만)', data: rk.map(v => Math.round(v.cost / 10000)), backgroundColor: '#E67E22', yAxisID: 'y' },
+      { type: 'line', label: '건수', data: rk.map(v => v.cnt), borderColor: '#1F5C99', backgroundColor: '#1F5C99', yAxisID: 'y1' }
+    ] },
+    options: { indexAxis: 'y', scales: { y: { position: 'top', title: { display: true, text: '금액(만)' } }, y1: { position: 'bottom', grid: { display: false }, title: { display: true, text: '건수' } } } }
+  });
+  // 공정별 / 유형별 (외주 전체)
+  const agg = (field) => { const o = {}; rows.forEach(r => { const k = (r[field] || '기타').trim(); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 8); };
+  const pr = agg('발생공정'), ty = agg('부적합내역');
+  const PAL = ['#17A2B8', '#1F5C99', '#7B4EA0', '#E67E22', '#27AE60', '#C0392B', '#F1C40F', '#98A2B3'];
+  mkChart('chartVendorProc', 'vProc', { type: 'doughnut', data: { labels: pr.map(x => x[0]), datasets: [{ data: pr.map(x => x[1]), backgroundColor: PAL }] }, options: { plugins: { legend: { position: 'right' } } } });
+  mkChart('chartVendorType', 'vType', { type: 'bar', data: { labels: ty.map(x => x[0]), datasets: [{ label: '건수', data: ty.map(x => x[1]), backgroundColor: '#7B4EA0' }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } } } });
+
+  // 테이블
+  document.getElementById('vendor-tbl-cnt').textContent = list.length + '개 외주처 · 금액순';
+  const tb = document.getElementById('vendor-tbody');
+  if (tb) tb.innerHTML = list.map(v => `<tr>
+    <td style="font-weight:600">${esc(v.name)}</td>
+    <td style="text-align:right">${v.cnt}</td>
+    <td style="text-align:right;color:#C0392B;font-weight:600">${man(v.cost)}</td>
+    <td style="text-align:right;color:#86868b">${v.cnt ? man(v.cost / v.cnt) : 0}</td>
+    <td style="color:#666">${esc(top(v.proc))}</td>
+    <td style="color:#666">${esc(top(v.type))}</td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#ccc;padding:18px">외주 부적합 데이터 없음</td></tr>';
+}
+
+// ========================
 // 작업자 사고 현황
 // ========================
 let workerYear = '';
@@ -1799,6 +1911,7 @@ const TAB_TITLES = {
   kpi: '성과관리',
   nccost: '품질사고 관리대장',
   claim: '클레임 DB',
+  vendor: '외주처 사고 분석',
   worker: '공정별 사고',
   gajebon: '가제본 현황',
   wip: '설비별 작업현황',
@@ -1847,6 +1960,7 @@ function showTab(name, btn) {
   renderOpenTabs();
   if (name === 'dashboard') refreshDash();
   if (name === 'analysis') renderErp();
+  if (name === 'vendor') renderVendor();
   if (name === 'kpi') renderKpi();
   if (name === 'claim' && claimData.length) renderClaimTable();
   if (name === 'worker') renderWorker();
