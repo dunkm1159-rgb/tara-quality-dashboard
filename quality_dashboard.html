@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 13:18</span>
+      v<span id="build-stamp">07/23 14:14</span>
     </div>
   </aside>
 
@@ -3923,6 +3923,14 @@ function renderGajebonTable() {
       </td>
       ${(() => { const order = r['주문번호']||'';
         if (!showParts()) return ovsCells(order);          // 전략사업본부는 파트 컬럼 미사용
+        const comp = ebsComp(r);                            // EBS: ERP 인쇄 대수(구성/대수마감) 자동
+        if (comp) {
+          const done = comp.filter(c => c.y).length;
+          const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${done === comp.length ? '#248a3d' : '#1d1d1f'}">${done}/${comp.length}</span></td>`;
+          let cells = '';
+          for (let i = 0; i < 10; i++) cells += (i < comp.length) ? partCellAuto(comp[i], r['날짜'] || '') : '<td></td>';
+          return prog + cells + ovsCells(order);
+        }
         const pr = partsProgress(order);
         const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${pr.applicable&&pr.done===pr.applicable?'#248a3d':'#1d1d1f'}">${pr.done}/${pr.applicable}</span></td>`;
         return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join('') + ovsCells(order); })()}
@@ -4132,6 +4140,29 @@ function cyclePart(order, part) {
   else delete gajebonPartStore[order][part];
   savePartStore();
   renderGajebonTable();
+}
+// ── EBS 자동 구성: ERP 인쇄 대수(구성 + 대수마감 Y/N) ──
+// 수집기가 만든 JSON: [{"n":"표지","y":true},{"n":"본문","y":false}, ...]
+// 본문 등 반복은 이미 하나로 통합, 표지류는 개수만큼 유지된 상태로 넘어온다.
+function ebsComp(rowObj) {
+  const raw = rowObj && rowObj['구성'];
+  if (!raw) return null;
+  try { const a = (typeof raw === 'string') ? JSON.parse(raw) : raw; return (Array.isArray(a) && a.length) ? a : null; }
+  catch (e) { return null; }
+}
+function partCellAuto(item, dateStr) {
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const name = `<div style="font-size:10.5px;color:#1d1d1f;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.n)}">${esc(item.n)}</div>`;
+  let check;
+  if (item.y) {
+    const dt = (dateStr || '').slice(5);   // 인쇄완료 표시일 = 주문 접수일
+    check = `<div style="display:inline-flex;flex-direction:column;align-items:center">
+      <div style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:6px;background:#ddf4e2;color:#248a3d;font-size:13px;font-weight:700;">&#10003;</div>
+      <div style="font-size:9px;color:#86868b;margin-top:1px;white-space:nowrap;">${dt}</div></div>`;
+  } else {
+    check = `<div style="display:inline-flex;width:22px;height:22px;border-radius:6px;border:1px solid #d2d2d7;"></div>`;
+  }
+  return `<td style="text-align:center;padding:5px 4px;vertical-align:top">${name}<div>${check}</div></td>`;
 }
 function partCell(order, part) {
   const idx = GAJEBON_PARTS.indexOf(part);
