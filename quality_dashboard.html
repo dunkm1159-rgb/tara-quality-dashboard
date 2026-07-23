@@ -424,7 +424,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/23 11:19</span>
+      v<span id="build-stamp">07/23 11:29</span>
     </div>
   </aside>
 
@@ -964,9 +964,11 @@
                   <th style="width:90px;cursor:pointer;user-select:none" onclick="toggleGajebonSort()" title="클릭하면 최신순/오래된순 전환">날짜<span id="gaj-sort-arrow"> ▼</span></th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
                   <th style="width:90px">요청내용</th><th style="width:150px">설비명</th><th style="width:124px">진행상태</th>
                   <th class="part-col" style="width:60px;text-align:center">진행</th>
-                  <th class="part-col" style="width:62px;text-align:center">표지</th><th class="part-col" style="width:62px;text-align:center">속표지</th>
-                  <th class="part-col" style="width:62px;text-align:center">정답표지</th><th class="part-col" style="width:62px;text-align:center">개매본문</th>
-                  <th class="part-col" style="width:62px;text-align:center">정매본문</th>
+                  <th class="part-col" id="parthd-0" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-1" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-2" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-3" style="width:62px;text-align:center;padding:2px"></th>
+                  <th class="part-col" id="parthd-4" style="width:62px;text-align:center;padding:2px"></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
                   <th class="ovs-col" style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
                   <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">출고</th>
@@ -3971,7 +3973,36 @@ function updateGajebonField(idx, field, value) {
 
 // ── 가제본 파트별 진행 (표지/속표지/정답표지/개매본문/정매본문) ──
 // 임시 저장: 이 브라우저(localStorage). 추후 구글시트 서버 저장으로 교체 예정.
-const GAJEBON_PARTS = ['표지','속표지','정답표지','개매본문','정매본문'];
+const GAJEBON_PARTS = ['표지','속표지','정답표지','개매본문','정매본문'];  // 내부 키(고정). 화면 이름표는 아래에서 시트별로 변경 가능.
+
+// ── 파트 컬럼 머리글(이름표) 시트별 편집 ──
+// 예: EBS 탭에서 '표지' → 원하는 글자로 바꿔 저장. 체크 데이터는 내부 키로 유지돼 안 깨진다.
+let gajebonPartLabels = {};
+try { gajebonPartLabels = JSON.parse(localStorage.getItem('gajebonPartLabels') || '{}'); } catch (e) { gajebonPartLabels = {}; }
+function partLabel(sheet, key) { return (gajebonPartLabels[sheet] || {})[key] || key; }
+function setPartLabel(sheet, key, val) {
+  val = String(val || '').trim();
+  if (!gajebonPartLabels[sheet]) gajebonPartLabels[sheet] = {};
+  if (!val || val === key) delete gajebonPartLabels[sheet][key];
+  else gajebonPartLabels[sheet][key] = val;
+  if (!Object.keys(gajebonPartLabels[sheet]).length) delete gajebonPartLabels[sheet];
+  try { localStorage.setItem('gajebonPartLabels', JSON.stringify(gajebonPartLabels)); } catch (e) {}
+}
+function renderPartHeaders() {
+  if (!showParts()) return;
+  const sh = gajebonCurrentSheet;
+  GAJEBON_PARTS.forEach((key, i) => {
+    const th = document.getElementById('parthd-' + i);
+    if (!th) return;
+    const v = String(partLabel(sh, key)).replace(/"/g, '&quot;');
+    th.innerHTML = `<input value="${v}" title="이름표를 원하는 대로 바꾸세요"
+      onchange="setPartLabel('${sh.replace(/'/g,"\\'")}','${key}',this.value)"
+      style="width:100%;box-sizing:border-box;border:1px solid transparent;border-radius:5px;
+             padding:3px 2px;font-size:11px;font-weight:600;text-align:center;background:#f6f8fa;color:#1d1d1f"
+      onfocus="this.style.borderColor='#17A2B8';this.style.background='#fff'"
+      onblur="this.style.borderColor='transparent';this.style.background='#f6f8fa'">`;
+  });
+}
 
 // ── 해외영업본부 전용 항목 (F&G승인일 / 발송견본 / 출고 / 최종승인 / 요청사항) ──
 const OVS_FIELDS = ['fg', 'sample', 'ship', 'final', 'req'];
@@ -3990,7 +4021,7 @@ function setOvs(order, key, val) {
 const OVS_SHEET = '영문거래처';
 function isOvsSheet() { return gajebonCurrentSheet === OVS_SHEET; }
 // 전략사업본부(대교·정상)는 파트(표지/속표지/…) 구분을 쓰지 않는다
-const NO_PART_SHEETS = ['대교', '정상제이엘에스', '영문거래처'];
+const NO_PART_SHEETS = ['기타', '대교', '정상제이엘에스', '영문거래처'];
 function showParts() { return !NO_PART_SHEETS.includes(gajebonCurrentSheet); }
 // 시트별 컬럼 표시/숨김 (헤더 + 표 최소너비)
 function syncOvsCols() {
@@ -3999,6 +4030,7 @@ function syncOvsCols() {
   document.querySelectorAll('.part-col').forEach(el => { el.style.display = prt ? '' : 'none'; });
   const tb = document.getElementById('gajebon-table');
   if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 390 : 0) + 'px';
+  if (prt) renderPartHeaders();   // 시트별 편집 가능한 파트 이름표 채우기
 }
 function ovsCells(order) {
   if (!isOvsSheet()) return '';      // 해외영업본부 탭에서만 입력칸 표시
