@@ -442,7 +442,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 10:04</span>
+      v<span id="build-stamp">07/24 10:52</span>
     </div>
   </aside>
 
@@ -5922,8 +5922,10 @@ async function loadSheetClaims(){
     const j = await r.json();
     if(!j || !j.ok || !Array.isArray(j.rows)) return;
     const nd = v => (typeof v==='string' && /\dT\d/.test(v)) ? new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : v;
+    const haveOrders = new Set(claimData.map(r => String(r[1]||'').trim()));  // 이미 있는 작업번호
     const add = j.rows
       .filter(row => row && row[1] && !String(row[1]).startsWith('TEST'))
+      .filter(row => !haveOrders.has(String(row[1]).trim()))   // claim_data.js 에 이미 있으면 중복 제외
       .map(row => {
         const r2 = row.slice(0,15);
         r2[0]=nd(r2[0]); r2[11]=nd(r2[11]); r2[14]=String(r2[14]||'').slice(0,4);
