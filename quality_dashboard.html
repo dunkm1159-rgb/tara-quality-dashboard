@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 14:13</span>
+      v<span id="build-stamp">07/24 14:19</span>
     </div>
   </aside>
 
@@ -3228,9 +3228,20 @@ function claimApplyDeleted() {
   if (!del.size) return;
   claimData = claimData.filter(r => !del.has(claimKey(r)));
 }
+// 삭제/복원 비밀번호 — 원하는 값으로 변경 가능
+const CLAIM_DEL_PW = '7544';
+let _delAuthed = false;   // 세션 중 한 번 인증하면 유지
+function checkDelPw() {
+  if (_delAuthed) return true;
+  const p = prompt('삭제 비밀번호를 입력하세요');
+  if (p === null) return false;
+  if (p === CLAIM_DEL_PW) { _delAuthed = true; return true; }
+  alert('비밀번호가 올바르지 않습니다.'); return false;
+}
 function deleteClaim(key) {
   const r = claimData.find(x => claimKey(x) === key);
   if (!r) return;
+  if (!checkDelPw()) return;
   const order = String(r[1] || '').trim();
   const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}  (${order})`;
   if (!confirm('아래 클레임을 삭제(무효 처리)할까요?\n\n' + label +
@@ -3257,6 +3268,7 @@ function voidClaimToSheet(order) {
   } catch (e) { console.warn('void send fail', e); }
 }
 function restoreClaims() {
+  if (!checkDelPw()) return;
   const n = claimDeletedSet().size;
   if (!n) { alert('삭제한 클레임이 없습니다.'); return; }
   if (!confirm('삭제 처리한 ' + n + '건을 모두 되살릴까요?\n(새로고침 후 다시 나타납니다)')) return;
