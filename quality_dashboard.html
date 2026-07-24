@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 14:47</span>
+      v<span id="build-stamp">07/24 14:52</span>
     </div>
   </aside>
 
@@ -3910,11 +3910,9 @@ function renderMonthly() {
   }
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:16px">
-      ${bigCard('부적합 건수', curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
-      ${bigCard('품질비용', man(curCost), '만원', '전월 대비 ' + delta(curCost, prevCost), '#C0392B')}
+      ${bigCard('부적합 건수' + (isErpM(curM) ? ' (잠정)' : ''), curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
+      ${bigCard('품질비용' + (isErpM(curM) ? ' (잠정)' : ''), man(curCost), '만원', isErpM(curM) ? 'ERP 공정중발견 포함 · 미확정' : '전월 대비 ' + delta(curCost, prevCost), '#C0392B')}
       ${bigCard('건당 평균비용', man(avgCost), '만원', curRows.length + '건 기준')}
-      ${bigCard('가제본 완료율', gPct, '%', `완료 ${gDone} / 전체 ${gTotal}건
-        <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${gPct}%;background:#17A2B8;border-radius:99px"></div></div>`, '#17A2B8')}
       ${extraCards}
     </div>
     <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px">
