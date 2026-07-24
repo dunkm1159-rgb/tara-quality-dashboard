@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 14:52</span>
+      v<span id="build-stamp">07/24 14:58</span>
     </div>
   </aside>
 
@@ -888,9 +888,10 @@
       <div class="card" style="padding:0">
         <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee;display:flex;justify-content:space-between;align-items:center;gap:10px">
           <span id="claim-count"></span>
-          <button onclick="restoreClaims()" title="삭제 처리한 클레임을 모두 되살립니다"
-            style="border:1px solid #e5e5e5;background:#fff;border-radius:6px;padding:3px 10px;font-size:12px;color:#666;cursor:pointer">삭제 복원</button>
+          <button id="claim-trash-btn" onclick="toggleTrash()" title="삭제한 클레임 선택 복원 / 완전삭제"
+            style="border:1px solid #e5e5e5;background:#fff;border-radius:6px;padding:3px 10px;font-size:12px;color:#666;cursor:pointer">🗑 휴지통 0</button>
         </div>
+        <div id="claim-trash-panel" style="display:none;padding:8px 16px;background:#fafafa;border-bottom:1px solid #f0f0ee"></div>
         <div class="tbl-wrap">
           <table style="table-layout:fixed">
             <colgroup>
@@ -2888,9 +2889,9 @@ function renderBarH(id, labels, data, color) {
   const ctx = document.getElementById(id);
   if (!ctx) return;
 
-  // 아이템 수에 따라 높이 동적 조정
+  // 아이템 수에 따라 높이 동적 조정 (항목당 26px, 최소 150 · 최대 300)
   const wrap = document.getElementById('wrap-' + id);
-  if (wrap) wrap.style.height = Math.max(200, labels.length * 34 + 40) + 'px';
+  if (wrap) wrap.style.height = Math.min(300, Math.max(150, labels.length * 26 + 30)) + 'px';
 
   const maxVal = Math.max(...data, 1);
   const base = color || '#17A2B8';
@@ -3178,6 +3179,7 @@ function initClaim() {
 
   renderClaimMetrics();
   renderClaimTable();
+  renderTrashPanel();
 }
 
 function renderClaimMetrics() {
@@ -3215,22 +3217,21 @@ function renderClaimMetrics() {
   `;
 }
 
-// ── 클레임 삭제 (잘못 등록한 건 제외) ──
-// 원본(엑셀/시트)은 건드리지 않고, 삭제한 건의 키를 브라우저에 기억해 계속 숨긴다.
-const CLAIM_DEL_KEY = 'claimDeleted_v1';
+// ── 클레임 삭제 (휴지통) ──
+// 일반삭제 = 휴지통 이동(이 PC, 선택 복원 가능). 완전삭제 = 시트 무효표시(영구 제외).
+const CLAIM_DEL_KEY = 'claimDeleted_v1';     // (구버전) 키만 저장 — 계속 숨김
+const CLAIM_TRASH_KEY = 'claimTrash_v1';     // 휴지통: [{k,row,ts}] — 선택 복원용
 function claimKey(r) { return [r[0] || '', r[1] || '', r[4] || ''].join('|'); }
-function claimDeletedSet() {
-  try { return new Set(JSON.parse(localStorage.getItem(CLAIM_DEL_KEY) || '[]')); }
-  catch (e) { return new Set(); }
-}
+function getTrash() { try { return JSON.parse(localStorage.getItem(CLAIM_TRASH_KEY) || '[]'); } catch (e) { return []; } }
+function saveTrash(a) { try { localStorage.setItem(CLAIM_TRASH_KEY, JSON.stringify(a)); } catch (e) {} }
+function legacyDeleted() { try { return JSON.parse(localStorage.getItem(CLAIM_DEL_KEY) || '[]'); } catch (e) { return []; } }
 function claimApplyDeleted() {
-  const del = claimDeletedSet();
-  if (!del.size) return;
-  claimData = claimData.filter(r => !del.has(claimKey(r)));
+  const hide = new Set([...legacyDeleted(), ...getTrash().map(t => t.k)]);
+  if (hide.size) claimData = claimData.filter(r => !hide.has(claimKey(r)));
 }
 // 삭제/복원 비밀번호 — 원하는 값으로 변경 가능
 const CLAIM_DEL_PW = '7544';
-let _delAuthed = false;   // 세션 중 한 번 인증하면 유지
+let _delAuthed = false;
 function checkDelPw() {
   if (_delAuthed) return true;
   const p = prompt('삭제 비밀번호를 입력하세요');
@@ -3238,42 +3239,89 @@ function checkDelPw() {
   if (p === CLAIM_DEL_PW) { _delAuthed = true; return true; }
   alert('비밀번호가 올바르지 않습니다.'); return false;
 }
-function deleteClaim(key) {
-  const r = claimData.find(x => claimKey(x) === key);
-  if (!r) return;
-  if (!checkDelPw()) return;
-  const order = String(r[1] || '').trim();
-  const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}  (${order})`;
-  if (!confirm('아래 클레임을 삭제(무효 처리)할까요?\n\n' + label +
-               '\n\n· 이 PC에서 바로 사라지고\n· 다음 갱신 때 보고서·관리대장·다른 PC에서도 제외됩니다.\n(되돌리려면 "삭제 복원")')) return;
-  // 1) 이 브라우저에서 즉시 숨김
-  const del = claimDeletedSet();
-  del.add(key);
-  try { localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify([...del])); } catch (e) {}
-  claimData = claimData.filter(x => claimKey(x) !== key);
-  // 2) 구글시트에 무효 표시 전송 → 파이프라인이 영구 제외
-  if (order) voidClaimToSheet(order);
+function _rerenderClaim() {
   if (typeof refreshDash === 'function') refreshDash();
   if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
   renderClaimTable();
   if (typeof renderCharts === 'function') renderCharts();
+  renderTrashPanel();
 }
-// 무효 표시를 시트에 append (작업번호를 'VOID:...' 형태로) — pull_sheet 가 읽어 제외한다
+// 일반 삭제 → 휴지통(이 PC). 복원 가능.
+function deleteClaim(key) {
+  const r = claimData.find(x => claimKey(x) === key);
+  if (!r) return;
+  if (!checkDelPw()) return;
+  const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}  (${String(r[1] || '').trim()})`;
+  if (!confirm('아래 클레임을 삭제할까요?\n\n' + label + '\n\n· 휴지통으로 이동해요 (선택 복원 가능)\n· "완전삭제"를 눌러야 보고서·다른 PC에서도 영구 제외돼요')) return;
+  const t = getTrash();
+  if (!t.some(x => x.k === key)) { t.push({ k: key, row: r.slice(), ts: Date.now() }); saveTrash(t); }
+  claimData = claimData.filter(x => claimKey(x) !== key);
+  _rerenderClaim();
+}
+// 휴지통에서 한 건 복원
+function restoreOneClaim(key) {
+  if (!checkDelPw()) return;
+  const t = getTrash(); const i = t.findIndex(x => x.k === key);
+  if (i < 0) return;
+  const row = t[i].row; t.splice(i, 1); saveTrash(t);
+  const leg = legacyDeleted().filter(k => k !== key); localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify(leg));
+  claimData.push(row);
+  _rerenderClaim();
+}
+// 완전 삭제 → 시트 무효표시(영구). 웹에서 복원 불가.
+function permanentDeleteClaim(key) {
+  if (!checkDelPw()) return;
+  const t = getTrash(); const item = t.find(x => x.k === key);
+  const row = item ? item.row : (claimData.find(x => claimKey(x) === key) || []);
+  const order = String((row && row[1]) || '').trim();
+  if (!confirm('완전 삭제할까요?\n\n· 구글시트에 무효표시 전송\n· 보고서·관리대장·모든 PC에서 영구 제외\n· 웹에서는 되돌릴 수 없어요 (무효클레임.txt 편집으로만 복구)')) return;
+  if (order) voidClaimToSheet(order);
+  saveTrash(getTrash().filter(x => x.k !== key));     // 휴지통에서 제거
+  const leg = legacyDeleted(); if (!leg.includes(key)) { leg.push(key); localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify(leg)); }
+  claimData = claimData.filter(x => claimKey(x) !== key);
+  _rerenderClaim();
+  alert('완전 삭제 요청됨. 다음 데이터 갱신 때 보고서·관리대장에서도 빠져요.');
+}
+// 무효 표시를 시트에 append (작업번호를 'VOID:...' 형태로) — pull_sheet 가 읽어 제외
 function voidClaimToSheet(order) {
   try {
     if (typeof CLAIM_SHEET_URL === 'undefined') return;
-    const row = ['', 'VOID:' + order];
     fetch(CLAIM_SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ key: CLAIM_SHEET_KEY, row: row }) });
+      body: JSON.stringify({ key: CLAIM_SHEET_KEY, row: ['', 'VOID:' + order] }) });
   } catch (e) { console.warn('void send fail', e); }
 }
-function restoreClaims() {
+function restoreClaims() {   // 전체 복원
   if (!checkDelPw()) return;
-  const n = claimDeletedSet().size;
-  if (!n) { alert('삭제한 클레임이 없습니다.'); return; }
-  if (!confirm('삭제 처리한 ' + n + '건을 모두 되살릴까요?\n(새로고침 후 다시 나타납니다)')) return;
-  try { localStorage.removeItem(CLAIM_DEL_KEY); } catch (e) {}
+  const t = getTrash(); const leg = legacyDeleted();
+  if (!t.length && !leg.length) { alert('삭제한 클레임이 없습니다.'); return; }
+  if (!confirm('휴지통 ' + (t.length + leg.length) + '건을 모두 되살릴까요?')) return;
+  localStorage.removeItem(CLAIM_TRASH_KEY); localStorage.removeItem(CLAIM_DEL_KEY);
   location.reload();
+}
+let _trashOpen = false;
+function toggleTrash() { _trashOpen = !_trashOpen; renderTrashPanel(); }
+function renderTrashPanel() {
+  const btn = document.getElementById('claim-trash-btn');
+  const panel = document.getElementById('claim-trash-panel');
+  const t = getTrash();
+  if (btn) btn.textContent = '🗑 휴지통 ' + t.length;
+  if (!panel) return;
+  if (!_trashOpen) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  if (!t.length) { panel.innerHTML = '<div style="color:#999;font-size:12px;padding:8px">휴지통이 비어 있어요.</div>'; return; }
+  panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+    '<b style="font-size:12px">삭제한 클레임 ' + t.length + '건</b>' +
+    '<button onclick="restoreClaims()" style="border:1px solid #cfe;background:#f2fbfd;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;color:#0f6e56">전체 복원</button></div>' +
+    t.slice().reverse().map(x => {
+      const r = x.row, k = x.k.replace(/'/g, "\\'");
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px;border-top:1px solid #f0f0f0;font-size:12px">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r[4])}">${esc((r[0]||''))} · ${esc(r[2]||'')} · ${esc(r[4]||'')}</span>
+        <span style="flex-shrink:0;display:flex;gap:4px">
+          <button onclick="restoreOneClaim('${k}')" style="border:1px solid #cde;background:#f4f8ff;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;color:#1F5C99">복원</button>
+          <button onclick="permanentDeleteClaim('${k}')" style="border:1px solid #f3c9c9;background:#fdf2f2;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;color:#c0392b">완전삭제</button>
+        </span></div>`;
+    }).join('');
 }
 
 function renderClaimTable() {
