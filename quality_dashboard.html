@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 14:25</span>
+      v<span id="build-stamp">07/24 14:41</span>
     </div>
   </aside>
 
@@ -3858,6 +3858,31 @@ function renderMonthly() {
       </div>
     </div>`;
   }
+  // ── 추가 지표 (품질사고 관리대장 NCCOST 확정치 기준) ──
+  const _MOS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const _ndY = (window.NCCOST_DATA || {})[curM.slice(0, 4)];
+  const _moIdx = Number(curM.slice(5, 7));
+  let extraCards = '';
+  if (_ndY && _ndY.months && _ndY.months[_moK]) {
+    const mv2 = _ndY.months[_moK];
+    const mGoal = mv2.goal || 0, mCost = mv2.cost || 0;
+    const goalPct = mGoal ? Math.round(mCost / mGoal * 100) : 0;
+    let ytd = 0; for (let i = 0; i < _moIdx; i++) ytd += (_ndY.months[_MOS[i]] || {}).cost || 0;
+    const yTarget = _ndY.target || 0;
+    const ytdPct = yTarget ? Math.round(ytd / yTarget * 100) : 0;
+    const selfM2 = mv2.selfCost || 0, outM2 = Math.max(0, mCost - selfM2);
+    const selfPct = mCost ? Math.round(selfM2 / mCost * 100) : 0;
+    const gc = goalPct > 100 ? '#C0392B' : '#248a3d';
+    const yc = ytdPct > 100 ? '#C0392B' : '#248a3d';
+    extraCards =
+      bigCard('월 목표 대비', goalPct, '%', `이번달 ${man(mCost)} / 목표 ${man(mGoal)}만
+        <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, goalPct)}%;background:${gc};border-radius:99px"></div></div>`, gc) +
+      bigCard('연간 누적 비용', man(ytd), '만원', `연 목표 ${man(yTarget)}만 대비 <b style="color:${yc}">${ytdPct}%</b>
+        <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, ytdPct)}%;background:${yc};border-radius:99px"></div></div>`, '#1F5C99') +
+      bigCard('사내 : 외주', selfPct + ':' + (100 - selfPct), '', `자사 ${man(selfM2)} · 외주 ${man(outM2)}만
+        <div style="display:flex;height:6px;border-radius:99px;overflow:hidden;margin-top:6px">
+          <div style="width:${selfPct}%;background:#17A2B8"></div><div style="width:${100 - selfPct}%;background:#E67E22"></div></div>`, '#7B4EA0');
+  }
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:16px">
       ${bigCard('부적합 건수', curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
@@ -3865,6 +3890,7 @@ function renderMonthly() {
       ${bigCard('건당 평균비용', man(avgCost), '만원', curRows.length + '건 기준')}
       ${bigCard('가제본 완료율', gPct, '%', `완료 ${gDone} / 전체 ${gTotal}건
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${gPct}%;background:#17A2B8;border-radius:99px"></div></div>`, '#17A2B8')}
+      ${extraCards}
     </div>
     <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px">
       <button class="claim-year-btn ${monthlySub === 'summary' ? 'active' : ''}" onclick="setMonthlySub('summary')">📊 요약</button>
