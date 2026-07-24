@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 14:06</span>
+      v<span id="build-stamp">07/24 14:10</span>
     </div>
   </aside>
 
@@ -3231,17 +3231,30 @@ function claimApplyDeleted() {
 function deleteClaim(key) {
   const r = claimData.find(x => claimKey(x) === key);
   if (!r) return;
-  const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}`;
-  if (!confirm('아래 클레임을 목록에서 삭제할까요?\n\n' + label +
-               '\n\n※ 원본 엑셀/시트는 지워지지 않습니다.\n   (되돌리려면 "삭제 복원" 버튼)')) return;
+  const order = String(r[1] || '').trim();
+  const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}  (${order})`;
+  if (!confirm('아래 클레임을 삭제(무효 처리)할까요?\n\n' + label +
+               '\n\n· 이 PC에서 바로 사라지고\n· 다음 갱신 때 보고서·관리대장·다른 PC에서도 제외됩니다.\n(되돌리려면 "삭제 복원")')) return;
+  // 1) 이 브라우저에서 즉시 숨김
   const del = claimDeletedSet();
   del.add(key);
   try { localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify([...del])); } catch (e) {}
   claimData = claimData.filter(x => claimKey(x) !== key);
+  // 2) 구글시트에 무효 표시 전송 → 파이프라인이 영구 제외
+  if (order) voidClaimToSheet(order);
   if (typeof refreshDash === 'function') refreshDash();
   if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
   renderClaimTable();
   if (typeof renderCharts === 'function') renderCharts();
+}
+// 무효 표시를 시트에 append (작업번호를 'VOID:...' 형태로) — pull_sheet 가 읽어 제외한다
+function voidClaimToSheet(order) {
+  try {
+    if (typeof CLAIM_SHEET_URL === 'undefined') return;
+    const row = ['', 'VOID:' + order];
+    fetch(CLAIM_SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: CLAIM_SHEET_KEY, row: row }) });
+  } catch (e) { console.warn('void send fail', e); }
 }
 function restoreClaims() {
   const n = claimDeletedSet().size;
@@ -5904,9 +5917,14 @@ async function loadSheetClaims(){
     const j = await r.json();
     if(!j || !j.ok || !Array.isArray(j.rows)) return;
     const nd = v => (typeof v==='string' && /\dT\d/.test(v)) ? new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : v;
+    // 무효(VOID:작업번호) 표시 수집 → 해당 건 제외
+    const voided = new Set();
+    j.rows.forEach(row => { const v=String((row&&row[1])||''); if(v.startsWith('VOID:')) voided.add(v.slice(5).trim()); });
+    if(voided.size){ claimData = claimData.filter(r => !voided.has(String(r[1]||'').trim())); }
     const haveOrders = new Set(claimData.map(r => String(r[1]||'').trim()));  // 이미 있는 작업번호
     const add = j.rows
-      .filter(row => row && row[1] && !String(row[1]).startsWith('TEST'))
+      .filter(row => row && row[1] && !String(row[1]).startsWith('TEST') && !String(row[1]).startsWith('VOID:'))
+      .filter(row => !voided.has(String(row[1]).trim()))       // 무효 처리된 건 제외
       .filter(row => !haveOrders.has(String(row[1]).trim()))   // claim_data.js 에 이미 있으면 중복 제외
       .map(row => {
         const r2 = row.slice(0,15);
