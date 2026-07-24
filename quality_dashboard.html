@@ -396,23 +396,23 @@
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">품질 관리</div>
+      <div class="sidebar-section-label">품질 기록</div>
       <button class="nav-item" id="nav-nccost" onclick="showTab('nccost',this)">
         <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 품질사고 관리대장
-      </button>
-      <button class="nav-item nav-sub" id="nav-worker" onclick="showTab('worker',this)">
-        <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
-      </button>
-      <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
-        <span class="nav-icon"><i class="ti ti-target"></i></span> 성과관리
       </button>
       <button class="nav-item" id="nav-claim" onclick="showTab('claim',this)">
         <span class="nav-icon"><i class="ti ti-folder"></i></span> 클레임 DB
       </button>
+      <button class="nav-item" id="nav-worker" onclick="showTab('worker',this)">
+        <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
+      </button>
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">품질사고 데이터분석</div>
+      <div class="sidebar-section-label">품질 분석</div>
+      <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
+        <span class="nav-icon"><i class="ti ti-target"></i></span> 품질 KPI
+      </button>
       <button class="nav-item" id="nav-erp" onclick="showTab('analysis',this);setAnalysisSrc('erp')">
         <span class="nav-icon"><i class="ti ti-alert-triangle"></i></span> 외주 품질사고
       </button>
@@ -422,14 +422,10 @@
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">리포트</div>
+      <div class="sidebar-section-label">리포트 · 문서</div>
       <button class="nav-item" id="nav-monthly" onclick="showTab('monthly',this)">
         <span class="nav-icon"><i class="ti ti-calendar"></i></span> 월간 리포트
       </button>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-label">입력 · 문서</div>
       <button class="nav-item" id="nav-register" onclick="showTab('register',this)">
         <span class="nav-icon"><i class="ti ti-edit"></i></span> 클레임 등록
       </button>
@@ -441,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 11:20</span>
+      v<span id="build-stamp">07/24 12:02</span>
     </div>
   </aside>
 
@@ -1315,7 +1311,7 @@
     <!-- ============ KPI 현황 ============ -->
     <div id="tab-kpi" class="tab">
       <div class="section-header">
-        <div class="section-title">성과관리 <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
+        <div class="section-title">품질 KPI <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
         <span style="font-size:12px;color:#aaa" id="kpi-period">목표 대비 실적</span>
       </div>
 
@@ -1907,7 +1903,7 @@ function renderWorker(skipTabs) {
 const TAB_TITLES = {
   dashboard: '대시보드',
   analysis: '분석',
-  kpi: '성과관리',
+  kpi: '품질 KPI',
   nccost: '품질사고 관리대장',
   claim: '클레임 DB',
   worker: '공정별 사고',
