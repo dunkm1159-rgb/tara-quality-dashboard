@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/24 14:41</span>
+      v<span id="build-stamp">07/24 14:47</span>
     </div>
   </aside>
 
@@ -3564,6 +3564,15 @@ function generateGiahnDoc() {
   const tgSum = PRC.reduce((s, p) => s + (PT[p] || 0), 0);
   const cSum = PRC.reduce((s, p) => s + cum[p].cost, 0);
   const nSum = PRC.reduce((s, p) => s + cum[p].cnt, 0);
+  // ── 연간 누적 TOP (공정별·부적합유형·거래처) — 취합본(claimData) 기준 ──
+  const _yRows = (typeof claimData !== 'undefined' ? claimData : []).filter(r => String(r[14] || '').slice(0, 4) === yr);
+  const _grp = (fn) => { const m = {}; _yRows.forEach(r => { const k = ((fn(r) || '(미상)') + '').trim() || '(미상)'; if (!m[k]) m[k] = { c: 0, cost: 0 }; m[k].c++; m[k].cost += (Number(r[12]) || 0) + (Number(r[13]) || 0); }); return Object.entries(m).sort((a, b) => b[1].c - a[1].c); };
+  const defTop = _grp(r => r[8]).slice(0, 6);
+  const cliTop = _grp(r => r[2]).slice(0, 6);
+  const procTop = PRC.map(p => [p, { c: cum[p].cnt, cost: cum[p].cost }]).filter(x => x[1].c > 0 || x[1].cost > 0).sort((a, b) => b[1].cost - a[1].cost);
+  const gwon = v => Math.round((v || 0) / 10000).toLocaleString();
+  const gEsc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const gbar = (title, entries, color) => { const mx = Math.max(1, ...entries.map(e => e[1].c)); return `<div class="gcol"><div class="gtitle">${title}</div>${entries.length ? entries.map(([k, v]) => `<div class="gbar-row"><div class="gbar-lbl"><span class="gnm" title="${gEsc(k)}">${gEsc(k)}</span><span class="gvl">${v.c}건·${gwon(v.cost)}만</span></div><div class="gbar-track"><div class="gbar-fill" style="width:${Math.round(v.c / mx * 100)}%;background:${color}"></div></div></div>`).join('') : '<div style="color:#bbb;font-size:10px">없음</div>'}</div>`; };
   let tg = {}; try { tg = JSON.parse(localStorage.getItem(giahnTgKey(curM)) || '{}'); } catch (e) {}
   const won = v => (v || 0).toLocaleString();
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
@@ -3592,6 +3601,15 @@ function generateGiahnDoc() {
     .c { text-align:center; }
     .over { color:#c0392b; font-weight:bold; }
     .foot { margin-top:22px; font-size:10.5px; color:#888; }
+    .graphic { display:flex; gap:9px; margin:6px 0 4px; }
+    .gcol { flex:1; border:1px solid #e2e2e2; border-radius:6px; padding:8px 10px; min-width:0; }
+    .gtitle { font-weight:bold; font-size:11.5px; margin-bottom:7px; }
+    .gbar-row { margin:5px 0; font-size:10px; }
+    .gbar-lbl { display:flex; justify-content:space-between; gap:6px; }
+    .gnm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:88px; }
+    .gvl { white-space:nowrap; color:#666; flex-shrink:0; }
+    .gbar-track { height:7px; background:#eef0f2; border-radius:4px; overflow:hidden; margin-top:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .gbar-fill { height:100%; border-radius:4px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   </style></head><body>
   <table class="approve"><tr><td class="h">담당</td><td class="h">검토</td><td class="h">승인</td></tr><tr><td class="s"></td><td class="s"></td><td class="s"></td></tr></table>
   <div style="clear:both"></div>
@@ -3633,14 +3651,21 @@ function generateGiahnDoc() {
     </tbody>
   </table>
 
-  <h3>3. ${moN}월 품질사고 내역 (첨부파일 참조)</h3>
+  <h3>3. 연간 누적 TOP 분석 (${yr}년, 1~${moN}월)</h3>
+  <div class="graphic">
+    ${gbar('공정별', procTop, '#17A2B8')}
+    ${gbar('부적합 유형', defTop, '#E67E22')}
+    ${gbar('거래처', cliTop, '#7B4EA0')}
+  </div>
+
+  <h3>4. ${moN}월 품질사고 내역 (첨부파일 참조)</h3>
   <div style="padding-left:14px">
     - 협력업체 부담비용 : ${won(outM)} 원<br>
     - 자사부담 품질비용 : ${won(selfM)} 원<br>
     - 발생 건수 : ${mv.cnt || 0} 건
   </div>
 
-  <h3>4. 첨부</h3>
+  <h3>5. 첨부</h3>
   <div style="padding-left:14px">- ${yr}년 ${moN}월 품질사고 관리대장</div>
 
   <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 통합품질관리시스템에서 자동 생성되었습니다. (생성일 ${today})</div>
