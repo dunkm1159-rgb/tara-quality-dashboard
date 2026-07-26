@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/27 08:23</span>
+      v<span id="build-stamp">07/27 08:48</span>
     </div>
   </aside>
 
@@ -987,11 +987,11 @@
                   <th class="part-col" id="parthd-7" style="width:74px;text-align:center;padding:2px"></th>
                   <th class="part-col" id="parthd-8" style="width:74px;text-align:center;padding:2px"></th>
                   <th class="part-col" id="parthd-9" style="width:74px;text-align:center;padding:2px"></th>
-                  <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G<br>승인일</th>
-                  <th class="ovs-col" style="width:78px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">숫자</span></th>
-                  <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">출고</th>
-                  <th class="ovs-col" style="width:96px;text-align:center;background:#eef7f9">최종승인</th>
-                  <th class="ovs-col" style="width:180px;background:#eef7f9">요청사항</th>
+                  <th class="ovs-col" style="width:130px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G 승인일</th>
+                  <th class="ovs-col" style="width:84px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">수량</span></th>
+                  <th class="ovs-col" style="width:126px;text-align:center;background:#eef7f9">출고일</th>
+                  <th class="ovs-col" style="width:126px;text-align:center;background:#eef7f9">최종승인일</th>
+                  <th class="ovs-col" style="width:200px;background:#eef7f9">요청사항</th>
                 </tr>
               </thead>
               <tbody id="gajebon-tbody"></tbody>
@@ -3441,11 +3441,14 @@ async function fetchGajebonFromServer() {
   }
 }
 
-// 외주 설비(외주·외주(매엽) 등)는 자체 가제본 대상이 아니므로 제외
-function isOutsourcedEquip(r) { return String(r['설비명'] || '').includes('외주'); }
+// 설비가 '전부 외주'인 건 (자사 설비가 하나도 없음) — 대시보드/오늘신규에서 제외 대상
+function isAllOutsourced(r) {
+  const parts = String(r['설비명'] || '').replace(/;/g, ',').split(',').map(s => s.trim()).filter(Boolean);
+  return parts.length > 0 && parts.every(p => p.includes('외주'));
+}
 function renderGajebonMetrics() {
-  // 현재 선택된 탭의 행만 집계 (외주 설비 제외)
-  const rows = (gajebonSheets[gajebonCurrentSheet] || []).filter(r => !isOutsourcedEquip(r));
+  // 조회 카운트는 외주 포함 (전체)
+  const rows = gajebonSheets[gajebonCurrentSheet] || [];
   const tabName = {
     '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
     '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)', '영문거래처': '해외영업본부'
@@ -4073,8 +4076,7 @@ function renderGajebonTable() {
   }
 
   const filtered = rows.filter(r => {
-    // 외주 설비 건은 가제본 대상 아님 → 목록에서 제외
-    if (String(r['설비명'] || '').includes('외주')) return false;
+    // (외주 작업도 조회 목록에는 포함 — 대시보드/오늘신규에서만 제외)
     // 텍스트 검색
     if (search) {
       const rowText = Object.values(r).join(' ').toLowerCase();
@@ -4325,21 +4327,22 @@ function syncOvsCols() {
   document.querySelectorAll('.part-col').forEach(el => { el.style.display = prt ? '' : 'none'; });
   const tb = document.getElementById('gajebon-table');
   // 파트 컬럼 = 진행(56) + 10칸×74 = 796
-  if (tb) tb.style.minWidth = (ovs ? 1660 : 1110) + (prt ? 796 : 0) + 'px';
+  if (tb) tb.style.minWidth = (ovs ? 1786 : 1110) + (prt ? 796 : 0) + 'px';
   if (prt) renderPartHeaders();   // 시트별 편집 가능한 파트 이름표 채우기
 }
 function ovsCells(order) {
   if (!isOvsSheet()) return '';      // 해외영업본부 탭에서만 입력칸 표시
   const o = String(order || '').replace(/'/g, '');
-  const box = 'border:1px solid #d2d2d7;border-radius:6px;padding:3px 5px;font-size:11px;width:100%;background:#fff';
-  const d = k => `<td style="text-align:center;background:#fcfdfe">
-      <input type="date" value="${getOvs(order, k)}" onchange="setOvs('${o}','${k}',this.value)" style="${box}"></td>`;
+  const box = 'border:1px solid #cdd5dd;border-radius:7px;padding:6px 7px;font-size:12.5px;width:100%;box-sizing:border-box;background:#fff;color:#1d1d1f';
+  const td = 'text-align:center;background:#f4f9fb;padding:5px 6px';
+  const d = k => `<td style="${td}">
+      <input type="date" value="${getOvs(order, k)}" onchange="setOvs('${o}','${k}',this.value)" style="${box};cursor:pointer"></td>`;
   return d('fg')
-    + `<td style="text-align:center;background:#fcfdfe"><input type="number" min="0" value="${getOvs(order, 'sample')}" placeholder="0"
-         onchange="setOvs('${o}','sample',this.value)" style="${box};text-align:right"></td>`
+    + `<td style="${td}"><input type="number" min="0" value="${getOvs(order, 'sample')}" placeholder="0"
+         onchange="setOvs('${o}','sample',this.value)" style="${box};text-align:center"></td>`
     + d('ship') + d('final')
-    + `<td style="background:#fcfdfe"><input type="text" value="${String(getOvs(order, 'req')).replace(/"/g, '&quot;')}" placeholder="요청사항"
-         onchange="setOvs('${o}','req',this.value)" style="${box}"></td>`;
+    + `<td style="background:#f4f9fb;padding:5px 6px"><input type="text" value="${String(getOvs(order, 'req')).replace(/"/g, '&quot;')}" placeholder="요청사항 입력"
+         onchange="setOvs('${o}','req',this.value)" style="${box};text-align:left"></td>`;
 }
 let gajebonPartStore = {};      // 주문별 파트 완료/날짜 + _app(해당 파트 목록)
 let gajebonPartTemplates = {};  // 제품명 → 해당 파트 목록 (기억)
