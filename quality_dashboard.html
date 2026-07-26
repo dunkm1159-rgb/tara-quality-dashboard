@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/27 08:05</span>
+      v<span id="build-stamp">07/27 08:18</span>
     </div>
   </aside>
 
@@ -3441,9 +3441,11 @@ async function fetchGajebonFromServer() {
   }
 }
 
+// 외주 설비(외주·외주(매엽) 등)는 자체 가제본 대상이 아니므로 제외
+function isOutsourcedEquip(r) { return String(r['설비명'] || '').includes('외주'); }
 function renderGajebonMetrics() {
-  // 현재 선택된 탭의 행만 집계 (탭 바뀌면 카운트도 바뀜)
-  const rows = gajebonSheets[gajebonCurrentSheet] || [];
+  // 현재 선택된 탭의 행만 집계 (외주 설비 제외)
+  const rows = (gajebonSheets[gajebonCurrentSheet] || []).filter(r => !isOutsourcedEquip(r));
   const tabName = {
     '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
     '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)', '영문거래처': '해외영업본부'
