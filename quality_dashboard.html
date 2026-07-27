@@ -401,7 +401,7 @@
         <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 품질사고 관리대장
       </button>
       <button class="nav-item" id="nav-claim" onclick="showTab('claim',this)">
-        <span class="nav-icon"><i class="ti ti-folder"></i></span> 클레임 DB
+        <span class="nav-icon"><i class="ti ti-folder"></i></span> 부적합사고 취합대장
       </button>
       <button class="nav-item" id="nav-worker" onclick="showTab('worker',this)">
         <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
@@ -427,7 +427,7 @@
         <span class="nav-icon"><i class="ti ti-calendar"></i></span> 월간 리포트
       </button>
       <button class="nav-item" id="nav-register" onclick="showTab('register',this)">
-        <span class="nav-icon"><i class="ti ti-edit"></i></span> 클레임 등록
+        <span class="nav-icon"><i class="ti ti-edit"></i></span> 부적합사고 등록
       </button>
       <button class="nav-item" id="nav-kpi-reg" onclick="showTab('kpi-reg',this)">
         <span class="nav-icon"><i class="ti ti-file-text"></i></span> KPI 등록
@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/27 09:01</span>
+      v<span id="build-stamp">07/27 12:01</span>
     </div>
   </aside>
 
@@ -493,7 +493,7 @@
           <div class="card-title" style="margin:0;"><i class="ti ti-file-text"></i> 작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
           <button onclick="copyPrintTargets()" class="btn btn-secondary btn-sm"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
         </div>
-        <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">최근 3일 완료 + 진행중 신규 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
+        <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
         <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
       </div>
 
@@ -741,7 +741,7 @@
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#17A2B8;margin:0;">클레임 등록</h2>
+      <h2 style="font-size:18px;font-weight:700;color:#17A2B8;margin:0;">부적합사고 등록</h2>
       <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 클라우드(구글시트)에 자동 저장</p>
     </div>
   </div>
@@ -857,7 +857,7 @@
 
     <div id="tab-claim" class="tab">
       <div class="section-header">
-        <div class="section-title">클레임 / 부적합 DB</div>
+        <div class="section-title">부적합사고 취합대장</div>
         <span id="claim-updated" style="font-size:12px;color:var(--color-text-secondary,#aaa)"></span>
       </div>
 
@@ -1906,13 +1906,13 @@ const TAB_TITLES = {
   analysis: '분석',
   kpi: '품질 KPI',
   nccost: '품질사고 관리대장',
-  claim: '클레임 DB',
+  claim: '부적합사고 취합대장',
   worker: '공정별 사고',
   gajebon: '가제본 현황',
   wip: '설비별 작업현황',
   monthly: '월간 리포트',
   docs: '문서 관리',
-  register: '클레임 등록',
+  register: '부적합사고 등록',
   'kpi-reg': 'KPI 등록',
 };
 
@@ -2052,16 +2052,18 @@ function renderHomeWip() {
 }
 
 function collectPrintTargets() {
-  // inject_data.py가 만든 오늘 delta 사용: 오늘 완료 + 오늘 새로 진행중
+  // 완료 = 최근 N일 완료(날짜기준) / 진행중 = 현재 진행중(최근순, 외주전용 제외)
   const t = (window.GAJEBON_TODAY && typeof window.GAJEBON_TODAY === 'object') ? window.GAJEBON_TODAY : {};
-  return { done: t.new_completed || [], prog: t.new_progress || [] };
+  const prog = (t.active_progress || t.new_progress || []).slice()
+    .sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || ''))).slice(0, 20);
+  return { done: t.new_completed || [], prog };
 }
 function renderPrintTargets() {
   const el = document.getElementById('print-target-list'); if (!el) return;
   const { done, prog } = collectPrintTargets();
   const days = (window.GAJEBON_TODAY && window.GAJEBON_TODAY.recent_days) || 3;
   const cnt = document.getElementById('print-target-count');
-  if (cnt) cnt.textContent = `최근 ${days}일 완료 ${done.length} · 진행중 신규 ${prog.length}`;
+  if (cnt) cnt.textContent = `최근 ${days}일 완료 ${done.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const rowHtml = (r, color, showDate) => `<tr>
      <td style="white-space:nowrap;color:#888;padding:2px 8px 2px 0">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</td>
@@ -2071,7 +2073,7 @@ function renderPrintTargets() {
   const section = (title, arr, color, showDate) => arr.length
     ? `<div style="font-weight:600;margin:8px 0 4px;color:${color}">${title} (${arr.length})</div><table style="width:100%;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>` : '';
   el.innerHTML = (done.length || prog.length)
-    ? section(`✅ 최근 ${days}일 완료`, done, '#248a3d', true) + section('🖨 진행중 신규', prog, '#c93400', false)
+    ? section(`✅ 최근 ${days}일 완료`, done, '#248a3d', true) + section('🖨 진행중', prog, '#c93400', false)
     : '<span style="color:#ccc">최근 완료 대상 없음</span>';
 }
 function copyPrintTargets() {
