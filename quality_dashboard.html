@@ -437,7 +437,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/28 08:05</span>
+      v<span id="build-stamp">07/28 08:53</span>
     </div>
   </aside>
 
@@ -3448,6 +3448,17 @@ function isAllOutsourced(r) {
   const parts = String(r['설비명'] || '').replace(/;/g, ',').split(',').map(s => s.trim()).filter(Boolean);
   return parts.length > 0 && parts.every(p => p.includes('외주'));
 }
+// 30일 넘게 진행중인 건은 사실상 완료로 간주 (오래된 미완료 정리)
+const GAJ_STALE_DAYS = 30;
+function isStaleGajebon(r) {
+  const d = String(r['날짜'] || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  return (Date.now() - new Date(d).getTime()) / 86400000 > GAJ_STALE_DAYS;
+}
+// 완료로 볼지: ERP완료 · 가제본날짜입력 · (진행중이지만 30일 초과)
+function gajTreatDone(r) {
+  return (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '') || (r['진행상태'] === '진행중' && isStaleGajebon(r));
+}
 function renderGajebonMetrics() {
   // 조회 카운트는 외주 포함 (전체)
   const rows = gajebonSheets[gajebonCurrentSheet] || [];
@@ -3455,11 +3466,10 @@ function renderGajebonMetrics() {
     '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
     '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)', '영문거래처': '해외영업본부'
   }[gajebonCurrentSheet] || gajebonCurrentSheet;   // 우즈벡·DNP는 시트명 그대로 표시
-  // 완료 = ERP 완료 또는 웹에서 가제본 완료처리(날짜입력) — 날짜 미입력이어도 완료로 집계
-  const isDone = r => (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '');
-  const done = rows.filter(isDone).length;
+  // 완료 = ERP완료 · 가제본날짜입력 · 30일 초과 진행중(자동 완료)
+  const done = rows.filter(gajTreatDone).length;
   const doneNoDate = rows.filter(r => r['진행상태'] === '완료' && (r['요청내용'] || '').includes('가제본') && !gajDate(r['주문번호'] || '')).length;
-  const progress = rows.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '')).length;
+  const progress = rows.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '') && !isStaleGajebon(r)).length;
   document.getElementById('gajebon-metrics').innerHTML = `
     <div class="metric"><div class="label">완료 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#248a3d">${done.toLocaleString()}</div><div class="sub ${doneNoDate ? 'up' : 'neutral'}">${doneNoDate ? '가제본일 미입력 ' + doneNoDate + '건' : '가제본일 입력 완료'}</div></div>
     <div class="metric"><div class="label">진행중 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#c93400">${progress.toLocaleString()}</div><div class="sub neutral">현재 생산 진행</div></div>
@@ -4096,14 +4106,14 @@ function renderGajebonTable() {
     if (todayDone && !newCompletedSet.has(r['주문번호'])) return false;
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
-    // 완료만 보이기 = (ERP완료 또는 가제본 완료처리) + 만든 뒤 다음 영업일까지
+    // 완료만 보이기 = (ERP완료 · 가제본완료처리 · 30일초과 진행중)
     if (onlyDone) {
       const gd0 = gajDate(r['주문번호']||'');
-      if (!gd0 && (r['진행상태']||'') !== '완료') return false;
+      if (!gd0 && (r['진행상태']||'') !== '완료' && !((r['진행상태']||'')==='진행중' && isStaleGajebon(r))) return false;
       if (gd0 && !gajWithinGrace(gd0)) return false;
     }
-    // 진행중만 (가제본 완료처리한 건 제외 - ERP 진행중이어도 완료로 봄)
-    if (onlyProgress && (gajDate(r['주문번호']||'') || (r['진행상태']||'') !== '진행중')) return false;
+    // 진행중만 (완료처리·30일초과 건 제외)
+    if (onlyProgress && (gajDate(r['주문번호']||'') || (r['진행상태']||'') !== '진행중' || isStaleGajebon(r))) return false;
     // 가제본 만들 것 = 완료 + 가제본요청 있음 + 아직 가제본 안 만듦
     if (needGajebon) {
       if ((r['진행상태']||'') !== '완료') return false;
