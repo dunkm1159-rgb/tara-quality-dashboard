@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/28 14:11</span>
+      v<span id="build-stamp">07/28 14:37</span>
     </div>
   </aside>
 
@@ -465,6 +465,8 @@
         <div class="section-title">대시보드 <span style="font-size:12px;color:#aaa;font-weight:400" id="dash-month"></span></div>
         <button class="btn btn-secondary btn-sm" onclick="refreshDash()">↻ 새로고침</button>
       </div>
+
+      <div id="data-freshness" style="display:none"></div>
 
       <div id="home-signal" style="display:none"></div>
 
@@ -2123,7 +2125,37 @@ function copyPrintTargets() {
   }
 }
 
+// ── 데이터 신선도 배지: 자동수집이 멈추면 한눈에 보이게 ──
+function renderFreshness() {
+  const el = document.getElementById('data-freshness');
+  if (!el) return;
+  // 매일 도는 파이프라인의 갱신시각들 중 가장 최근을 '마지막 자동실행'으로 봄
+  const src = [];
+  const pick = (o, label) => { if (o && o.updated) src.push({ label, t: String(o.updated) }); };
+  pick(window.GAJEBON_DATA, '가제본 수집');
+  pick(window.WORKER_DATA, '공정 사고');
+  pick(window.SCHEDULE_DATA, '설비 스케줄');
+  pick(window.QUALITY_DATA, '품질 지표');
+  if (!src.length) { el.style.display = 'none'; return; }
+  const parse = s => { const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); return m ? new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5]) : null; };
+  let latest = null, latestLabel = '';
+  src.forEach(x => { const d = parse(x.t); if (d && (!latest || d > latest)) { latest = d; latestLabel = x.label; } });
+  if (!latest) { el.style.display = 'none'; return; }
+  const now = new Date();
+  const days = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - new Date(latest.getFullYear(), latest.getMonth(), latest.getDate())) / 86400000);
+  const stamp = `${latest.getFullYear()}-${String(latest.getMonth()+1).padStart(2,'0')}-${String(latest.getDate()).padStart(2,'0')} ${String(latest.getHours()).padStart(2,'0')}:${String(latest.getMinutes()).padStart(2,'0')}`;
+  let bg, bd, fg, icon, msg;
+  if (days <= 1) { bg='#eefaf3'; bd='#bfe6cf'; fg='#248a3d'; icon='✅'; msg='데이터 최신'; }
+  else if (days <= 3) { bg='#fff9e9'; bd='#f0e0a8'; fg='#a6812a'; icon='⏳'; msg=`${days}일째 갱신 없음 — 확인 권장`; }
+  else { bg='#fdeeee'; bd='#f2c4c4'; fg='#c0392b'; icon='⚠️'; msg=`${days}일째 자동수집 멈춤 — 확인 필요`; }
+  el.style.display = 'block';
+  el.style.cssText = `display:block;margin-bottom:14px;padding:9px 14px;border-radius:9px;background:${bg};border:1px solid ${bd};color:${fg};font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap`;
+  el.innerHTML = `<span style="font-size:14px">${icon}</span><b>${msg}</b>`
+    + `<span style="color:#888;font-weight:400">· 마지막 자동실행 ${stamp} (${latestLabel})</span>`
+    + (days > 3 ? `<span style="color:#888;font-weight:400;margin-left:2px">· 수집 PC 켜짐/네트워크/ERP 로그인 점검</span>` : '');
+}
 function refreshDash() {
+  renderFreshness();
   renderHomeSignal();
   renderHomeWip();
   renderPrintTargets();
