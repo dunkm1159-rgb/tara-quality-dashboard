@@ -435,9 +435,12 @@
       <button class="nav-item" id="nav-docs" onclick="showTab('docs',this)">
         <span class="nav-icon"><i class="ti ti-files"></i></span> 문서 관리
       </button>
+      <button class="nav-item" id="nav-log" onclick="showTab('log',this)">
+        <span class="nav-icon"><i class="ti ti-history"></i></span> 변경 이력
+      </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/28 09:03</span>
+      v<span id="build-stamp">07/28 10:41</span>
     </div>
   </aside>
 
@@ -1419,6 +1422,33 @@
     </div>
 
     <!-- ============ 문서 관리 ============ -->
+    <!-- ============ 변경 이력 ============ -->
+    <div id="tab-log" class="tab">
+      <div class="section-header" style="margin-bottom:10px">
+        <div class="section-title">변경 이력 <span style="font-size:12px;color:#aaa;font-weight:400">감사추적 (등록·삭제·복원)</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="log-search" oninput="renderChangeLog()" placeholder="검색 (작업번호·작성자·내용)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:220px">
+          <button onclick="loadLogFromSheet()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer" title="다른 PC 기록까지 시트에서 불러오기">🔄 전체 불러오기</button>
+        </div>
+      </div>
+      <div style="font-size:11.5px;color:#86868b;margin-bottom:12px">누가·언제·무엇을 변경했는지 기록됩니다. (이 PC 기록은 자동, 전체는 "전체 불러오기")</div>
+      <div class="card" style="padding:0">
+        <div style="padding:9px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="log-count"></div>
+        <div style="overflow-x:auto;max-height:560px;overflow-y:auto">
+          <table style="width:100%;font-size:12.5px">
+            <thead><tr>
+              <th style="white-space:nowrap;text-align:left">일시</th>
+              <th style="white-space:nowrap;text-align:left">작성자</th>
+              <th style="white-space:nowrap;text-align:left">동작</th>
+              <th style="white-space:nowrap;text-align:left">작업번호</th>
+              <th style="white-space:nowrap;text-align:left">내용</th>
+            </tr></thead>
+            <tbody id="log-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-docs" class="tab">
       <div class="section-header" style="margin-bottom:20px">
         <div class="section-title">문서 관리</div>
@@ -1914,6 +1944,7 @@ const TAB_TITLES = {
   docs: '문서 관리',
   register: '부적합사고 등록',
   'kpi-reg': 'KPI 등록',
+  log: '변경 이력',
 };
 
 let openTabs = ['dashboard'];   // 열려있는 탭 목록 (홈은 항상)
@@ -1963,6 +1994,7 @@ function showTab(name, btn) {
     else if (IS_SERVER) fetchGajebonFromServer();
   }
   if (name === 'docs') renderDocsList();
+  if (name === 'log') renderChangeLog();
   if (name === 'register') initRegForm();
   if (name === 'nccost') renderNcCost();
   if (name === 'wip') renderWip();
@@ -3258,6 +3290,7 @@ function deleteClaim(key) {
   const t = getTrash();
   if (!t.some(x => x.k === key)) { t.push({ k: key, row: r.slice(), ts: Date.now() }); saveTrash(t); }
   claimData = claimData.filter(x => claimKey(x) !== key);
+  logAction('삭제(휴지통)', String(r[1] || ''), String(r[4] || ''));
   _rerenderClaim();
 }
 // 휴지통에서 한 건 복원
@@ -3268,6 +3301,7 @@ function restoreOneClaim(key) {
   const row = t[i].row; t.splice(i, 1); saveTrash(t);
   const leg = legacyDeleted().filter(k => k !== key); localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify(leg));
   claimData.push(row);
+  logAction('복원', String(row[1] || ''), String(row[4] || ''));
   _rerenderClaim();
 }
 // 완전 삭제 → 시트 무효표시(영구). 웹에서 복원 불가.
@@ -3281,6 +3315,7 @@ function permanentDeleteClaim(key) {
   saveTrash(getTrash().filter(x => x.k !== key));     // 휴지통에서 제거
   const leg = legacyDeleted(); if (!leg.includes(key)) { leg.push(key); localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify(leg)); }
   claimData = claimData.filter(x => claimKey(x) !== key);
+  logAction('완전삭제', order, String((row && row[4]) || ''));
   _rerenderClaim();
   alert('완전 삭제 요청됨. 다음 데이터 갱신 때 보고서·관리대장에서도 빠져요.');
 }
@@ -3291,6 +3326,65 @@ function voidClaimToSheet(order) {
     fetch(CLAIM_SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ key: CLAIM_SHEET_KEY, row: ['', 'VOID:' + order] }) });
   } catch (e) { console.warn('void send fail', e); }
+}
+
+// ── 변경 이력 로그 (감사추적) ──
+const QMS_LOG_KEY = 'qmsChangeLog_v1';
+function qmsUser() {
+  let u = '';
+  try { u = localStorage.getItem('qmsUser') || ''; } catch (e) {}
+  if (!u) {
+    u = (prompt('이름을 입력하세요 (변경 이력 기록용, 1회)') || '').trim();
+    if (u) { try { localStorage.setItem('qmsUser', u); } catch (e) {} }
+  }
+  return u || '(미상)';
+}
+function logAction(action, target, detail) {
+  const entry = { t: new Date().toISOString(), u: qmsUser(), a: action, tg: target || '', d: detail || '' };
+  let arr = []; try { arr = JSON.parse(localStorage.getItem(QMS_LOG_KEY) || '[]'); } catch (e) {}
+  arr.push(entry); if (arr.length > 800) arr = arr.slice(-800);
+  try { localStorage.setItem(QMS_LOG_KEY, JSON.stringify(arr)); } catch (e) {}
+  // 시트에 영구 기록 (교차 PC) — row[1]='LOG'
+  try {
+    if (typeof CLAIM_SHEET_URL !== 'undefined') {
+      fetch(CLAIM_SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ key: CLAIM_SHEET_KEY, row: ['', 'LOG', entry.t, entry.u, action, target || '', detail || ''] }) });
+    }
+  } catch (e) {}
+  if (typeof renderChangeLog === 'function') renderChangeLog();
+}
+let _sheetLog = [];   // 시트에서 불러온 로그
+function renderChangeLog() {
+  const tb = document.getElementById('log-tbody');
+  if (!tb) return;
+  let local = []; try { local = JSON.parse(localStorage.getItem(QMS_LOG_KEY) || '[]'); } catch (e) {}
+  const all = local.concat(_sheetLog);
+  // 중복 제거 (시각+동작+대상)
+  const seen = new Set(); const merged = [];
+  all.forEach(e => { const k = e.t + '|' + e.a + '|' + e.tg; if (!seen.has(k)) { seen.add(k); merged.push(e); } });
+  merged.sort((a, b) => String(b.t).localeCompare(String(a.t)));
+  const q = (document.getElementById('log-search')?.value || '').toLowerCase();
+  const rows = q ? merged.filter(e => (e.u + e.a + e.tg + e.d).toLowerCase().includes(q)) : merged;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const fmt = t => { try { return new Date(t).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(0, 16); } catch (e) { return t; } };
+  const color = a => a.includes('완전삭제') ? '#c0392b' : a.includes('삭제') ? '#e67e22' : a.includes('복원') ? '#1F5C99' : '#248a3d';
+  const cnt = document.getElementById('log-count'); if (cnt) cnt.textContent = rows.length + '건';
+  tb.innerHTML = rows.length ? rows.map(e => `<tr>
+    <td style="white-space:nowrap;color:#666">${fmt(e.t)}</td>
+    <td style="white-space:nowrap;font-weight:600">${esc(e.u)}</td>
+    <td style="white-space:nowrap"><span style="color:${color(e.a)};font-weight:600">${esc(e.a)}</span></td>
+    <td style="white-space:nowrap;font-family:monospace;color:#555">${esc(e.tg)}</td>
+    <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px" title="${esc(e.d)}">${esc(e.d)}</td>
+  </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:#ccc;padding:18px">기록 없음</td></tr>';
+}
+async function loadLogFromSheet() {
+  try {
+    const r = await fetch(CLAIM_SHEET_URL); const j = await r.json();
+    if (!j || !Array.isArray(j.rows)) return;
+    _sheetLog = j.rows.filter(row => String(row[1] || '') === 'LOG')
+      .map(row => ({ t: row[2] || '', u: row[3] || '', a: row[4] || '', tg: row[5] || '', d: row[6] || '' }));
+    renderChangeLog();
+  } catch (e) { alert('시트 로그 불러오기 실패'); }
 }
 function restoreClaims() {   // 전체 복원
   if (!checkDelPw()) return;
@@ -4740,6 +4834,7 @@ async function submitClaimReg(e) {
   ];
   claimData.push(newRow);
   if (typeof saveClaimToSheet === 'function') saveClaimToSheet(newRow);
+  logAction('등록', String(newRow[1] || ''), String(newRow[4] || ''));
   if (typeof refreshDash === 'function') refreshDash();
   if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
   if (typeof renderClaimTable === 'function') renderClaimTable();
@@ -6051,7 +6146,7 @@ async function loadSheetClaims(){
     if(voided.size){ claimData = claimData.filter(r => !voided.has(String(r[1]||'').trim())); }
     const haveOrders = new Set(claimData.map(r => String(r[1]||'').trim()));  // 이미 있는 작업번호
     const add = j.rows
-      .filter(row => row && row[1] && !String(row[1]).startsWith('TEST') && !String(row[1]).startsWith('VOID:'))
+      .filter(row => row && row[1] && !String(row[1]).startsWith('TEST') && !String(row[1]).startsWith('VOID:') && String(row[1]) !== 'LOG')
       .filter(row => !voided.has(String(row[1]).trim()))       // 무효 처리된 건 제외
       .filter(row => !haveOrders.has(String(row[1]).trim()))   // claim_data.js 에 이미 있으면 중복 제외
       .map(row => {
