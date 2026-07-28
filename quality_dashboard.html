@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/28 15:03</span>
+      v<span id="build-stamp">07/29 07:48</span>
     </div>
   </aside>
 
@@ -870,11 +870,11 @@
 
       <!-- 연도 탭 -->
       <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid #e5e5e0;padding-bottom:0">
-        <button class="claim-year-btn active" onclick="switchClaimYear('',this)">전체</button>
+        <button class="claim-year-btn" onclick="switchClaimYear('',this)">전체</button>
         <button class="claim-year-btn" onclick="switchClaimYear('2023',this)">2023</button>
         <button class="claim-year-btn" onclick="switchClaimYear('2024',this)">2024</button>
         <button class="claim-year-btn" onclick="switchClaimYear('2025',this)">2025</button>
-        <button class="claim-year-btn" onclick="switchClaimYear('2026',this)">2026</button>
+        <button class="claim-year-btn active" onclick="switchClaimYear('2026',this)">2026</button>
       </div>
 
       <div class="filter-bar">
@@ -1190,11 +1190,11 @@
 
       <!-- 연도 탭 버튼 -->
       <div style="display:flex;gap:4px;margin:12px 0 18px;border-bottom:2px solid #e5e5e0;padding-bottom:0">
-        <button class="claim-year-btn active" id="analysis-yr-btn-all" onclick="switchAnalysisYear('',this)">전체</button>
+        <button class="claim-year-btn" id="analysis-yr-btn-all" onclick="switchAnalysisYear('',this)">전체</button>
         <button class="claim-year-btn" id="analysis-yr-btn-2023" onclick="switchAnalysisYear('2023',this)">2023</button>
         <button class="claim-year-btn" id="analysis-yr-btn-2024" onclick="switchAnalysisYear('2024',this)">2024</button>
         <button class="claim-year-btn" id="analysis-yr-btn-2025" onclick="switchAnalysisYear('2025',this)">2025</button>
-        <button class="claim-year-btn" id="analysis-yr-btn-2026" onclick="switchAnalysisYear('2026',this)">2026</button>
+        <button class="claim-year-btn active" id="analysis-yr-btn-2026" onclick="switchAnalysisYear('2026',this)">2026</button>
       </div>
       <!-- hidden select for renderCharts() compatibility -->
       <select id="analysis-year" style="display:none"></select>
@@ -1522,7 +1522,7 @@ const monthData = [3,5,4,7,14,4,0,0,0,0,0,0];
 // ========================
 // ERP 부적합 분석 (QUALITY_DATA)
 // ========================
-let erpYear = '';        // '' = 전체
+let erpYear = '2026';        // 기본 2026 ('' = 전체)
 let erpInout = '';       // '' = 전체 / '사내' / '외주'
 function setErpInout(v) { erpInout = v; renderErp(); }
 window._eCharts = window._eCharts || {};
@@ -1754,7 +1754,7 @@ function renderVendor() {
 // ========================
 // 작업자 사고 현황
 // ========================
-let workerYear = '';
+let workerYear = '2026';   // 기본 2026 ('' = 전체)
 let workerLevel = 0;   // 0=전체, 1~4=해당 등급만
 let workerAnon = false;   // 익명 모드 (시연/공유용)
 function toggleWorkerAnon() {
