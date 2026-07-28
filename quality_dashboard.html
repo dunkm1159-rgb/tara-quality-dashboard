@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 08:03</span>
+      v<span id="build-stamp">07/29 08:14</span>
     </div>
   </aside>
 
@@ -2092,23 +2092,34 @@ function collectPrintTargets() {
     .sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || ''))).slice(0, 20);
   return { done: t.new_completed || [], prog };
 }
+let _showOlderPrint = false;
+function toggleOlderPrint() { _showOlderPrint = !_showOlderPrint; renderPrintTargets(); }
 function renderPrintTargets() {
   const el = document.getElementById('print-target-list'); if (!el) return;
   const { done, prog } = collectPrintTargets();
   const days = (window.GAJEBON_TODAY && window.GAJEBON_TODAY.recent_days) || 3;
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });   // YYYY-MM-DD
+  const todayDone = done.filter(r => String(r['완료일'] || '') === today);
+  const olderDone = done.filter(r => String(r['완료일'] || '') !== today);
   const cnt = document.getElementById('print-target-count');
-  if (cnt) cnt.textContent = `최근 ${days}일 완료 ${done.length} · 진행중 ${prog.length}`;
+  if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const rowHtml = (r, color, showDate) => `<tr>
      <td style="white-space:nowrap;color:#888;padding:2px 8px 2px 0">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</td>
      <td style="white-space:nowrap;font-family:monospace;color:${color};padding:2px 8px 2px 0">${esc(r['주문번호'])}</td>
      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px;padding:2px 8px 2px 0" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
      <td style="white-space:nowrap;color:#888">${esc(r['거래처'])}</td></tr>`;
-  const section = (title, arr, color, showDate) => arr.length
-    ? `<div style="font-weight:600;margin:8px 0 4px;color:${color}">${title} (${arr.length})</div><table style="width:100%;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>` : '';
-  el.innerHTML = (done.length || prog.length)
-    ? section(`✅ 최근 ${days}일 완료`, done, '#248a3d', true) + section('🖨 진행중', prog, '#c93400', false)
-    : '<span style="color:#ccc">최근 완료 대상 없음</span>';
+  const table = (arr, color, showDate) => `<table style="width:100%;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>`;
+  const head = (title, color, extra) => `<div style="font-weight:600;margin:8px 0 4px;color:${color}${extra || ''}">${title}</div>`;
+  let html = '';
+  if (todayDone.length) html += head(`✅ 오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
+  if (olderDone.length) {
+    html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;font-weight:600;margin:8px 0 4px;color:#248a3d">`
+      + `${_showOlderPrint ? '▾' : '▸'} 이전 완료 (${olderDone.length}) ${_showOlderPrint ? '접기' : '펼치기'}</div>`;
+    if (_showOlderPrint) html += table(olderDone, '#248a3d', true);
+  }
+  if (prog.length) html += head(`🖨 진행중 (${prog.length})`, '#c93400') + table(prog, '#c93400', false);
+  el.innerHTML = html || '<span style="color:#ccc">최근 완료 대상 없음</span>';
 }
 function copyPrintTargets() {
   const { done, prog } = collectPrintTargets();
