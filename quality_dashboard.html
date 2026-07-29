@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 09:02</span>
+      v<span id="build-stamp">07/29 09:26</span>
     </div>
   </aside>
 
@@ -3523,7 +3523,7 @@ function renderClaimTable() {
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r[4]}">${r[4]||'-'}</td>
       <td><span class="badge ${typeColor(r[7])}">${r[7]||'-'}</span></td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[8]}">${r[8]||'-'}</td>
-      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[11]||''}">${r[11]||'-'}</td>
+      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[10]||''}">${r[10]||'-'}</td>
       <td style="text-align:right;font-size:13px">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
       <td style="text-align:center"><button title="이 클레임 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"
         style="border:none;background:none;cursor:pointer;color:#c0392b;font-size:15px;padding:2px 6px;line-height:1"
@@ -5434,7 +5434,7 @@ function normalizeClaimData(rows) {
     '뒷뭍음':'뒷묻음','뒤뭍음':'뒷묻음','잉크 묻음':'잉크묻음','잉크 뜯김':'잉크뜯김',
     '더러움(인쇄뒷묻음)':'더러움','더러움(뒷묻음)':'더러움','더러움,표지 뒤집힘(무선)':'더러움',
     '제본시 더러움':'더러움','품과다 오염':'오염',
-    '오염(요고레)':'오염','요고레':'오염','요그레':'오염','야레지 유입':'야레지유입',
+    '야레지 유입':'야레지유입',
     '접지불량':'접지','접지 불량':'접지','접지 밀림':'접지밀림','정합시 용지접힘':'접지',
     '재단 불량':'재단불량','재단불량(사이즈 오류)':'재단불량','재단불량(사이즈오류)':'재단불량',
     '재단규격불량':'재단불량','재단규격불량(중철)':'재단불량','재단규격불량(무선)':'재단불량',
