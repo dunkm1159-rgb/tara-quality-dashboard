@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 15:09</span>
+      v<span id="build-stamp">07/29 16:07</span>
     </div>
   </aside>
 
@@ -504,7 +504,7 @@
 
       <div class="grid2" style="margin-bottom:16px;">
         <div class="card">
-          <div class="card-title">최근 클레임 <span style="font-size:11px;font-weight:400;color:#aaa">최신 5건</span></div>
+          <div class="card-title">최근 부적합 <span style="font-size:11px;font-weight:400;color:#aaa">취합대장 최신 5건</span></div>
           <div id="dash-claim-list"></div>
         </div>
         <div class="card">
@@ -2218,9 +2218,9 @@ function refreshDash() {
     </div>
   `;
 
-  // ─ 최근 클레임 5건 ─
+  // ─ 최근 부적합 5건 (취합대장과 1:1 — 품질유형 무관, 접수일 최신순) ─
   const recent = [...claimData]
-    .filter(r=>r[0] && (r[7]||'').trim()==='클레임')
+    .filter(r=>r[0])
     .sort((a,b)=>(b[0]||'').localeCompare(a[0]||''))
     .slice(0,5);
   const clEl = document.getElementById('dash-claim-list');
