@@ -417,7 +417,7 @@
         <span class="nav-icon"><i class="ti ti-alert-triangle"></i></span> 외주 품질사고
       </button>
       <button class="nav-item" id="nav-analysis" onclick="showTab('analysis',this);setAnalysisSrc('claim')">
-        <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 클레임 분석
+        <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 부적합사고 분석
       </button>
     </div>
 
@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 08:43</span>
+      v<span id="build-stamp">07/29 09:01</span>
     </div>
   </aside>
 
@@ -1184,7 +1184,7 @@
       <div id="an-claim" style="display:none">
       <!-- 분석 필터 헤더 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
-        <div class="section-title">클레임 DB 분석</div>
+        <div class="section-title">부적합사고 분석</div>
         <button class="btn btn-secondary btn-sm" onclick="renderCharts()">↻ 새로고침</button>
       </div>
 
@@ -1532,7 +1532,7 @@ function setAnalysisSrc(s) {
   document.getElementById('ansrc-erp').classList.toggle('active', s === 'erp');
   document.getElementById('ansrc-claim').classList.toggle('active', s === 'claim');
   const tt = document.getElementById('topbar-title');
-  if (tt) tt.textContent = (s === 'erp') ? '외주 품질사고' : '클레임 분석';
+  if (tt) tt.textContent = (s === 'erp') ? '외주 품질사고' : '부적합사고 분석';
   if (s === 'erp') renderErp(); else renderCharts();
 }
 function setErpYear(y) { erpYear = y; renderErp(); }
@@ -1935,7 +1935,7 @@ function renderWorker(skipTabs) {
 // ========================
 const TAB_TITLES = {
   dashboard: '대시보드',
-  analysis: '분석',
+  analysis: '부적합사고 분석',
   kpi: '품질 KPI',
   nccost: '품질사고 관리대장',
   claim: '부적합사고 취합대장',
@@ -6230,7 +6230,13 @@ async function loadSheetClaims(){
         r2[13]=(typeof r2[13]==='number')?r2[13]:(r2[13]?Number(r2[13]):null);
         return r2;
       });
-    if(add.length) claimData = claimData.concat(add);
+    // 시트 이중등록 방지: 작업번호+부적합내용(+유형) 같은 행은 한 건만
+    const _seen = new Set();
+    const addDedup = add.filter(r => {
+      const k = String(r[1]||'').trim() + '|' + String(r[6]||'').trim() + '|' + String(r[8]||'').trim();
+      if (_seen.has(k)) return false; _seen.add(k); return true;
+    });
+    if(addDedup.length) claimData = claimData.concat(addDedup);
     // 공용 휴지통: trashed 작업번호를 claimData 에서 빼서 _sheetTrash 로
     _sheetTrash = [];
     if(trashed.size){
