@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 16:24</span>
+      v<span id="build-stamp">07/30 07:48</span>
     </div>
   </aside>
 
@@ -1105,7 +1105,20 @@
             <div id="erp-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           </div>
         </div>
-        <div style="font-size:11.5px;color:#86868b;margin-bottom:14px">ERP 부적합내역 중 <b>외주 귀책분만</b> 집계 (사내분은 품질사고 관리대장과 동일하여 제외) <span id="erp-updated" style="color:#ccc"></span></div>
+        <div style="font-size:11.5px;color:#86868b;margin-bottom:10px">ERP 부적합내역 중 <b>외주 귀책분만</b> 집계 (사내분은 품질사고 관리대장과 동일하여 제외) <span id="erp-updated" style="color:#ccc"></span></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:#555">
+          <span style="font-weight:600">기간(월)</span>
+          <select id="erp-mon-from" onchange="setErpMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
+          <span>~</span>
+          <select id="erp-mon-to" onchange="setErpMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
+          <span style="display:inline-flex;gap:4px;margin-left:4px">
+            <button class="claim-year-btn" onclick="setErpQuarter(1,3,this)" style="padding:4px 9px">1분기</button>
+            <button class="claim-year-btn" onclick="setErpQuarter(4,6,this)" style="padding:4px 9px">2분기</button>
+            <button class="claim-year-btn" onclick="setErpQuarter(7,9,this)" style="padding:4px 9px">3분기</button>
+            <button class="claim-year-btn" onclick="setErpQuarter(10,12,this)" style="padding:4px 9px">4분기</button>
+            <button class="claim-year-btn" onclick="setErpQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
+          </span>
+        </div>
         <div id="erp-recon"></div>
         <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
         <div class="card" style="padding:16px 18px;margin-bottom:16px">
@@ -1551,6 +1564,34 @@ function setAnalysisSrc(s) {
   if (s === 'erp') renderErp(); else renderCharts();
 }
 function setErpYear(y) { erpYear = y; renderErp(); }
+let erpMonFrom = 0, erpMonTo = 0;   // 0 = 전체월
+function fillErpMonthSelects() {
+  const f = document.getElementById('erp-mon-from'), t = document.getElementById('erp-mon-to');
+  if (!f || !t || f.options.length) return;
+  const opt = (v, l) => `<option value="${v}">${l}</option>`;
+  let fh = opt(0, '전체'), th = opt(0, '전체');
+  for (let m = 1; m <= 12; m++) { fh += opt(m, m + '월'); th += opt(m, m + '월'); }
+  f.innerHTML = fh; t.innerHTML = th;
+}
+function setErpMonths() {
+  erpMonFrom = parseInt(document.getElementById('erp-mon-from').value, 10) || 0;
+  erpMonTo = parseInt(document.getElementById('erp-mon-to').value, 10) || 0;
+  document.querySelectorAll('[onclick^="setErpQuarter"]').forEach(b => b.classList.remove('active'));
+  renderErp();
+}
+function setErpQuarter(from, to, btn) {
+  erpMonFrom = from; erpMonTo = to;
+  const f = document.getElementById('erp-mon-from'), t = document.getElementById('erp-mon-to');
+  if (f) f.value = from; if (t) t.value = to;
+  document.querySelectorAll('[onclick^="setErpQuarter"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderErp();
+}
+function erpMonthFilter(rows) {
+  if (!erpMonFrom && !erpMonTo) return rows;
+  const lo = erpMonFrom || 1, hi = erpMonTo || 12;
+  return rows.filter(r => { const m = parseInt(String(r._m || '').slice(5, 7), 10); return m >= lo && m <= hi; });
+}
 function erpAllRows() {
   const Q = window.QUALITY_DATA;
   if (!Q || !Q.months) return [];
@@ -1613,7 +1654,9 @@ function renderErp() {
   // ERP 부적합 분석은 '외주'만 집계 (사내분은 품질사고 관리대장과 동일하여 제외)
   const bi = document.getElementById('erp-inout-btns');
   if (bi) bi.innerHTML = '<span style="font-size:11px;color:#E67E22;font-weight:600;background:#fdf1e7;border-radius:6px;padding:3px 9px">외주 전용</span>';
+  fillErpMonthSelects();
   let rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;
+  rows = erpMonthFilter(rows);              // 월 범위 필터 (예: 4~6월)
   rows = rows.filter(r => r['사내외주'] === '외주');
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const num = r => Number(r['금액'] || 0);
@@ -1703,7 +1746,8 @@ function renderErp() {
 // ========================
 function renderVendor() {
   const all = erpAllRows().filter(r => r['사내외주'] === '외주');
-  const rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;   // 상단 연도 필터 공유
+  let rows = erpYear ? all.filter(r => r._m.slice(0, 4) === erpYear) : all;   // 상단 연도 필터 공유
+  rows = erpMonthFilter(rows);   // 월 범위 필터 공유
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const num = r => Number(r['금액'] || 0);
   const man = v => Math.round(v / 10000).toLocaleString();
