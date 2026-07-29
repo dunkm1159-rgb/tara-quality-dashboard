@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 09:33</span>
+      v<span id="build-stamp">07/29 12:01</span>
     </div>
   </aside>
 
@@ -6237,6 +6237,21 @@ async function loadSheetClaims(){
       if (_seen.has(k)) return false; _seen.add(k); return true;
     });
     if(addDedup.length) claimData = claimData.concat(addDedup);
+    // 시트 보강: 파일본은 품질유형이 공란(→'기타')이라, 시트에 값이 있으면 채워넣는다.
+    // (작업번호+부적합유형으로 매칭. 조치사항도 비어있으면 시트값으로 채움)
+    const sheetInfo = {};
+    j.rows.filter(row => row && row[1] && !isMarker(row[1])).forEach(row => {
+      const key = String(row[1]).trim() + '|' + String(row[8]||'').trim();
+      const qual = String(row[7]||'').trim(), act = String(row[10]||'').trim();
+      if (!sheetInfo[key]) sheetInfo[key] = { qual, act };
+      else { if(qual && !sheetInfo[key].qual) sheetInfo[key].qual = qual; if(act && !sheetInfo[key].act) sheetInfo[key].act = act; }
+    });
+    claimData.forEach(r => {
+      const s = sheetInfo[String(r[1]||'').trim() + '|' + String(r[8]||'').trim()];
+      if (!s) return;
+      if (s.qual && (!r[7] || r[7] === '기타')) r[7] = s.qual;
+      if (s.act && !r[10]) r[10] = s.act;
+    });
     // 공용 휴지통: trashed 작업번호를 claimData 에서 빼서 _sheetTrash 로
     _sheetTrash = [];
     if(trashed.size){
