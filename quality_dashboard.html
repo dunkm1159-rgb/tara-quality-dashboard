@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/29 12:01</span>
+      v<span id="build-stamp">07/29 15:02</span>
     </div>
   </aside>
 
@@ -3549,6 +3549,9 @@ const UZ_SHEET = '해외영업본부(우즈벡)';
 const DNP_SHEET = '해외영업본부(DNP)';
 const isUz  = r => String(r['거래처'] || '').toUpperCase().includes('OZBEKISTON') || String(r['제품명'] || '').includes('우즈벡');
 const isDnp = r => String(r['거래처'] || '').toUpperCase().includes('DNP');
+// 담당자가 이 목록이면 거래처가 영어라도 국내영업본부(기타)로 분류한다.
+const DOMESTIC_MANAGERS = ['강민형'];
+const isDomesticMgr = r => DOMESTIC_MANAGERS.some(m => String(r['담당자'] || '').includes(m));
 function splitEbsSheet() {
   const base = gajebonSheets['기타'];
   if (base) {
@@ -3558,9 +3561,13 @@ function splitEbsSheet() {
   }
   const ovs = gajebonSheets['영문거래처'];
   if (ovs) {
-    gajebonSheets[UZ_SHEET]  = ovs.filter(isUz);
-    gajebonSheets[DNP_SHEET] = ovs.filter(r => !isUz(r) && isDnp(r));
-    gajebonSheets['영문거래처'] = ovs.filter(r => !isUz(r) && !isDnp(r));
+    // 강민형 등 국내 담당자 건은 거래처가 영어라도 국내영업본부(기타)로 이동
+    const dom = ovs.filter(isDomesticMgr);
+    if (dom.length) gajebonSheets['기타'] = (gajebonSheets['기타'] || []).concat(dom);
+    const rest = ovs.filter(r => !isDomesticMgr(r));
+    gajebonSheets[UZ_SHEET]  = rest.filter(isUz);
+    gajebonSheets[DNP_SHEET] = rest.filter(r => !isUz(r) && isDnp(r));
+    gajebonSheets['영문거래처'] = rest.filter(r => !isUz(r) && !isDnp(r));
   }
 }
 
