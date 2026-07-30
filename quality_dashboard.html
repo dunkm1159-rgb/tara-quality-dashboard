@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/30 13:23</span>
+      v<span id="build-stamp">07/30 14:43</span>
     </div>
   </aside>
 
@@ -795,11 +795,12 @@
         <textarea id="reg-defcontent" rows="3" placeholder="구체적인 부적합 내용을 입력하세요" style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;resize:vertical;"></textarea>
       </div>
 
-      <div>
-        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">부적합유형</label>
-        <select id="reg-deftype" onchange="onDeftypeChange(this)" style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;background:#fff;box-sizing:border-box;">
-          <option value="">선택</option>
-        </select>
+      <div style="position:relative">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">부적합유형 <span style="font-size:11px;color:#aaa;font-weight:400">공정별 · 입력하면 아래 후보 표시</span></label>
+        <input id="reg-deftype" type="text" autocomplete="off" placeholder="예: 색상, 접지, 코팅 … (타이핑하면 유형 목록)"
+          oninput="filterDeftype()" onfocus="filterDeftype()" onblur="setTimeout(hideDeftype,180)"
+          style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;background:#fff;box-sizing:border-box;">
+        <div id="reg-deftype-list" style="display:none;position:absolute;z-index:30;left:0;right:0;top:100%;margin-top:2px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #d0d3d8;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.12)"></div>
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">작업설비</label>
@@ -4988,16 +4989,10 @@ function initRegForm() {
   const cliSet  = new Set(data.map(r => (r[2]||'').trim()).filter(Boolean));
   const equipSet = new Set(data.map(r => (r[9]||'').trim()).filter(Boolean));
 
-  const ds = document.getElementById('reg-deftype');
   const cl = document.getElementById('reg-client-list');
   const eq = document.getElementById('reg-equip-list');
 
-  // 부적합유형: 기존 데이터에서 수집 + 직접입력 옵션 (중복방지 위해 매번 새로 채움)
-  if (ds) {
-    ds.innerHTML = '<option value="">선택</option>';
-    [...defSet].sort((a,b)=>a.localeCompare(b,'ko')).forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; ds.appendChild(o); });
-    const oEtc=document.createElement('option'); oEtc.value='__custom__'; oEtc.textContent='+ 직접 입력'; ds.appendChild(oEtc);
-  }
+  // 부적합유형은 이제 분류표(DEFTYPE_GROUPS) 기반 검색 입력창 — 여기서 채우지 않음
   if (cl) { cl.innerHTML=''; [...cliSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; cl.appendChild(o); }); }
   if (eq) { eq.innerHTML=''; [...equipSet].sort().forEach(v => { const o=document.createElement('option'); o.value=v; eq.appendChild(o); }); }
 
@@ -5006,16 +5001,41 @@ function initRegForm() {
   const rd = document.getElementById('reg-date');
   if (rd && !rd.value) rd.value = today;
 }
-// 부적합유형 '직접 입력' 선택 시 텍스트 입력으로 전환
-function onDeftypeChange(sel) {
-  if (sel.value !== '__custom__') return;
-  const custom = prompt('새 부적합유형을 입력하세요');
-  if (custom && custom.trim()) {
-    const v = custom.trim();
-    let opt = [...sel.options].find(o => o.value === v);
-    if (!opt) { opt = document.createElement('option'); opt.value=v; opt.textContent=v; sel.insertBefore(opt, sel.lastElementChild); }
-    sel.value = v;
-  } else { sel.value = ''; }
+// ── 부적합유형 분류표 (공정별) ──
+const DEFTYPE_GROUPS = {
+  '데이터': ['구데이터 사용','데이터 겹침','데이터 누락','연결면 여분없음','이미지 겹침','이미지유실','재단 여분없음','터잡기 오류','페이지 번호 오류','페이지 위치 오류'],
+  '제판': ['제판불량'],
+  '인쇄': ['긁힘','더러움','망점 유실','색상','석션자국','야레지유입','이물질','잉크 뜯김','잉크 묻음','잉크뒷묻음','잉크딱지','지종 안맞음','판기스','핀트 안맞음','핀트불량','판바뀜','겹인쇄','급지 불량','기름 튐','요그레','하리불량','백지'],
+  '접지': ['접지'],
+  '제본': ['더블정합','부족분 발생','재단불량(사이즈 오류)','재단불량(터짐)','정합시 더러움','정합시 용지접힘','책등돌아감','표지누락','풀과다(오염)','풀부족(본문 빠짐)','혼입','철심불량'],
+  '후가공': ['에폭시','코팅','톰슨','포장(적제) 오류'],
+  '파손': ['비젖음','배송중 파손','파본유입','파손'],
+  '기타': ['기타','뒤집힘','배송지 오류','송장분실','수량파악오류','스티커 구겨짐'],
+};
+const DEFTYPE_GROUP_COLOR = { '데이터':'#7B4EA0','제판':'#1F5C99','인쇄':'#17A2B8','접지':'#16A085','제본':'#E67E22','후가공':'#C0392B','파손':'#98A2B3','기타':'#888' };
+function hideDeftype() { const b = document.getElementById('reg-deftype-list'); if (b) b.style.display = 'none'; }
+function pickDeftype(v) {
+  const inp = document.getElementById('reg-deftype'); if (inp) inp.value = v;
+  hideDeftype();
+}
+function filterDeftype() {
+  const inp = document.getElementById('reg-deftype'), box = document.getElementById('reg-deftype-list');
+  if (!inp || !box) return;
+  const q = inp.value.trim().toLowerCase();
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const pk = v => String(v).replace(/'/g, "\\'");
+  let html = '';
+  Object.keys(DEFTYPE_GROUPS).forEach(g => {
+    const hits = DEFTYPE_GROUPS[g].filter(t => !q || t.toLowerCase().includes(q) || g.toLowerCase().includes(q));
+    if (!hits.length) return;
+    const c = DEFTYPE_GROUP_COLOR[g] || '#888';
+    html += `<div style="padding:5px 12px 3px;font-size:11px;font-weight:700;color:${c};background:#fafafa;border-top:1px solid #f0f0ee">${g}</div>`;
+    html += hits.map(t => `<div onmousedown="pickDeftype('${pk(t)}')" style="padding:6px 14px;font-size:13px;cursor:pointer;color:#1d1d1f"
+      onmouseover="this.style.background='#eef7f9'" onmouseout="this.style.background='#fff'">${esc(t)}</div>`).join('');
+  });
+  if (!html && q) html = `<div onmousedown="pickDeftype('${pk(inp.value.trim())}')" style="padding:8px 14px;font-size:13px;cursor:pointer;color:#17A2B8">+ "${esc(inp.value.trim())}" 직접 입력</div>`;
+  box.innerHTML = html;
+  box.style.display = html ? 'block' : 'none';
 }
 
 function resetClaimRegForm() {
@@ -5633,6 +5653,31 @@ function normalizeClaimData(rows) {
     '잉크불량':'잉크묻음','눌림자국':'눌림','박 누락(일부)':'박누락',
     '카드 뜯어짐':'카드분리','후가공표기누락':'후가공','인쇄, 제본':'복합불량',
     'None':'기타','':'기타','?':'기타',
+    // ── 신규 분류표(DEFTYPE_GROUPS)로 통일 매핑 (기존 유형 재분류) ──
+    '코팅불량':'코팅','라미네이팅':'코팅','코팅 벗겨짐':'코팅',
+    '부족분':'부족분 발생','부족분 발생':'부족분 발생','여분 부족':'부족분 발생','여분부족':'부족분 발생','수량부족':'부족분 발생','부족':'부족분 발생',
+    '접지불량':'접지','접지 불량':'접지','접지 밀림':'접지',
+    '색상편차':'색상','색상불량':'색상','띠색상편차':'색상','색상(핀트 불량)':'색상',
+    '더러움(뒷묻음)':'더러움','더러움(인쇄뒷묻음)':'더러움','제본시 더러움':'더러움',
+    '뒷묻음':'잉크뒷묻음','뒤묻음':'잉크뒷묻음','인쇄뒷묻음':'잉크뒷묻음',
+    '묻음':'잉크 묻음','잉크묻음':'잉크 묻음','잉크불량':'잉크 묻음',
+    '인쇄긁힘':'긁힘','긁힘':'긁힘',
+    '판스크래치':'판기스','판 스크래치':'판기스','스크래치':'판기스',
+    '화선부유실':'망점 유실','망점유실':'망점 유실',
+    '톰슨불량':'톰슨',
+    '데이터불량':'데이터 누락','데이터 불량':'데이터 누락','수정미반영':'데이터 누락','수정 미반영':'데이터 누락','ERP오기입':'데이터 누락','데이터':'데이터 누락',
+    '터잡기':'터잡기 오류','터잡기오류':'터잡기 오류',
+    '요고레':'요그레','오염(요고레)':'요그레','요그레':'요그레',
+    '찢어짐':'재단불량(터짐)','재단불량(터짐)':'재단불량(터짐)',
+    '재단불량':'재단불량(사이즈 오류)','재단 불량':'재단불량(사이즈 오류)','재단규격불량':'재단불량(사이즈 오류)',
+    '철심':'철심불량','중철심 불량':'철심불량','사철불량':'철심불량','호침불량':'철심불량',
+    '대수혼입':'혼입','대수 혼입':'혼입',
+    '이물질(벌레)':'이물질',
+    '핀트':'핀트불량','핀트 불량':'핀트불량',
+    '판 바뀜':'판바뀜','색판바뀜':'판바뀜','색판 바뀜':'판바뀜',
+    '급지불량':'급지 불량','시와':'하리불량','시와(구겨짐)':'하리불량',
+    '표지 뒤집힘':'뒤집힘','본문 뒤짐힘':'뒤집힘',
+    '배송중 파손':'배송중 파손','파본유입':'파본유입',
   };
   // 거래처 특수 매핑 (오타, 약칭 통일)
   const clientSpecific = {
