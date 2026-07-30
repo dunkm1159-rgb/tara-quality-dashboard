@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/30 09:01</span>
+      v<span id="build-stamp">07/30 12:02</span>
     </div>
   </aside>
 
@@ -939,7 +939,8 @@
       <div id="gajebon-content" style="display:none">
         <div style="font-size:12px;color:#aaa;margin-bottom:14px" id="gajebon-file-info"></div>
 
-        <div class="metrics" id="gajebon-metrics" style="margin-bottom:20px"></div>
+        <div class="metrics" id="gajebon-metrics" style="margin-bottom:14px"></div>
+        <div id="gajebon-breakdown" style="margin-bottom:20px"></div>
 
         <!-- 시트 탭 -->
         <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:0">
@@ -3739,6 +3740,54 @@ function renderGajebonMetrics() {
     <div class="metric"><div class="label">완료 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#248a3d">${done.toLocaleString()}</div><div class="sub ${doneNoDate ? 'up' : 'neutral'}">${doneNoDate ? '가제본일 미입력 ' + doneNoDate + '건' : '가제본일 입력 완료'}</div></div>
     <div class="metric"><div class="label">진행중 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#c93400">${progress.toLocaleString()}</div><div class="sub neutral">현재 생산 진행</div></div>
   `;
+  renderGajebonBreakdown();
+}
+// 항목(영업본부·거래처)별 완료/진행중 집계표
+function renderGajebonBreakdown() {
+  const el = document.getElementById('gajebon-breakdown');
+  if (!el) return;
+  const LABELS = {
+    '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
+    '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)',
+    '영문거래처': '해외영업본부', '해외영업본부(우즈벡)': '해외영업본부(우즈벡)',
+    '해외영업본부(DNP)': '해외영업본부(DNP)'
+  };
+  const order = ['기타', '국내영업본부(EBS)', '대교', '정상제이엘에스', '영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
+  const keys = order.filter(k => gajebonSheets[k] && gajebonSheets[k].length);
+  Object.keys(gajebonSheets).forEach(k => { if (!keys.includes(k) && (gajebonSheets[k] || []).length) keys.push(k); });
+  let tot = 0, totP = 0;
+  const rowsHtml = keys.map(k => {
+    const rs = gajebonSheets[k] || [];
+    const done = rs.filter(gajTreatDone).length;
+    const prog = rs.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '') && !isStaleGajebon(r)).length;
+    tot += done; totP += prog;
+    const isCur = k === gajebonCurrentSheet;
+    return `<tr style="${isCur ? 'background:rgba(23,162,184,0.06)' : ''};cursor:pointer" onclick="switchGajebonSheet('${String(k).replace(/'/g, "\\'")}')">
+      <td style="padding:6px 12px;font-weight:${isCur ? 700 : 500};white-space:nowrap">${LABELS[k] || k}</td>
+      <td style="padding:6px 12px;text-align:right;color:#248a3d;font-weight:600;font-variant-numeric:tabular-nums">${done.toLocaleString()}</td>
+      <td style="padding:6px 12px;text-align:right;color:#c93400;font-weight:600;font-variant-numeric:tabular-nums">${prog.toLocaleString()}</td>
+      <td style="padding:6px 12px;text-align:right;color:#888;font-variant-numeric:tabular-nums">${(done + prog).toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:9px 14px;font-size:13px;font-weight:700;border-bottom:1px solid #f0f0ee">항목별 가제본 현황 <span style="font-size:11px;font-weight:400;color:#aaa">완료 · 진행중 (행 클릭 시 해당 탭으로)</span></div>
+      <div style="overflow-x:auto"><table style="width:100%;font-size:12.5px;border-collapse:collapse">
+        <thead><tr style="color:#888;border-bottom:1px solid #f0f0ee">
+          <th style="padding:6px 12px;text-align:left;font-weight:600">항목</th>
+          <th style="padding:6px 12px;text-align:right;font-weight:600">완료</th>
+          <th style="padding:6px 12px;text-align:right;font-weight:600">진행중</th>
+          <th style="padding:6px 12px;text-align:right;font-weight:600">합계</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+        <tfoot><tr style="border-top:2px solid #e5e5e0;font-weight:700">
+          <td style="padding:7px 12px">전체 합계</td>
+          <td style="padding:7px 12px;text-align:right;color:#248a3d">${tot.toLocaleString()}</td>
+          <td style="padding:7px 12px;text-align:right;color:#c93400">${totP.toLocaleString()}</td>
+          <td style="padding:7px 12px;text-align:right;color:#555">${(tot + totP).toLocaleString()}</td>
+        </tr></tfoot>
+      </table></div>
+    </div>`;
 }
 
 // ========================
@@ -4846,7 +4895,8 @@ function clearGajebonDate() {
 function switchGajebonSheet(name, btn) {
   gajebonCurrentSheet = name;
   document.querySelectorAll('.gajebon-sheet-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn && btn.classList) btn.classList.add('active');
+  else document.querySelectorAll('.gajebon-sheet-btn').forEach(b => { if ((b.getAttribute('onclick') || '').includes("'" + name + "'")) b.classList.add('active'); });
   renderGajebonMetrics();   // 탭별 완료/진행중 카운트 갱신
   renderGajebonTable();
 }
