@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/30 15:02</span>
+      v<span id="build-stamp">07/30 15:08</span>
     </div>
   </aside>
 
@@ -749,6 +749,22 @@
       <h2 style="font-size:18px;font-weight:700;color:#17A2B8;margin:0;">부적합사고 등록</h2>
       <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 클라우드(구글시트)에 자동 저장</p>
     </div>
+  </div>
+
+  <!-- ERP 행 붙여넣기 → 자동 등록 -->
+  <div style="background:#f5fbfc;border:1px solid #cfeaef;border-radius:10px;padding:16px 18px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <div style="font-size:13.5px;font-weight:700;color:#0f6e7e">⚡ ERP 행 붙여넣기로 바로 등록</div>
+      <div style="font-size:11px;color:#888">ERP에서 행을 복사해 붙여넣으세요 · 여러 줄(여러 건) 한 번에 가능</div>
+    </div>
+    <textarea id="reg-paste" rows="3" placeholder="접수일  작업번호  거래처  담당자  제품명  수량  부적합내용  접수유형  부적합유형  설비  작업일  주야  작업자  조치사항  조치일  (탭으로 구분된 ERP 행 그대로 붙여넣기)"
+      style="width:100%;box-sizing:border-box;border:1px solid #cfe0e3;border-radius:8px;padding:9px 11px;font-size:12px;font-family:monospace;resize:vertical;background:#fff"></textarea>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button type="button" onclick="parsePasteRegister()" style="background:#17A2B8;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">붙여넣기 등록</button>
+      <button type="button" onclick="previewPasteRegister()" style="background:#fff;color:#17A2B8;border:1px solid #17A2B8;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer">미리보기</button>
+      <span id="reg-paste-msg" style="font-size:12px;color:#666"></span>
+    </div>
+    <div id="reg-paste-preview" style="margin-top:10px;font-size:12px"></div>
   </div>
 
   <form id="claim-reg-form" onsubmit="submitClaimReg(event)" style="background:#fff;border-radius:10px;border:1px solid #e0e3e8;padding:24px;">
@@ -3734,13 +3750,9 @@ function renderGajebonMetrics() {
     '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)', '영문거래처': '해외영업본부'
   }[gajebonCurrentSheet] || gajebonCurrentSheet;   // 우즈벡·DNP는 시트명 그대로 표시
   // 완료 = ERP완료 · 가제본날짜입력 · 30일 초과 진행중(자동 완료)
-  const done = rows.filter(gajTreatDone).length;
-  const doneNoDate = rows.filter(r => r['진행상태'] === '완료' && (r['요청내용'] || '').includes('가제본') && !gajDate(r['주문번호'] || '')).length;
-  const progress = rows.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '') && !isStaleGajebon(r)).length;
-  document.getElementById('gajebon-metrics').innerHTML = `
-    <div class="metric"><div class="label">완료 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#248a3d">${done.toLocaleString()}</div><div class="sub ${doneNoDate ? 'up' : 'neutral'}">${doneNoDate ? '가제본일 미입력 ' + doneNoDate + '건' : '가제본일 입력 완료'}</div></div>
-    <div class="metric"><div class="label">진행중 <span style="font-size:11px;color:#98a2b3;font-weight:500">· ${tabName}</span></div><div class="value" style="color:#c93400">${progress.toLocaleString()}</div><div class="sub neutral">현재 생산 진행</div></div>
-  `;
+  // 상단 완료/진행중 요약 카드는 제거(항목별 집계표로 대체). 요소는 비워둔다.
+  const gm = document.getElementById('gajebon-metrics');
+  if (gm) { gm.innerHTML = ''; gm.style.display = 'none'; }
   renderGajebonBreakdown();
 }
 // 항목(영업본부·거래처)별 완료/진행중 집계표
@@ -5044,6 +5056,80 @@ function resetClaimRegForm() {
   const rd = document.getElementById('reg-date');
   if (rd) rd.value = today;
   document.getElementById('reg-msg').textContent = '';
+}
+
+// ── ERP 행 붙여넣기 → 자동 등록 ──
+// 열: 접수일 작업번호 거래처 담당자 제품명 수량 부적합내용 접수유형 부적합유형 설비 작업일 주야 작업자 조치사항 조치일
+function _pasteDate(s, order) {
+  s = String(s || '').trim();
+  const yr = (String(order || '').match(/(20\d\d)/) || [])[1] || String(new Date().getFullYear());
+  let m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+  if (m) return yr + '-' + String(m[1]).padStart(2, '0') + '-' + String(m[2]).padStart(2, '0');
+  m = s.match(/(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/);
+  if (m) return m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+  return s;
+}
+function _pasteRows() {
+  const ta = document.getElementById('reg-paste');
+  if (!ta) return [];
+  return ta.value.split(/\r?\n/).map(l => l).filter(l => l.trim() && !l.trim().startsWith('#')).map(line => {
+    const c = line.split('\t');
+    const g = i => (c[i] != null ? String(c[i]).trim() : '');
+    const order = g(1);
+    if (!order) return null;
+    const date = _pasteDate(g(0), order);
+    const year = (String(order).match(/(20\d\d)/) || [])[1] || date.slice(0, 4) || String(new Date().getFullYear());
+    // [date,order,client,manager,product,qty,defContent,qualType,defType,equip,action,actionDate,costSelf,costPart,year]
+    return [date, order, g(2), g(3), g(4), g(5).replace(/,/g, ''), g(6), g(7), g(8), g(9), g(13), _pasteDate(g(14), order), null, null, year];
+  }).filter(Boolean);
+}
+function previewPasteRegister() {
+  const rows = _pasteRows();
+  const el = document.getElementById('reg-paste-preview');
+  const msg = document.getElementById('reg-paste-msg');
+  if (!rows.length) { if (el) el.innerHTML = ''; if (msg) { msg.textContent = '붙여넣은 내용이 없습니다.'; msg.style.color = '#c0392b'; } return; }
+  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  if (msg) { msg.textContent = rows.length + '건 인식됨'; msg.style.color = '#0f6e7e'; }
+  if (el) el.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;font-size:11.5px;border-collapse:collapse">'
+    + '<thead><tr style="color:#888;border-bottom:1px solid #e0e0e0">'
+    + ['접수일', '작업번호', '거래처', '담당자', '제품명', '부적합유형', '품질유형', '조치'].map(h => `<th style="padding:4px 8px;text-align:left;white-space:nowrap">${h}</th>`).join('')
+    + '</tr></thead><tbody>'
+    + rows.map(r => `<tr style="border-bottom:1px solid #f2f2f2">
+        <td style="padding:4px 8px;white-space:nowrap">${esc(r[0])}</td>
+        <td style="padding:4px 8px;white-space:nowrap;font-family:monospace">${esc(r[1])}</td>
+        <td style="padding:4px 8px;white-space:nowrap">${esc(r[2])}</td>
+        <td style="padding:4px 8px;white-space:nowrap">${esc(r[3])}</td>
+        <td style="padding:4px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r[4])}">${esc(r[4])}</td>
+        <td style="padding:4px 8px;white-space:nowrap;color:#c0392b">${esc(r[8]) || '-'}</td>
+        <td style="padding:4px 8px;white-space:nowrap">${esc(r[7]) || '-'}</td>
+        <td style="padding:4px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r[10])}">${esc(r[10]) || '-'}</td>
+      </tr>`).join('')
+    + '</tbody></table></div>';
+}
+function parsePasteRegister() {
+  const rows = _pasteRows();
+  const msg = document.getElementById('reg-paste-msg');
+  if (!rows.length) { if (msg) { msg.textContent = '붙여넣은 내용이 없습니다.'; msg.style.color = '#c0392b'; } return; }
+  // 이미 있는 건(작업번호+부적합유형) 제외
+  const have = new Set((typeof claimData !== 'undefined' ? claimData : []).map(r => String(r[1] || '').trim() + '|' + String(r[8] || '').trim()));
+  const fresh = rows.filter(r => !have.has(String(r[1]).trim() + '|' + String(r[8]).trim()));
+  const dup = rows.length - fresh.length;
+  if (!fresh.length) { if (msg) { msg.textContent = `이미 등록된 건입니다 (${dup}건 중복).`; msg.style.color = '#e67e22'; } return; }
+  if (!confirm(`${fresh.length}건을 등록할까요?${dup ? ' (중복 ' + dup + '건 제외)' : ''}\n\n등록 즉시 취합대장·대시보드에 반영되고 클라우드(시트)에 저장됩니다.`)) return;
+  let n = 0;
+  fresh.forEach(newRow => {
+    if (typeof claimData !== 'undefined') claimData.push(newRow);
+    if (typeof saveClaimToSheet === 'function') saveClaimToSheet(newRow);
+    if (typeof logAction === 'function') logAction('등록(붙여넣기)', String(newRow[1] || ''), String(newRow[4] || ''));
+    n++;
+  });
+  if (typeof refreshDash === 'function') refreshDash();
+  if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
+  if (typeof renderClaimTable === 'function') renderClaimTable();
+  if (typeof renderCharts === 'function') renderCharts();
+  const ta = document.getElementById('reg-paste'); if (ta) ta.value = '';
+  const pv = document.getElementById('reg-paste-preview'); if (pv) pv.innerHTML = '';
+  if (msg) { msg.textContent = `✅ ${n}건 등록 완료${dup ? ' (중복 ' + dup + '건 제외)' : ''}`; msg.style.color = '#248a3d'; }
 }
 
 /* ── 폼 제출 ── */
