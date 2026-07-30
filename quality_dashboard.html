@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/30 15:13</span>
+      v<span id="build-stamp">07/30 15:26</span>
     </div>
   </aside>
 
@@ -5121,8 +5121,10 @@ function parsePasteRegister() {
     if (typeof claimData !== 'undefined') claimData.push(newRow);
     if (typeof saveClaimToSheet === 'function') saveClaimToSheet(newRow);
     if (typeof logAction === 'function') logAction('등록(붙여넣기)', String(newRow[1] || ''), String(newRow[4] || ''));
+    if (typeof regSessionLog !== 'undefined') regSessionLog.unshift({ date: newRow[0], client: newRow[2], product: newRow[4] || '', qual: newRow[7], def: newRow[8], saved: true });
     n++;
   });
+  if (typeof updateRegLog === 'function') updateRegLog();
   if (typeof refreshDash === 'function') refreshDash();
   if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
   if (typeof renderClaimTable === 'function') renderClaimTable();
