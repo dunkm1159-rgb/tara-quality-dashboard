@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/30 15:26</span>
+      v<span id="build-stamp">07/30 17:02</span>
     </div>
   </aside>
 
@@ -880,7 +880,10 @@
     <div id="tab-claim" class="tab">
       <div class="section-header">
         <div class="section-title">부적합사고 취합대장</div>
-        <span id="claim-updated" style="font-size:12px;color:var(--color-text-secondary,#aaa)"></span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="claim-updated" style="font-size:12px;color:var(--color-text-secondary,#aaa)"></span>
+          <button onclick="exportClaims()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap">⬇ 엑셀 내려받기</button>
+        </div>
       </div>
 
       <div class="metrics" id="claim-metrics"></div>
@@ -989,6 +992,7 @@
           <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
           <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">🆕 오늘 신규완료</button>
+          <button type="button" onclick="exportGajebon()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap">⬇ 엑셀 내려받기</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -3602,6 +3606,40 @@ function renderTrashPanel() {
     }).join('');
 }
 
+// ── 데이터 내려받기 (엑셀에서 열리는 CSV, 한글깨짐 방지 BOM) ──
+function _csvCell(v) { v = (v == null ? '' : String(v)); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function downloadCSV(filename, headerArr, rows2d) {
+  const lines = [headerArr.map(_csvCell).join(',')].concat(rows2d.map(r => r.map(_csvCell).join(',')));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function exportClaims() {
+  if (typeof claimData === 'undefined' || !claimData.length) { alert('내려받을 데이터가 없습니다.'); return; }
+  const g = id => (document.getElementById(id) ? document.getElementById(id).value : '');
+  const search = (g('claim-search') || '').toLowerCase(), type = g('claim-type'), defect = g('claim-defect'), client = g('claim-client');
+  const rows = claimData.filter(r => {
+    if (typeof claimCurrentYear !== 'undefined' && claimCurrentYear && r[14] !== claimCurrentYear) return false;
+    if (type && r[7] !== type) return false;
+    if (defect && r[8] !== defect) return false;
+    if (client && r[2] !== client) return false;
+    if (search && !(r[2] || '').toLowerCase().includes(search) && !(r[4] || '').toLowerCase().includes(search) && !(r[6] || '').toLowerCase().includes(search) && !(r[8] || '').toLowerCase().includes(search)) return false;
+    return true;
+  }).sort((a, b) => (b[0] || '').localeCompare(a[0] || ''));
+  if (!rows.length) { alert('현재 필터에 해당하는 데이터가 없습니다.'); return; }
+  const H = ['접수일', '작업번호', '거래처', '담당자', '제품명', '부적합내용', '품질유형', '부적합유형', '설비', '조치사항', '조치일', '자사비용', '외주비용', '연도', '판정등급'];
+  const out = rows.map(r => [r[0], r[1], r[2], r[3], r[4], r[6], r[7], r[8], r[9], r[10], r[11], r[12], r[13], r[14], r[15]]);
+  const yr = (typeof claimCurrentYear !== 'undefined' && claimCurrentYear) ? claimCurrentYear : '전체';
+  downloadCSV('부적합사고_취합대장_' + yr + '.csv', H, out);
+}
+function exportGajebon() {
+  const rows = (typeof gajebonSheets !== 'undefined' && gajebonSheets[gajebonCurrentSheet]) ? gajebonSheets[gajebonCurrentSheet] : [];
+  if (!rows.length) { alert('내려받을 데이터가 없습니다.'); return; }
+  const COLS = ['날짜', '주문번호', '거래처', '제품명', '요청내용', '설비명', '검수일자', '진행상태', '담당자', '부서', '구성'];
+  const out = rows.map(r => COLS.map(c => r[c]));
+  downloadCSV('가제본현황_' + (gajebonCurrentSheet || 'sheet') + '.csv', COLS, out);
+}
 function renderClaimTable() {
   const search = document.getElementById('claim-search').value.toLowerCase();
   const type   = document.getElementById('claim-type').value;
