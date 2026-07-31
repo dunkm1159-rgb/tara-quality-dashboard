@@ -440,7 +440,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/31 12:25</span>
+      v<span id="build-stamp">07/31 12:37</span>
     </div>
   </aside>
 
@@ -1059,7 +1059,22 @@
         <div class="section-title">품질사고 관리대장</div>
         <div id="nccost-year-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
-      <p style="font-size:12px;color:#86868b;margin:-6px 0 14px;">연간 품질부적합 비용 목표 대비 발생 현황 (공정별: 제판·매엽·윤전·제본·외주·특재)</p>
+      <p style="font-size:12px;color:#86868b;margin:-6px 0 10px;">연간 품질부적합 비용 목표 대비 발생 현황 (공정별: 제판·매엽·윤전·제본·외주·특재)</p>
+
+      <!-- 월 범위 필터 -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:#555">
+        <span style="font-weight:600">기간(월)</span>
+        <select id="nccost-mon-from" onchange="setNcMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
+        <span>~</span>
+        <select id="nccost-mon-to" onchange="setNcMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
+        <span style="display:inline-flex;gap:4px;margin-left:4px">
+          <button class="claim-year-btn" onclick="setNcQuarter(1,3,this)" style="padding:4px 9px">1분기</button>
+          <button class="claim-year-btn" onclick="setNcQuarter(4,6,this)" style="padding:4px 9px">2분기</button>
+          <button class="claim-year-btn" onclick="setNcQuarter(7,9,this)" style="padding:4px 9px">3분기</button>
+          <button class="claim-year-btn" onclick="setNcQuarter(10,12,this)" style="padding:4px 9px">4분기</button>
+          <button class="claim-year-btn" onclick="setNcQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
+        </span>
+      </div>
 
       <div class="metrics" id="nccost-metrics"></div>
       <div id="nccost-gap-note"></div>
@@ -1302,7 +1317,22 @@
       <div style="font-size:12.5px;color:#666;margin-bottom:14px">품질사고 관리대장 기준 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
 
       <!-- 연도 탭 -->
-      <div style="display:flex;gap:4px;margin:0 0 18px;border-bottom:2px solid #e5e5e0" id="worker-year-tabs"></div>
+      <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0" id="worker-year-tabs"></div>
+
+      <!-- 월 범위 필터 -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+        <span style="font-weight:600">기간(월)</span>
+        <select id="worker-mon-from" onchange="setWorkerMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
+        <span>~</span>
+        <select id="worker-mon-to" onchange="setWorkerMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
+        <span style="display:inline-flex;gap:4px;margin-left:4px">
+          <button class="claim-year-btn" onclick="setWorkerQuarter(1,3,this)" style="padding:4px 9px">1분기</button>
+          <button class="claim-year-btn" onclick="setWorkerQuarter(4,6,this)" style="padding:4px 9px">2분기</button>
+          <button class="claim-year-btn" onclick="setWorkerQuarter(7,9,this)" style="padding:4px 9px">3분기</button>
+          <button class="claim-year-btn" onclick="setWorkerQuarter(10,12,this)" style="padding:4px 9px">4분기</button>
+          <button class="claim-year-btn" onclick="setWorkerQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
+        </span>
+      </div>
 
       <!-- 등급 요약 카드 -->
       <div class="metrics" id="worker-metrics" style="margin-bottom:20px"></div>
@@ -1864,6 +1894,34 @@ function switchWorkerYear(y, btn) {
   if (btn) btn.classList.add('active');
   renderWorker(true);
 }
+let workerMonFrom = 0, workerMonTo = 0;   // 0 = 전체월
+function fillWorkerMonthSelects() {
+  const f = document.getElementById('worker-mon-from'), t = document.getElementById('worker-mon-to');
+  if (!f || !t || f.options.length) return;
+  const opt = (v, l) => `<option value="${v}">${l}</option>`;
+  let fh = opt(0, '전체'), th = opt(0, '전체');
+  for (let m = 1; m <= 12; m++) { fh += opt(m, m + '월'); th += opt(m, m + '월'); }
+  f.innerHTML = fh; t.innerHTML = th;
+}
+function setWorkerMonths() {
+  workerMonFrom = parseInt(document.getElementById('worker-mon-from').value, 10) || 0;
+  workerMonTo = parseInt(document.getElementById('worker-mon-to').value, 10) || 0;
+  document.querySelectorAll('[onclick^="setWorkerQuarter"]').forEach(b => b.classList.remove('active'));
+  renderWorker(true);
+}
+function setWorkerQuarter(from, to, btn) {
+  workerMonFrom = from; workerMonTo = to;
+  const f = document.getElementById('worker-mon-from'), t = document.getElementById('worker-mon-to');
+  if (f) f.value = from; if (t) t.value = to;
+  document.querySelectorAll('[onclick^="setWorkerQuarter"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderWorker(true);
+}
+function workerMonthMatch(r) {
+  if (!workerMonFrom && !workerMonTo) return true;
+  const m = parseInt(String(r[0] || '').slice(5, 7), 10);
+  return m >= (workerMonFrom || 1) && m <= (workerMonTo || 12);
+}
 
 function setWorkerLevel(lv) {
   workerLevel = (workerLevel === lv) ? 0 : lv;   // 같은 등급 다시 누르면 해제
@@ -1882,8 +1940,9 @@ function renderWorker(skipTabs) {
       `<button class="claim-year-btn ${workerYear===''?'active':''}" onclick="switchWorkerYear('',this)">전체</button>` +
       years.map(y => `<button class="claim-year-btn ${workerYear===y?'active':''}" onclick="switchWorkerYear('${y}',this)">${y}</button>`).join('');
   }
-  // 연도 필터 (담당자 있는 행)
-  const yearRows = wd.filter(r => r[1] && (!workerYear || r[7] === workerYear));
+  fillWorkerMonthSelects();
+  // 연도 + 월범위 필터 (담당자 있는 행)
+  const yearRows = wd.filter(r => r[1] && (!workerYear || r[7] === workerYear) && workerMonthMatch(r));
 
   // 등급 요약 카드 (연도 전체 기준) — 클릭하면 해당 등급만 필터
   const lvCnt = {1:0,2:0,3:0,4:0};
@@ -2354,6 +2413,29 @@ let nccostYear = '2026';
 const NC_MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const NC_PROCS  = ['제판','매엽','윤전','제본','외주','특재'];
 function setNcCostYear(y){ nccostYear = y; renderNcCost(); }
+let nccostMonFrom = 0, nccostMonTo = 0;   // 0 = 전체월
+function fillNcMonthSelects(){
+  const f=document.getElementById('nccost-mon-from'), t=document.getElementById('nccost-mon-to');
+  if(!f||!t||f.options.length) return;
+  const opt=(v,l)=>`<option value="${v}">${l}</option>`;
+  let fh=opt(0,'전체'), th=opt(0,'전체');
+  for(let m=1;m<=12;m++){ fh+=opt(m,m+'월'); th+=opt(m,m+'월'); }
+  f.innerHTML=fh; t.innerHTML=th;
+}
+function setNcMonths(){
+  nccostMonFrom=parseInt(document.getElementById('nccost-mon-from').value,10)||0;
+  nccostMonTo=parseInt(document.getElementById('nccost-mon-to').value,10)||0;
+  document.querySelectorAll('[onclick^="setNcQuarter"]').forEach(b=>b.classList.remove('active'));
+  renderNcCost();
+}
+function setNcQuarter(from,to,btn){
+  nccostMonFrom=from; nccostMonTo=to;
+  const f=document.getElementById('nccost-mon-from'), t=document.getElementById('nccost-mon-to');
+  if(f) f.value=from; if(t) t.value=to;
+  document.querySelectorAll('[onclick^="setNcQuarter"]').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderNcCost();
+}
 function renderNcCost(){
   const D = window.NCCOST_DATA || {};
   const years = Object.keys(D).sort();
@@ -2362,31 +2444,44 @@ function renderNcCost(){
   const bw = document.getElementById('nccost-year-btns');
   if (bw) bw.innerHTML = years.map(y=>`<button class="claim-year-btn ${y===nccostYear?'active':''}" onclick="setNcCostYear('${y}')">${y}년</button>`).join('');
   const yd = D[nccostYear];
-  const rate = yd.target ? Math.round(yd.totalCost/yd.target*100) : 0;
-  const over = yd.totalCost > yd.target;
   const won = v => Math.round(v/10000).toLocaleString();
+  fillNcMonthSelects();
+  // 월 범위: 활성 시 월별 상세(months)에서 기간 합계로 재계산 (미수록 gap 제외)
+  const _mf = nccostMonFrom, _mt = nccostMonTo, rangeOn = !!(_mf || _mt);
+  const lo = _mf || 1, hi = _mt || 12;
+  const inR = i => (i+1) >= lo && (i+1) <= hi;
+  const monLabels = rangeOn ? NC_MONTHS.filter((m,i)=>inR(i)) : NC_MONTHS;
+  const monLabel = rangeOn ? ((_mf||1)+'~'+(_mt||12)+'월') : '';
+  const pCost = NC_MONTHS.reduce((s,m,i)=> s + (inR(i) ? (yd.months[m]?.cost||0) : 0), 0);
+  const pCnt  = NC_MONTHS.reduce((s,m,i)=> s + (inR(i) ? (yd.months[m]?.cnt||0)  : 0), 0);
+  const pTarget = Math.round(yd.target * (monLabels.length/12));
+  const dCost = rangeOn ? pCost : yd.totalCost;
+  const dCnt  = rangeOn ? pCnt  : yd.totalCnt;
+  const dTarget = rangeOn ? pTarget : yd.target;
+  const rate = dTarget ? Math.round(dCost/dTarget*100) : 0;
+  const over = dCost > dTarget;
   const mEl = document.getElementById('nccost-metrics');
   if (mEl) mEl.innerHTML = `
-    <div class="metric"><div class="label">연간 목표비용</div><div class="value">${won(yd.target)}만</div><div class="sub neutral">${nccostYear}년</div></div>
-    <div class="metric"><div class="label">발생비용</div><div class="value">${won(yd.totalCost)}만</div><div class="sub ${over?'up':'down'}">목표 대비 ${rate}%${yd.gapCost?` · 대장 ${won(yd.ledgerCost)}만+미수록 ${won(yd.gapCost)}만`:''}</div></div>
+    <div class="metric"><div class="label">${rangeOn?'기간 목표(비례)':'연간 목표비용'}</div><div class="value">${won(dTarget)}만</div><div class="sub neutral">${nccostYear}년${monLabel?' · '+monLabel:''}</div></div>
+    <div class="metric"><div class="label">발생비용</div><div class="value">${won(dCost)}만</div><div class="sub ${over?'up':'down'}">목표 대비 ${rate}%${(!rangeOn&&yd.gapCost)?` · 대장 ${won(yd.ledgerCost)}만+미수록 ${won(yd.gapCost)}만`:''}</div></div>
     <div class="metric"><div class="label">달성률(목표 대비)</div><div class="value" style="color:${over?'#d70015':'#248a3d'}">${rate}%</div><div class="sub neutral">${over?'목표 초과':'목표 이내'}</div></div>
-    <div class="metric"><div class="label">발생 건수</div><div class="value">${yd.totalCnt}</div><div class="sub neutral">연간 누적</div></div>
+    <div class="metric"><div class="label">발생 건수</div><div class="value">${dCnt}</div><div class="sub neutral">${rangeOn?monLabel+' 합계':'연간 누적'}</div></div>
   `;
-  // 관리대장에 상세가 없는 보정분 안내 (월별·공정별 차트에는 미반영)
+  // 관리대장에 상세가 없는 보정분 안내 (전체기간에서만; 월범위 선택 시엔 월별 상세 기준이라 숨김)
   const gEl = document.getElementById('nccost-gap-note');
-  if (gEl) gEl.innerHTML = yd.gapCost ? `
+  if (gEl) gEl.innerHTML = (!rangeOn && yd.gapCost) ? `
     <div style="background:#fff8e6;border:1px solid #f5d78e;border-radius:8px;padding:8px 12px;font-size:11.5px;color:#8a6d1f;margin-bottom:12px">
       <b>${nccostYear}년 발생비용 ${won(yd.totalCost)}만</b> = 관리대장 집계 ${won(yd.ledgerCost)}만 + 미수록 ${won(yd.gapCost)}만<br>
       미수록분은 상세 내역이 확보되지 않아 <b>아래 월별·공정별 차트에는 포함되지 않습니다.</b> (총액만 확정치 반영)
     </div>` : '';
-  const ty = document.getElementById('nccost-trend-yr'); if (ty) ty.textContent = '('+nccostYear+'년, 만원)';
-  const goals = NC_MONTHS.map(m => (yd.months[m]?.goal||0)/10000);
-  const costs = NC_MONTHS.map(m => (yd.months[m]?.cost||0)/10000);
-  ncMixedChart('nccost-chart-trend', NC_MONTHS, costs, goals);
-  const procSum = NC_PROCS.map(p => Object.values(yd.months).reduce((s,mv)=>s+(mv.proc?.[p]||0),0)/10000);
+  const ty = document.getElementById('nccost-trend-yr'); if (ty) ty.textContent = '('+nccostYear+'년'+(monLabel?' '+monLabel:'')+', 만원)';
+  const goals = monLabels.map(m => (yd.months[m]?.goal||0)/10000);
+  const costs = monLabels.map(m => (yd.months[m]?.cost||0)/10000);
+  ncMixedChart('nccost-chart-trend', monLabels, costs, goals);
+  const procSum = NC_PROCS.map(p => NC_MONTHS.reduce((s,m,i)=> s + (inR(i) ? (yd.months[m]?.proc?.[p]||0) : 0), 0)/10000);
   renderBar('nccost-chart-proc', NC_PROCS, procSum, NC_PROCS.map(()=>'#17A2B8'));
-  const cnts = NC_MONTHS.map(m => yd.months[m]?.cnt||0);
-  renderBar('nccost-chart-cnt', NC_MONTHS, cnts, NC_MONTHS.map(()=>'#34c759'));
+  const cnts = monLabels.map(m => yd.months[m]?.cnt||0);
+  renderBar('nccost-chart-cnt', monLabels, cnts, monLabels.map(()=>'#34c759'));
   ncYearChart('nccost-chart-year', years, years.map(y=>D[y].target/10000), years.map(y=>D[y].totalCost/10000));
 
   // ── 연도별 사내/외주 부담 ──
