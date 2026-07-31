@@ -8,6 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>타라TPS 품질개선팀 통합품질관리시스템</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
@@ -440,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">07/31 15:03</span>
+      v<span id="build-stamp">07/31 16:57</span>
     </div>
   </aside>
 
@@ -6739,6 +6740,33 @@ function applyChartTheme() {
     D.elements.arc.borderColor = '#fff';
     if (D.datasets && D.datasets.doughnut) D.datasets.doughnut.cutout = '58%';
     if (D.scale && D.scale.grid) { D.scale.grid.color = 'rgba(0,0,0,0.05)'; D.scale.grid.drawBorder = false; }
+    // ── 모든 그래프에 퍼센트(%) 표시 (파이/도넛/막대). 선그래프는 제외 ──
+    if (window.ChartDataLabels) {
+      try { Chart.register(window.ChartDataLabels); } catch (e) {}
+      const dsTotal = ctx => (ctx.chart.data.datasets[ctx.datasetIndex].data || []).reduce((a, b) => a + (Math.abs(+b) || 0), 0);
+      const isLine = ctx => (ctx.dataset.type || ctx.chart.config.type) === 'line';
+      const isPie = ctx => { const t = ctx.chart.config.type; return t === 'pie' || t === 'doughnut'; };
+      D.plugins.datalabels = {
+        clamp: true, clip: false,
+        color: ctx => isPie(ctx) ? '#fff' : '#555',
+        font: { size: 10, weight: '700' },
+        anchor: ctx => isPie(ctx) ? 'center' : 'end',
+        align: ctx => isPie(ctx) ? 'center' : 'end',
+        offset: 2,
+        display: ctx => {
+          if (isLine(ctx)) return false;
+          const t = ctx.chart.config.type;
+          if (t !== 'pie' && t !== 'doughnut' && t !== 'bar') return false;
+          const v = ctx.dataset.data[ctx.dataIndex];
+          return v != null && v !== 0;                     // 0/빈값은 숨김
+        },
+        formatter: (value, ctx) => {
+          const total = dsTotal(ctx);
+          if (!total || !value) return '';
+          return Math.round(Math.abs(value) / total * 100) + '%';
+        }
+      };
+    }
   } catch (e) { console.warn('chart theme', e); }
 }
 
