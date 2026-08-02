@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 08:04</span>
+      v<span id="build-stamp">08/03 08:18</span>
     </div>
   </aside>
 
@@ -3872,9 +3872,14 @@ function isStaleGajebon(r) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
   return (Date.now() - new Date(d).getTime()) / 86400000 > GAJ_STALE_DAYS;
 }
-// 완료로 볼지: ERP완료 · 가제본날짜입력 · (진행중이지만 30일 초과)
+// 단비교육 '스티커' 품목은 대수마감 N이어도 가제본 완료로 처리 (특례)
+function isStickerDone(r) {
+  if (!String(r['거래처'] || '').includes('단비교육')) return false;
+  return (String(r['구성'] || '') + ' ' + String(r['제품명'] || '')).includes('스티커');
+}
+// 완료로 볼지: ERP완료 · 가제본날짜입력 · (진행중이지만 30일 초과) · 단비교육 스티커 특례
 function gajTreatDone(r) {
-  return (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '') || (r['진행상태'] === '진행중' && isStaleGajebon(r));
+  return (r['진행상태'] === '완료') || !!gajDate(r['주문번호'] || '') || (r['진행상태'] === '진행중' && isStaleGajebon(r)) || isStickerDone(r);
 }
 function renderGajebonMetrics() {
   // 조회 카운트는 외주 포함 (전체)
@@ -3906,7 +3911,7 @@ function renderGajebonBreakdown() {
   const rowsHtml = keys.map(k => {
     const rs = gajebonSheets[k] || [];
     const done = rs.filter(gajTreatDone).length;
-    const prog = rs.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '') && !isStaleGajebon(r)).length;
+    const prog = rs.filter(r => r['진행상태'] === '진행중' && !gajDate(r['주문번호'] || '') && !isStaleGajebon(r) && !isStickerDone(r)).length;
     tot += done; totP += prog;
     const isCur = k === gajebonCurrentSheet;
     return `<tr style="${isCur ? 'background:rgba(23,162,184,0.06)' : ''};cursor:pointer" onclick="switchGajebonSheet('${String(k).replace(/'/g, "\\'")}')">
@@ -4576,14 +4581,14 @@ function renderGajebonTable() {
     }
     // 가제본만
     if (gajebonOnly && !(r['요청내용']||'').includes('가제본')) return false;
-    // 완료만 보이기 = (ERP완료 · 가제본완료처리 · 30일초과 진행중)
+    // 완료만 보이기 = (ERP완료 · 가제본완료처리 · 30일초과 진행중 · 단비교육 스티커 특례)
     if (onlyDone) {
       const gd0 = gajDate(r['주문번호']||'');
-      if (!gd0 && (r['진행상태']||'') !== '완료' && !((r['진행상태']||'')==='진행중' && isStaleGajebon(r))) return false;
+      if (!gd0 && (r['진행상태']||'') !== '완료' && !((r['진행상태']||'')==='진행중' && isStaleGajebon(r)) && !isStickerDone(r)) return false;
       if (gd0 && !gajWithinGrace(gd0)) return false;
     }
-    // 진행중만 (완료처리·30일초과 건 제외)
-    if (onlyProgress && (gajDate(r['주문번호']||'') || (r['진행상태']||'') !== '진행중' || isStaleGajebon(r))) return false;
+    // 진행중만 (완료처리·30일초과·스티커 특례 건 제외)
+    if (onlyProgress && (gajDate(r['주문번호']||'') || (r['진행상태']||'') !== '진행중' || isStaleGajebon(r) || isStickerDone(r))) return false;
     // 가제본 만들 것 = 완료 + 가제본요청 있음 + 아직 가제본 안 만듦
     if (needGajebon) {
       if ((r['진행상태']||'') !== '완료') return false;
@@ -4629,7 +4634,7 @@ function renderGajebonTable() {
   const allRows = gajebonSheets[gajebonCurrentSheet] || [];
   tbody.innerHTML = filtered.map(r => {
     const origIdx = allRows.indexOf(r);
-    const status = gajDate(r['주문번호']||'') ? '완료' : (r['진행상태'] || '');
+    const status = (gajDate(r['주문번호']||'') || isStickerDone(r)) ? '완료' : (r['진행상태'] || '');
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
     return `<tr>
@@ -4655,7 +4660,7 @@ function renderGajebonTable() {
             style="border:1px solid #d2d2d7;border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;">
           ${status==='완료' ? (gajDate(r['주문번호']||'')
             ? '<div style="font-size:10px;color:#248a3d;font-weight:600">✓ 가제본 완료</div>'
-            : '') : ''}
+            : (isStickerDone(r) ? '<div style="font-size:10px;color:#248a3d;font-weight:600">✓ 스티커 특례 완료</div>' : '')) : ''}
         </div>
       </td>
       ${(() => { const order = r['주문번호']||'';
