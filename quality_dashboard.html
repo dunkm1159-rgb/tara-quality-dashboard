@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 08:45</span>
+      v<span id="build-stamp">08/03 08:51</span>
     </div>
   </aside>
 
@@ -2230,6 +2230,7 @@ function collectPrintTargets() {
   // 완료 = 최근 N일 완료(날짜기준) / 진행중 = 현재 진행중(최근순, 외주전용 제외)
   const t = (window.GAJEBON_TODAY && typeof window.GAJEBON_TODAY === 'object') ? window.GAJEBON_TODAY : {};
   const prog = (t.active_progress || t.new_progress || []).slice()
+    .filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)))   // 완료 특례 제외
     .sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || ''))).slice(0, 20);
   return { done: t.new_completed || [], prog };
 }
@@ -2333,8 +2334,8 @@ function refreshDash() {
 
   const allGaj   = Object.values(gajebonSheets||{}).flat();
   const gajTotal = allGaj.length;
-  const gajDone  = allGaj.filter(r => r['진행상태']==='완료').length;
-  const gajProg  = allGaj.filter(r => r['진행상태']==='진행중').length;
+  const gajDone  = allGaj.filter(r => r['진행상태']==='완료' || isStickerDone(r)).length;
+  const gajProg  = allGaj.filter(r => r['진행상태']==='진행중' && !isStickerDone(r)).length;
 
   document.getElementById('dash-metrics').innerHTML = `
     <div class="metric">
@@ -5437,11 +5438,14 @@ function renderGajebonTodaySummary() {
   // window.GAJEBON_TODAY: inject_data.py가 주입한 오늘의 delta 데이터 우선 사용
   if (window.GAJEBON_TODAY && window.GAJEBON_TODAY.date === today) {
     const t = window.GAJEBON_TODAY;
-    const done = t.completed_count || 0;
-    const progress = t.progress_count || 0;
-    const total = t.total_count || 0;
+    // 완료 특례(스티커·수동목록) 제외한 실제 진행중
+    const _actProg = (t.active_progress || []).filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)));
+    const _stickerN = (t.active_progress || []).length - _actProg.length;
+    const done = (t.completed_count || 0) + _stickerN;
+    const progress = _actProg.length;
+    const total = done + progress;
     const doneSamples = (t.new_completed || []).slice(0,3).map(r => r['거래처'] || '');
-    const progressSamples = (t.active_progress || []).slice(0,3).map(r => r['거래처'] || '');
+    const progressSamples = _actProg.slice(0,3).map(r => r['거래처'] || '');
     el.innerHTML = `
       <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
         <div style="background:#f0faf4;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #c8ecd4;">
