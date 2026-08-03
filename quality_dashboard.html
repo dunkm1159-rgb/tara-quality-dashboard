@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 16:29</span>
+      v<span id="build-stamp">08/03 16:40</span>
     </div>
   </aside>
 
@@ -2467,17 +2467,13 @@ function renderNcCost(){
   const mEl = document.getElementById('nccost-metrics');
   if (mEl) mEl.innerHTML = `
     <div class="metric"><div class="label">${rangeOn?'기간 목표(비례)':'연간 목표비용'}</div><div class="value">${won(dTarget)}만</div><div class="sub neutral">${nccostYear}년${monLabel?' · '+monLabel:''}</div></div>
-    <div class="metric"><div class="label">발생비용</div><div class="value">${won(dCost)}만</div><div class="sub ${over?'up':'down'}">목표 대비 ${rate}%${(!rangeOn&&yd.gapCost)?` · 대장 ${won(yd.ledgerCost)}만+미수록 ${won(yd.gapCost)}만`:''}</div></div>
+    <div class="metric"><div class="label">발생비용</div><div class="value">${won(dCost)}만</div><div class="sub ${over?'up':'down'}">목표 대비 ${rate}%</div></div>
     <div class="metric"><div class="label">달성률(목표 대비)</div><div class="value" style="color:${over?'#d70015':'#248a3d'}">${rate}%</div><div class="sub neutral">${over?'목표 초과':'목표 이내'}</div></div>
     <div class="metric"><div class="label">발생 건수</div><div class="value">${dCnt}</div><div class="sub neutral">${rangeOn?monLabel+' 합계':'연간 누적'}</div></div>
   `;
-  // 관리대장에 상세가 없는 보정분 안내 (전체기간에서만; 월범위 선택 시엔 월별 상세 기준이라 숨김)
+  // 미수록 안내 배너 제거 (사용자 요청)
   const gEl = document.getElementById('nccost-gap-note');
-  if (gEl) gEl.innerHTML = (!rangeOn && yd.gapCost) ? `
-    <div style="background:#fff8e6;border:1px solid #f5d78e;border-radius:8px;padding:8px 12px;font-size:11.5px;color:#8a6d1f;margin-bottom:12px">
-      <b>${nccostYear}년 발생비용 ${won(yd.totalCost)}만</b> = 관리대장 집계 ${won(yd.ledgerCost)}만 + 미수록 ${won(yd.gapCost)}만<br>
-      미수록분은 상세 내역이 확보되지 않아 <b>아래 월별·공정별 차트에는 포함되지 않습니다.</b> (총액만 확정치 반영)
-    </div>` : '';
+  if (gEl) gEl.innerHTML = '';
   const ty = document.getElementById('nccost-trend-yr'); if (ty) ty.textContent = '('+nccostYear+'년'+(monLabel?' '+monLabel:'')+', 만원)';
   const goals = monLabels.map(m => (yd.months[m]?.goal||0)/10000);
   const costs = monLabels.map(m => (yd.months[m]?.cost||0)/10000);
