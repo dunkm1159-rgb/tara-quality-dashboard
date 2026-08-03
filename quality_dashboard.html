@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 08:51</span>
+      v<span id="build-stamp">08/03 09:01</span>
     </div>
   </aside>
 
@@ -6774,7 +6774,18 @@ function applyChartTheme() {
           const t = ctx.chart.config.type;
           if (t !== 'pie' && t !== 'doughnut' && t !== 'bar') return false;
           const v = ctx.dataset.data[ctx.dataIndex];
-          return v != null && v !== 0;                     // 0/빈값은 숨김
+          if (v == null || v === 0) return false;          // 0/빈값 숨김
+          // 파이/도넛: 조각이 작으면(겹침 방지) 라벨 숨김
+          if (t === 'pie' || t === 'doughnut') {
+            const total = dsTotal(ctx);
+            if (total && Math.abs(v) / total < 0.06) return false;   // 6% 미만 숨김
+          }
+          // 막대: 막대가 너무 많으면(라벨 겹침) 숨김
+          if (t === 'bar') {
+            const n = (ctx.dataset.data || []).filter(x => x).length;
+            if (n > 14) return false;
+          }
+          return true;
         },
         formatter: (value, ctx) => {
           const total = dsTotal(ctx);
