@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 15:01</span>
+      v<span id="build-stamp">08/03 15:20</span>
     </div>
   </aside>
 
@@ -967,6 +967,8 @@
         <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:0">
           <button class="gajebon-sheet-btn active" onclick="switchGajebonSheet('기타',this)">국내영업본부</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(EBS)',this)">국내영업본부(EBS)</button>
+          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(단비)',this)">국내영업본부(단비)</button>
+          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(개념원리)',this)">국내영업본부(개념원리)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('대교',this)">전략사업본부(대교)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('정상제이엘에스',this)">전략사업본부(정상)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('영문거래처',this)">해외영업본부</button>
@@ -3799,6 +3801,11 @@ const UZ_SHEET = '해외영업본부(우즈벡)';
 const DNP_SHEET = '해외영업본부(DNP)';
 const isUz  = r => String(r['거래처'] || '').toUpperCase().includes('OZBEKISTON') || String(r['제품명'] || '').includes('우즈벡');
 const isDnp = r => String(r['거래처'] || '').toUpperCase().includes('DNP');
+// 국내영업본부(기타)에서 단비교육·개념원리를 별도 탭으로 분리한다.
+const DANBI_SHEET = '국내영업본부(단비)';
+const GAENYUM_SHEET = '국내영업본부(개념원리)';
+const isDanbi = r => String(r['거래처'] || '').includes('단비교육');
+const isGaenyum = r => String(r['거래처'] || '').includes('개념원리');
 // 담당자가 이 목록이면 거래처가 영어라도 국내영업본부(기타)로 분류한다.
 const DOMESTIC_MANAGERS = ['강민형'];
 const isDomesticMgr = r => DOMESTIC_MANAGERS.some(m => String(r['담당자'] || '').includes(m));
@@ -3818,6 +3825,13 @@ function splitEbsSheet() {
     gajebonSheets[UZ_SHEET]  = rest.filter(isUz);
     gajebonSheets[DNP_SHEET] = rest.filter(r => !isUz(r) && isDnp(r));
     gajebonSheets['영문거래처'] = rest.filter(r => !isUz(r) && !isDnp(r));
+  }
+  // 국내영업본부(기타)에서 단비교육·개념원리 분리 (모든 이동 반영 후 마지막에)
+  const b2 = gajebonSheets['기타'];
+  if (b2) {
+    gajebonSheets[DANBI_SHEET]   = b2.filter(isDanbi);
+    gajebonSheets[GAENYUM_SHEET] = b2.filter(isGaenyum);
+    gajebonSheets['기타'] = b2.filter(r => !isDanbi(r) && !isGaenyum(r));
   }
 }
 
@@ -3911,11 +3925,12 @@ function renderGajebonBreakdown() {
   if (!el) return;
   const LABELS = {
     '기타': '국내영업본부', '국내영업본부(EBS)': '국내영업본부(EBS)',
+    '국내영업본부(단비)': '국내영업본부(단비)', '국내영업본부(개념원리)': '국내영업본부(개념원리)',
     '대교': '전략사업본부(대교)', '정상제이엘에스': '전략사업본부(정상)',
     '영문거래처': '해외영업본부', '해외영업본부(우즈벡)': '해외영업본부(우즈벡)',
     '해외영업본부(DNP)': '해외영업본부(DNP)'
   };
-  const order = ['기타', '국내영업본부(EBS)', '대교', '정상제이엘에스', '영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
+  const order = ['기타', '국내영업본부(EBS)', '국내영업본부(단비)', '국내영업본부(개념원리)', '대교', '정상제이엘에스', '영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
   const keys = order.filter(k => gajebonSheets[k] && gajebonSheets[k].length);
   Object.keys(gajebonSheets).forEach(k => { if (!keys.includes(k) && (gajebonSheets[k] || []).length) keys.push(k); });
   let tot = 0, totP = 0;
