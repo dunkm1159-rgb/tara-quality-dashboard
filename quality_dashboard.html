@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 12:01</span>
+      v<span id="build-stamp">08/03 15:01</span>
     </div>
   </aside>
 
@@ -2413,7 +2413,7 @@ function renderDashCharts(year) {
 // ── 부적합 목표·성과 ──
 let nccostYear = '2026';
 const NC_MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-const NC_PROCS  = ['제판','매엽','윤전','제본','외주','특재'];
+const NC_PROCS  = ['제판','매엽','윤전','코팅','제본','외주','특재외'];
 function setNcCostYear(y){ nccostYear = y; renderNcCost(); }
 let nccostMonFrom = 0, nccostMonTo = 0;   // 0 = 전체월
 function fillNcMonthSelects(){
@@ -6319,7 +6319,7 @@ function renderKpi() {
   try {
     if(chartInstances.chartCostProcess){chartInstances.chartCostProcess.destroy();}
     const ctx = document.getElementById('chartCostProcess');
-    const NC_PROCS=['제판','매엽','윤전','제본','외주','특재'];
+    const NC_PROCS=['제판','매엽','윤전','코팅','제본','외주','특재외'];
     const procPairs = NC_PROCS.map(p=>[p, Object.values(nc2026.months||{}).reduce((s,mv)=>s+((mv.proc&&mv.proc[p])||0),0)]).filter(x=>x[1]>0);
     const procs = procPairs.length ? procPairs.map(x=>x[0]) : ['데이터없음'];
     const pVals = procPairs.length ? procPairs.map(x=>x[1]) : [0];
