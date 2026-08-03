@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 09:01</span>
+      v<span id="build-stamp">08/03 09:55</span>
     </div>
   </aside>
 
@@ -3879,11 +3879,14 @@ const FORCE_DONE_ORDERS = new Set([
   'TOR2026072700004',   // 단비교육 윙크일일학습모음집 (스티커, 데이터 미표기)
   'TOR2026070900083',   // Hancock House 자이언츠 (완료 확인건)
 ]);
+// 단비교육 완료특례로 볼 제품 패턴 (스티커 부속 등으로 대수마감 N이어도 가제본 완료)
+const DANBI_DONE_PATTERNS = ['스티커', '윙크일일학습모음집'];
 function isStickerDone(r) {
   const order = String(r['주문번호'] || '').trim();
   if (FORCE_DONE_ORDERS.has(order)) return true;
   if (!String(r['거래처'] || '').includes('단비교육')) return false;
-  return (String(r['구성'] || '') + ' ' + String(r['제품명'] || '')).includes('스티커');
+  const txt = String(r['구성'] || '') + ' ' + String(r['제품명'] || '');
+  return DANBI_DONE_PATTERNS.some(p => txt.includes(p));
 }
 // 완료로 볼지: ERP완료 · 가제본날짜입력 · (진행중이지만 30일 초과) · 단비교육 스티커 특례
 function gajTreatDone(r) {
