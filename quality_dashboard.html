@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 16:52</span>
+      v<span id="build-stamp">08/03 18:01</span>
     </div>
   </aside>
 
@@ -6812,10 +6812,11 @@ function applyChartTheme() {
     if (window.ChartDataLabels) {
       try { Chart.register(window.ChartDataLabels); } catch (e) {}
       const dsTotal = ctx => (ctx.chart.data.datasets[ctx.datasetIndex].data || []).reduce((a, b) => a + (Math.abs(+b) || 0), 0);
-      const isLine = ctx => (ctx.dataset.type || ctx.chart.config.type) === 'line';
-      const isPie = ctx => { const t = ctx.chart.config.type; return t === 'pie' || t === 'doughnut'; };
+      const cType = ctx => ctx.dataset.type || ctx.chart.config.type;   // 혼합차트도 데이터셋 타입으로 판별
+      const isLine = ctx => cType(ctx) === 'line';
+      const isPie = ctx => { const t = cType(ctx); return t === 'pie' || t === 'doughnut'; };
       D.plugins.datalabels = {
-        clamp: true, clip: false,
+        clamp: true, clip: false, textAlign: 'center',
         color: ctx => isPie(ctx) ? '#fff' : '#555',
         font: { size: 10, weight: '700' },
         anchor: ctx => isPie(ctx) ? 'center' : 'end',
@@ -6823,27 +6824,29 @@ function applyChartTheme() {
         offset: 2,
         display: ctx => {
           if (isLine(ctx)) return false;
-          const t = ctx.chart.config.type;
+          const t = cType(ctx);
           if (t !== 'pie' && t !== 'doughnut' && t !== 'bar') return false;
           const v = ctx.dataset.data[ctx.dataIndex];
           if (v == null || v === 0) return false;          // 0/빈값 숨김
-          // 파이/도넛: 조각이 작으면(겹침 방지) 라벨 숨김
           if (t === 'pie' || t === 'doughnut') {
             const total = dsTotal(ctx);
             if (total && Math.abs(v) / total < 0.06) return false;   // 6% 미만 숨김
           }
-          // 막대: 가로막대(건수 라벨 이미 있음)엔 % 숨김, 막대 너무 많으면 숨김
           if (t === 'bar') {
-            if (ctx.chart.options && ctx.chart.options.indexAxis === 'y') return false;
+            if (ctx.chart.options && ctx.chart.options.indexAxis === 'y') return false;   // 가로막대는 건수 라벨 있음
             const n = (ctx.dataset.data || []).filter(x => x).length;
-            if (n > 14) return false;
+            if (n > 16) return false;
           }
           return true;
         },
         formatter: (value, ctx) => {
+          const t = cType(ctx);
           const total = dsTotal(ctx);
-          if (!total || !value) return '';
-          return Math.round(Math.abs(value) / total * 100) + '%';
+          const pct = total ? Math.round(Math.abs(value) / total * 100) : 0;
+          if (t === 'pie' || t === 'doughnut') return pct + '%';
+          // 막대: 값 + % (건수/금액을 그대로 보이게)
+          if (!value) return '';
+          return (typeof value === 'number' ? value.toLocaleString() : value) + '\n(' + pct + '%)';
         }
       };
     }
