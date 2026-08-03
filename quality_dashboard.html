@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 16:40</span>
+      v<span id="build-stamp">08/03 16:52</span>
     </div>
   </aside>
 
@@ -1122,10 +1122,6 @@
         </div>
       </div>
 
-      <div class="card" style="padding:0;margin-top:0">
-        <div class="card-title" style="padding:16px 18px 0;margin:0">공정별 불량유형 (건수) <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 공정 클릭 시 펼침</span></div>
-        <div id="nccost-proc-detail" style="padding:8px 18px 16px"></div>
-      </div>
     </div>
 
     <!-- ============ 분석 ============ -->
@@ -5490,11 +5486,12 @@ function renderGajebonTodaySummary() {
     const t = window.GAJEBON_TODAY;
     // 완료 특례(스티커·수동목록) 제외한 실제 진행중
     const _actProg = (t.active_progress || []).filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)));
-    const _stickerN = (t.active_progress || []).length - _actProg.length;
-    const done = (t.completed_count || 0) + _stickerN;
+    // 완료 = '오늘 완료된 것'만 (아래 '오늘 완료' 목록과 일치)
+    const _todayDone = (t.new_completed || []).filter(r => String(r['완료일'] || '') === today);
+    const done = _todayDone.length;
     const progress = _actProg.length;
     const total = done + progress;
-    const doneSamples = (t.new_completed || []).slice(0,3).map(r => r['거래처'] || '');
+    const doneSamples = _todayDone.slice(0,3).map(r => r['거래처'] || '');
     const progressSamples = _actProg.slice(0,3).map(r => r['거래처'] || '');
     el.innerHTML = `
       <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
