@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 16:20</span>
+      v<span id="build-stamp">08/03 16:29</span>
     </div>
   </aside>
 
@@ -6839,8 +6839,9 @@ function applyChartTheme() {
             const total = dsTotal(ctx);
             if (total && Math.abs(v) / total < 0.06) return false;   // 6% 미만 숨김
           }
-          // 막대: 막대가 너무 많으면(라벨 겹침) 숨김
+          // 막대: 가로막대(건수 라벨 이미 있음)엔 % 숨김, 막대 너무 많으면 숨김
           if (t === 'bar') {
+            if (ctx.chart.options && ctx.chart.options.indexAxis === 'y') return false;
             const n = (ctx.dataset.data || []).filter(x => x).length;
             if (n > 14) return false;
           }
