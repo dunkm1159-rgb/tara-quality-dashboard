@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/03 15:20</span>
+      v<span id="build-stamp">08/03 16:20</span>
     </div>
   </aside>
 
@@ -3609,6 +3609,25 @@ function markSheet(prefix, order) {
 }
 // 무효 표시를 시트에 append (작업번호를 'VOID:...' 형태로) — pull_sheet 가 읽어 제외
 function voidClaimToSheet(order) { markSheet('VOID:', order); }
+// 특정 행만 무효 (작업번호+부적합내용) — 수정 시 옛 건만 교체용
+function voidKeyToSheet(order, def) { markSheet('VOIDKEY:', String(order || '').trim() + '||' + String(def || '').trim()); }
+
+// ── 부적합사고 수정 ──
+let _editKey = null, _editOrig = null;
+function editClaim(key) {
+  const r = (typeof claimData !== 'undefined') ? claimData.find(x => claimKey(x) === key) : null;
+  if (!r) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
+  set('reg-date', r[0]); set('reg-order', r[1]); set('reg-client', r[2]); set('reg-manager', r[3]);
+  set('reg-product', r[4]); set('reg-qty', r[5]); set('reg-defcontent', r[6]); set('reg-qualtype', r[7]);
+  set('reg-deftype', r[8]); set('reg-equip', r[9]); set('reg-action', r[10]); set('reg-actiondate', r[11]);
+  set('reg-cost-self', (typeof r[12] === 'number' ? r[12] : '')); set('reg-cost-partner', (typeof r[13] === 'number' ? r[13] : ''));
+  _editKey = key; _editOrig = { order: String(r[1] || '').trim(), def: String(r[6] || '').trim() };
+  if (typeof showTab === 'function') showTab('register', document.getElementById('nav-register'));
+  const msg = document.getElementById('reg-msg');
+  if (msg) { msg.textContent = '✏️ 수정 모드 — 내용 고치고 아래 "✅ 등록"을 누르면 기존 건이 교체됩니다.'; msg.style.color = '#1F5C99'; }
+  try { window.scrollTo(0, 0); } catch (e) {}
+}
 
 // ── 변경 이력 로그 (감사추적) ──
 const QMS_LOG_KEY = 'qmsChangeLog_v1';
@@ -3777,10 +3796,15 @@ function renderClaimTable() {
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[8]}">${r[8]||'-'}</td>
       <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[6]||''}">${r[6]||'-'}</td>
       <td style="text-align:right;font-size:13px">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
-      <td style="text-align:center"><button title="이 클레임 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"
-        style="border:none;background:none;cursor:pointer;color:#c0392b;font-size:15px;padding:2px 6px;line-height:1"
-        onmouseover="this.style.background='#fdeaea';this.style.borderRadius='6px'"
-        onmouseout="this.style.background='none'"><i class="ti ti-trash"></i></button></td>
+      <td style="text-align:center;white-space:nowrap">
+        <button title="이 건 수정" onclick="editClaim('${claimKey(r).replace(/'/g, "\\'")}')"
+          style="border:none;background:none;cursor:pointer;color:#1F5C99;font-size:14px;padding:2px 5px;line-height:1"
+          onmouseover="this.style.background='#eaf2fb';this.style.borderRadius='6px'"
+          onmouseout="this.style.background='none'"><i class="ti ti-edit"></i></button>
+        <button title="이 건 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"
+          style="border:none;background:none;cursor:pointer;color:#c0392b;font-size:15px;padding:2px 5px;line-height:1"
+          onmouseover="this.style.background='#fdeaea';this.style.borderRadius='6px'"
+          onmouseout="this.style.background='none'"><i class="ti ti-trash"></i></button></td>
     </tr>
   `).join('');
 }
@@ -5336,9 +5360,20 @@ async function submitClaimReg(e) {
     costPart ? Number(costPart) : null,
     year
   ];
+  // ── 수정 모드: 기존 건 교체 (옛 건 무효 + 새 건 등록) ──
+  if (_editKey) {
+    const oldRow = claimData.find(x => claimKey(x) === _editKey);
+    // 옛 특정 행만 무효표시 (작업번호+부적합내용) → 시트/파이프라인에서 제외
+    if (_editOrig && _editOrig.order) voidKeyToSheet(_editOrig.order, _editOrig.def);
+    claimData = claimData.filter(x => claimKey(x) !== _editKey);   // 화면에서 옛 건 제거
+    const leg = legacyDeleted(); if (!leg.includes(_editKey)) { leg.push(_editKey); try{localStorage.setItem(CLAIM_DEL_KEY, JSON.stringify(leg));}catch(e){} }
+    logAction('수정', String(newRow[1] || ''), String(newRow[4] || ''));
+    _editKey = null; _editOrig = null;
+  } else {
+    logAction('등록', String(newRow[1] || ''), String(newRow[4] || ''));
+  }
   claimData.push(newRow);
   if (typeof saveClaimToSheet === 'function') saveClaimToSheet(newRow);
-  logAction('등록', String(newRow[1] || ''), String(newRow[4] || ''));
   if (typeof refreshDash === 'function') refreshDash();
   if (typeof refreshClaimFilters === 'function') refreshClaimFilters(typeof claimCurrentYear !== 'undefined' ? claimCurrentYear : '');
   if (typeof renderClaimTable === 'function') renderClaimTable();
@@ -6674,19 +6709,24 @@ async function loadSheetClaims(){
     const nd = v => (typeof v==='string' && /\dT\d/.test(v)) ? new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : v;
     // 무효(VOID:) / 휴지통(TRASH:·UNTRASH:) 마커 수집 (시트 순서 = 시간순)
     const voided = new Set();
+    const voidedKeys = new Set();   // 수정 교체용: '작업번호||부적합내용' 단위 무효
     const trashed = new Set();   // 공용 휴지통(완전삭제 전, 복원 가능)
     j.rows.forEach(row => {
       const v = String((row && row[1]) || '');
-      if (v.startsWith('VOID:')) { const o = v.slice(5).trim(); voided.add(o); trashed.delete(o); }
+      if (v.startsWith('VOIDKEY:')) voidedKeys.add(v.slice(8).trim());
+      else if (v.startsWith('VOID:')) { const o = v.slice(5).trim(); voided.add(o); trashed.delete(o); }
       else if (v.startsWith('TRASH:')) trashed.add(v.slice(6).trim());
       else if (v.startsWith('UNTRASH:')) trashed.delete(v.slice(8).trim());
     });
+    const rowKey = r => String(r[1]||'').trim() + '||' + String(r[6]||'').trim();
     if(voided.size){ claimData = claimData.filter(r => !voided.has(String(r[1]||'').trim())); }
+    if(voidedKeys.size){ claimData = claimData.filter(r => !voidedKeys.has(rowKey(r))); }   // 수정 전 옛 건 제거
     const haveOrders = new Set(claimData.map(r => String(r[1]||'').trim()));  // 이미 있는 작업번호
-    const isMarker = v => { v=String(v); return v.startsWith('TEST')||v.startsWith('VOID:')||v.startsWith('TRASH:')||v.startsWith('UNTRASH:')||v==='LOG'; };
+    const isMarker = v => { v=String(v); return v.startsWith('TEST')||v.startsWith('VOID:')||v.startsWith('VOIDKEY:')||v.startsWith('TRASH:')||v.startsWith('UNTRASH:')||v==='LOG'; };
     const add = j.rows
       .filter(row => row && row[1] && !isMarker(row[1]))
       .filter(row => !voided.has(String(row[1]).trim()))       // 무효 처리된 건 제외
+      .filter(row => !voidedKeys.has(rowKey(row)))             // 수정 전 옛 건 제외
       .filter(row => !haveOrders.has(String(row[1]).trim()))   // claim_data.js 에 이미 있으면 중복 제외
       .map(row => {
         const r2 = row.slice(0,15);
