@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/04 09:01</span>
+      v<span id="build-stamp">08/04 09:40</span>
     </div>
   </aside>
 
@@ -6169,8 +6169,9 @@ function renderKpi() {
       return (t.total || 0) || (c.소계 || 0) || (s.actual != null) || (st.actual || 0)
           || t.note || c.note || s.note || st.note;
     };
-    const avail = MO.filter(hasM);
-    if (avail.length && !avail.includes(kpiMonth)) kpiMonth = avail[avail.length - 1];   // 기본 = 최신 달
+    const withData = MO.filter(hasM);
+    const avail = MO;   // 12개월 전부 탭으로 노출 (데이터 없는 달도 표시)
+    if (!kpiMonth || !avail.includes(kpiMonth)) kpiMonth = (withData[withData.length - 1] || '1월');   // 기본 = 데이터 있는 최신 달
     const tabsEl = document.getElementById('kpi-month-tabs');
     if (tabsEl) tabsEl.innerHTML = avail.map(m =>
       `<button class="claim-year-btn ${kpiMonth === m ? 'active' : ''}" onclick="setKpiMonth('${m}')">${m}</button>`).join('');
