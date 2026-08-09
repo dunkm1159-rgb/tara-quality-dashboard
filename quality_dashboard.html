@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/10 08:28</span>
+      v<span id="build-stamp">08/10 08:33</span>
     </div>
   </aside>
 
@@ -2239,8 +2239,8 @@ function renderPrintTargets() {
   const { done, prog } = collectPrintTargets();
   const days = (window.GAJEBON_TODAY && window.GAJEBON_TODAY.recent_days) || 3;
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });   // YYYY-MM-DD
-  const todayDone = done.filter(r => String(r['완료일'] || '') === today);
-  const olderDone = done.filter(r => String(r['완료일'] || '') !== today);
+  const todayDone = done.filter(r => String(r['완료일'] || '') === today && !isStickerDone(r));
+  const olderDone = done.filter(r => String(r['완료일'] || '') !== today && !isStickerDone(r));
   const cnt = document.getElementById('print-target-count');
   if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -5486,8 +5486,8 @@ function renderGajebonTodaySummary() {
     const t = window.GAJEBON_TODAY;
     // 완료 특례(스티커·수동목록) 제외한 실제 진행중
     const _actProg = (t.active_progress || []).filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)));
-    // 완료 = '오늘 완료된 것'만 (아래 '오늘 완료' 목록과 일치)
-    const _todayDone = (t.new_completed || []).filter(r => String(r['완료일'] || '') === today);
+    // 완료 = '오늘 완료된 것'만 (스티커·윙크 특례 제외 — 실제 오늘 완료건만)
+    const _todayDone = (t.new_completed || []).filter(r => String(r['완료일'] || '') === today && !(typeof isStickerDone === 'function' && isStickerDone(r)));
     const done = _todayDone.length;
     const progress = _actProg.length;
     const total = done + progress;
