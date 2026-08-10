@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/11 08:13</span>
+      v<span id="build-stamp">08/11 08:22</span>
     </div>
   </aside>
 
@@ -4791,7 +4791,8 @@ function renderGajebonTable() {
         if (!showParts()) return ovsCells(order);          // 전략사업본부는 파트 컬럼 미사용
         const comp = ebsComp(r);                            // EBS: ERP 인쇄 대수(구성/대수마감) 자동
         if (comp) {
-          const done = comp.filter(c => c.y).length;
+          const gdone = !!gajDate(order);                   // 가제본 완료 처리 시 구성품 전체 완료로 집계
+          const done = gdone ? comp.length : comp.filter(c => c.y).length;
           const prog = `<td style="text-align:center;white-space:nowrap;"><span style="font-size:12px;font-weight:600;color:${done === comp.length ? '#248a3d' : '#1d1d1f'}">${done}/${comp.length}</span></td>`;
           let cells = '';
           for (let i = 0; i < 10; i++) cells += (i < comp.length) ? partCellAuto(comp[i], r['날짜'] || '', order, i) : '<td></td>';
@@ -5047,7 +5048,8 @@ function partCellAuto(item, dateStr, order, idx) {
   const o = String(order).replace(/'/g, "\\'");
   const disp = shortPart(item.n);
   const name = `<div style="font-size:10.5px;color:#1d1d1f;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(item.n)}">${esc(disp)}</div>`;
-  const work = getEbsWork(order, idx);
+  // 가제본 완료 처리(가제본일 도장)되면 구성품도 자동 작업완료로 표시
+  const work = getEbsWork(order, idx) || (gajDate(order) ? { date: gajDate(order) } : null);
   const click = `onclick="toggleEbsWork('${o}',${idx})" style="cursor:pointer"`;
   let check;
   if (work) {
