@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/10 16:46</span>
+      v<span id="build-stamp">08/10 16:59</span>
     </div>
   </aside>
 
@@ -1883,6 +1883,7 @@ let workerYear = '2026';   // 기본 2026 ('' = 전체)
 let workerLevel = 0;   // 0=전체, 1~4=해당 등급만
 let workerEquip = '';      // 설비 필터 ('' = 전체)
 let workerEmpFilter = '';  // 담당자 필터 ('' = 전체)
+let workerShowSingles = false;  // 1건 담당자 펼치기 여부
 let workerAnon = false;   // 익명 모드 (시연/공유용)
 function toggleWorkerAnon() {
   workerAnon = !workerAnon;
@@ -1951,6 +1952,10 @@ function setWorkerFilters() {
 }
 function resetWorkerFilters() {
   workerLevel = 0; workerEquip = ''; workerEmpFilter = '';
+  renderWorker(true);
+}
+function toggleWorkerSingles() {
+  workerShowSingles = !workerShowSingles;
   renderWorker(true);
 }
 
@@ -2024,9 +2029,8 @@ function renderWorker(skipTabs) {
   });
   const ranked = Object.entries(emp).sort((a,b) => b[1].total - a[1].total);
 
-  // 표
-  const tb = document.getElementById('worker-tbody');
-  if (tb) tb.innerHTML = ranked.map(([name, v], i) => {
+  // 표 (1건 담당자는 접기/펼치기 토글)
+  const _wrow = ([name, v], i) => {
     const topEq = Object.entries(v.eq).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0]).join(', ');
     const cell = (n,c) => `<td style="text-align:center;${n?('color:'+c+';font-weight:600'):'color:#ccc'}">${n||'-'}</td>`;
     return `<tr>
@@ -2037,7 +2041,21 @@ function renderWorker(skipTabs) {
       ${cell(v.lv[1],LV_COLORS[1])}${cell(v.lv[2],LV_COLORS[2])}${cell(v.lv[3],LV_COLORS[3])}${cell(v.lv[4],LV_COLORS[4])}
       <td style="color:#666;font-size:12px">${topEq||'-'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
+  };
+  const _multi = ranked.filter(e => e[1].total > 1);
+  const _singles = ranked.filter(e => e[1].total === 1);
+  const tb = document.getElementById('worker-tbody');
+  if (tb) {
+    let _body = _multi.map((e,i) => _wrow(e,i)).join('');
+    if (_singles.length) {
+      const _sCost = _singles.reduce((s,e)=>s+(e[1].cost||0),0);
+      _body += `<tr onclick="toggleWorkerSingles()" style="cursor:pointer">
+        <td colspan="9" style="text-align:center;color:#17A2B8;padding:8px;font-size:12.5px;background:rgba(23,162,184,0.05)">
+          ${workerShowSingles?'▾':'▸'} 1건 담당자 ${_singles.length}명 (${Math.round(_sCost/10000).toLocaleString()}만원) ${workerShowSingles?'접기':'펼치기'}</td></tr>`;
+      if (workerShowSingles) _body += _singles.map((e,i) => _wrow(e, _multi.length+i)).join('');
+    }
+    tb.innerHTML = _body || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
+  }
 
   // 사고 상세 목록 (현재 필터 = 연도 + 등급)
   const wEsc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
