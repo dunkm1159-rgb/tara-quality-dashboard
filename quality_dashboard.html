@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/10 13:29</span>
+      v<span id="build-stamp">08/10 13:45</span>
     </div>
   </aside>
 
@@ -1333,6 +1333,21 @@
         </span>
       </div>
 
+      <!-- 판정등급 · 설비 · 담당자 필터 -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+        <span style="font-weight:600">필터</span>
+        <select id="worker-f-level" onchange="setWorkerFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px">
+          <option value="0">전체 등급</option>
+          <option value="1">면책 (Lv1)</option>
+          <option value="2">경고 (Lv2)</option>
+          <option value="3">중대경고 (Lv3)</option>
+          <option value="4">치명적위반 (Lv4)</option>
+        </select>
+        <select id="worker-f-equip" onchange="setWorkerFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="">전체 설비</option></select>
+        <select id="worker-f-emp" onchange="setWorkerFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="">전체 담당자</option></select>
+        <button class="claim-year-btn" onclick="resetWorkerFilters()" style="padding:4px 9px">필터 해제</button>
+      </div>
+
       <!-- 등급 요약 카드 -->
       <div class="metrics" id="worker-metrics" style="margin-bottom:20px"></div>
 
@@ -1866,6 +1881,8 @@ function renderVendor() {
 // ========================
 let workerYear = '2026';   // 기본 2026 ('' = 전체)
 let workerLevel = 0;   // 0=전체, 1~4=해당 등급만
+let workerEquip = '';      // 설비 필터 ('' = 전체)
+let workerEmpFilter = '';  // 담당자 필터 ('' = 전체)
 let workerAnon = false;   // 익명 모드 (시연/공유용)
 function toggleWorkerAnon() {
   workerAnon = !workerAnon;
@@ -1926,6 +1943,16 @@ function setWorkerLevel(lv) {
   workerLevel = (workerLevel === lv) ? 0 : lv;   // 같은 등급 다시 누르면 해제
   renderWorker(true);
 }
+function setWorkerFilters() {
+  const lv = document.getElementById('worker-f-level'); if (lv) workerLevel = parseInt(lv.value, 10) || 0;
+  const eq = document.getElementById('worker-f-equip'); if (eq) workerEquip = eq.value || '';
+  const em = document.getElementById('worker-f-emp');   if (em) workerEmpFilter = em.value || '';
+  renderWorker(true);
+}
+function resetWorkerFilters() {
+  workerLevel = 0; workerEquip = ''; workerEmpFilter = '';
+  renderWorker(true);
+}
 
 function renderWorker(skipTabs) {
   const wd = (window.WORKER_DATA && window.WORKER_DATA.rows) ? window.WORKER_DATA.rows : [];
@@ -1961,8 +1988,24 @@ function renderWorker(skipTabs) {
     mcard(4, '치명적위반 (Lv4)', lvCnt[4], LV_COLORS[4]) +
     `<div class="metric" style="padding:10px 12px"><div class="label" style="font-size:11px;margin-bottom:2px">불량금액 합계</div><div class="value" style="font-size:19px;color:#c0392b">${Math.round(yearCost/10000).toLocaleString()}만원</div></div>`;
 
-  // 등급 필터 적용
-  const rows = workerLevel ? yearRows.filter(r => r[3] === workerLevel) : yearRows;
+  // 필터 드롭다운 채우기 (설비/담당자 — 연도+월 기준), 등급 선택 동기화
+  const _equips = [...new Set(yearRows.map(r => r[4]).filter(Boolean))].sort();
+  const _emps = [...new Set(yearRows.flatMap(r => String(r[1] || '').split(/[,，、\/·]/).map(s => s.trim()).filter(Boolean)))].sort();
+  const _fillSel = (id, vals, cur, allLabel, label) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = `<option value="">${allLabel}</option>` +
+      vals.map(v => `<option value="${String(v).replace(/"/g, '&quot;')}" ${cur === v ? 'selected' : ''}>${label ? label(v) : v}</option>`).join('');
+    el.value = cur || '';
+  };
+  _fillSel('worker-f-equip', _equips, workerEquip, '전체 설비');
+  _fillSel('worker-f-emp', _emps, workerEmpFilter, '전체 담당자', wname);
+  const _lvSel = document.getElementById('worker-f-level'); if (_lvSel) _lvSel.value = String(workerLevel || 0);
+
+  // 등급 · 설비 · 담당자 필터 적용
+  let rows = yearRows;
+  if (workerLevel) rows = rows.filter(r => r[3] === workerLevel);
+  if (workerEquip) rows = rows.filter(r => (r[4] || '') === workerEquip);
+  if (workerEmpFilter) rows = rows.filter(r => String(r[1] || '').split(/[,，、\/·]/).map(s => s.trim()).includes(workerEmpFilter));
   const fn = document.getElementById('worker-filter-note');
   if (fn) fn.innerHTML = workerLevel
     ? `<span style="color:${LV_COLORS[workerLevel]}">● ${LV_NAMES[workerLevel]}</span> 받은 사람만 표시 <span style="color:#999;cursor:pointer;text-decoration:underline" onclick="setWorkerLevel(0)">해제</span>`
