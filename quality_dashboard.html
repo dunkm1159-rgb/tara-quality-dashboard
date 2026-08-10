@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/10 15:01</span>
+      v<span id="build-stamp">08/10 16:46</span>
     </div>
   </aside>
 
@@ -520,7 +520,7 @@
           <div class="chart-wrap"><canvas id="dash-chartTrend"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title">상위 거래처</div>
+          <div class="card-title">클레임 상위 거래처</div>
           <div class="chart-wrap"><canvas id="dash-chartClient"></canvas></div>
         </div>
       </div>
@@ -2439,14 +2439,15 @@ function renderDashCharts(year) {
   const monMap = {};
   MONTHS.forEach(m=>monMap[m]=0);
   d.forEach(r=>{
+    if ((r[7]||'').trim() !== '클레임') return;   // 품질유형 '클레임'만 (검수중발견·접수 등 제외) → 지표와 일치
     const parts=(r[0]||'').split('-');
     if (parts.length>=2){ const m=parseInt(parts[1],10); if(m>=1&&m<=12) monMap[MONTHS[m-1]]++; }
   });
   renderLine('dash-chartTrend', MONTHS, monMap);
 
-  // 상위 거래처 가로 바 (dash-chartClient)
+  // 클레임 상위 거래처 가로 바 (dash-chartClient) — 품질유형 '클레임'만
   const clientMap = {};
-  d.forEach(r=>{ const c=r[2]||'기타'; clientMap[c]=(clientMap[c]||0)+1; });
+  d.forEach(r=>{ if ((r[7]||'').trim() !== '클레임') return; const c=r[2]||'기타'; clientMap[c]=(clientMap[c]||0)+1; });
   const clientS = Object.entries(clientMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
   if (clientS.length) renderBarH('dash-chartClient', clientS.map(x=>x[0]), clientS.map(x=>x[1]), '#17A2B8');
 }
