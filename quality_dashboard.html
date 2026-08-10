@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/11 08:22</span>
+      v<span id="build-stamp">08/11 08:34</span>
     </div>
   </aside>
 
@@ -2042,17 +2042,22 @@ function renderWorker(skipTabs) {
       <td style="color:#666;font-size:12px">${topEq||'-'}</td>
     </tr>`;
   };
-  const _multi = ranked.filter(e => e[1].total > 1);
-  const _singles = ranked.filter(e => e[1].total === 1);
+  const _top = ranked.slice(0, 4);          // 상위 4명만 개별 표시
+  const _rest = ranked.slice(4);            // 나머지는 '기타'로 묶음
   const tb = document.getElementById('worker-tbody');
   if (tb) {
-    let _body = _multi.map((e,i) => _wrow(e,i)).join('');
-    if (_singles.length) {
-      const _sCost = _singles.reduce((s,e)=>s+(e[1].cost||0),0);
-      _body += `<tr onclick="toggleWorkerSingles()" style="cursor:pointer">
-        <td colspan="9" style="text-align:center;color:#17A2B8;padding:8px;font-size:12.5px;background:rgba(23,162,184,0.05)">
-          ${workerShowSingles?'▾':'▸'} 1건 담당자 ${_singles.length}명 (${Math.round(_sCost/10000).toLocaleString()}만원) ${workerShowSingles?'접기':'펼치기'}</td></tr>`;
-      if (workerShowSingles) _body += _singles.map((e,i) => _wrow(e, _multi.length+i)).join('');
+    let _body = _top.map((e,i) => _wrow(e,i)).join('');
+    if (_rest.length) {
+      const _cell = (n,c) => `<td style="text-align:center;${n?('color:'+c+';font-weight:600'):'color:#ccc'}">${n||'-'}</td>`;
+      const agg = _rest.reduce((a,[,v]) => { a.total+=v.total; a.cost+=(v.cost||0); [1,2,3,4].forEach(l=>a.lv[l]+=(v.lv[l]||0)); return a; }, {total:0,cost:0,lv:{1:0,2:0,3:0,4:0}});
+      _body += `<tr onclick="toggleWorkerSingles()" style="cursor:pointer;background:rgba(23,162,184,0.05)">
+        <td style="text-align:center;color:#17A2B8">${workerShowSingles?'▾':'▸'}</td>
+        <td style="font-weight:600;color:#17A2B8">기타 (${_rest.length}명) · ${workerShowSingles?'접기':'펼치기'}</td>
+        <td style="text-align:center;font-weight:700">${agg.total}</td>
+        <td style="text-align:right;color:#c0392b;font-weight:600">${agg.cost?Math.round(agg.cost/10000).toLocaleString():'-'}</td>
+        ${_cell(agg.lv[1],LV_COLORS[1])}${_cell(agg.lv[2],LV_COLORS[2])}${_cell(agg.lv[3],LV_COLORS[3])}${_cell(agg.lv[4],LV_COLORS[4])}
+        <td style="color:#666;font-size:12px">-</td></tr>`;
+      if (workerShowSingles) _body += _rest.map((e,i) => _wrow(e, _top.length+i)).join('');
     }
     tb.innerHTML = _body || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
   }
