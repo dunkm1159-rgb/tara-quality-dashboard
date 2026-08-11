@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/12 08:49</span>
+      v<span id="build-stamp">08/12 08:55</span>
     </div>
   </aside>
 
@@ -1071,8 +1071,7 @@
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">날짜</label>
           <input type="date" id="sched-f-date" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px">
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">담당자</label>
-          <input type="text" id="sched-f-person" list="sched-person-list" placeholder="이름 (예: 배원기)" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px">
-          <datalist id="sched-person-list"></datalist>
+          <select id="sched-f-person" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px"></select>
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">분류</label>
           <select id="sched-f-cat" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px"></select>
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">제목</label>
@@ -5019,6 +5018,14 @@ const SCHED_CATS = [
   { k:'교육', c:'#27AE60' }, { k:'마감', c:'#C0392B' }, { k:'기타', c:'#7f8c8d' }
 ];
 function schedCatColor(k){ const f=SCHED_CATS.find(x=>x.k===k); return f?f.c:'#7f8c8d'; }
+const SCHED_PERSONS = ['강경모','김배수','박호정','정훈','배원기'];   // 품질개선팀 담당자 목록
+function _schedFillPersons(cur){
+  const sel=document.getElementById('sched-f-person'); if(!sel) return;
+  const list = SCHED_PERSONS.slice();
+  if(cur && !list.includes(cur)) list.push(cur);   // 기존 데이터에 목록 밖 이름 있으면 유지
+  sel.innerHTML = '<option value="">(미지정)</option>' + list.map(n=>`<option value="${esc4(n)}" ${cur===n?'selected':''}>${esc4(n)}</option>`).join('');
+  sel.value = cur || '';
+}
 function esc4(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 let schedEvents = [];
 const _schedNow = new Date();
@@ -5087,9 +5094,6 @@ function renderSchedule(){
     html+='<div style="margin-top:8px;color:#bbb;font-size:13px">등록된 일정이 없습니다. 날짜 칸이나 "+ 일정 추가"를 눌러 등록하세요.</div>';
   }
   el.innerHTML=html;
-  // 담당자 자동완성 목록 (기존 입력 이름들)
-  const _dl=document.getElementById('sched-person-list');
-  if(_dl){ const names=[...new Set(schedEvents.map(e=>e.person).filter(Boolean))].sort(); _dl.innerHTML=names.map(n=>`<option value="${esc4(n)}">`).join(''); }
 }
 function _schedFillCats(cur){
   const sel=document.getElementById('sched-f-cat'); if(!sel) return;
@@ -5100,7 +5104,7 @@ function schedAdd(date){
   document.getElementById('sched-f-id').value='';
   document.getElementById('sched-f-date').value=date||(schedYear+'-'+String(schedMonth+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0'));
   _schedFillCats('회의');
-  document.getElementById('sched-f-person').value='';
+  _schedFillPersons('');
   document.getElementById('sched-f-title').value='';
   document.getElementById('sched-f-memo').value='';
   document.getElementById('sched-f-del').style.display='none';
@@ -5112,7 +5116,7 @@ function schedEdit(id){
   document.getElementById('sched-f-id').value=ev.id;
   document.getElementById('sched-f-date').value=ev.date;
   _schedFillCats(ev.cat);
-  document.getElementById('sched-f-person').value=ev.person||'';
+  _schedFillPersons(ev.person||'');
   document.getElementById('sched-f-title').value=ev.title;
   document.getElementById('sched-f-memo').value=ev.memo;
   document.getElementById('sched-f-del').style.display='inline-block';
