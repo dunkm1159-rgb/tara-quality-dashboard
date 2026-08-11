@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/12 06:02</span>
+      v<span id="build-stamp">08/12 08:00</span>
     </div>
   </aside>
 
@@ -659,8 +659,8 @@
 
   <!-- SOP 준수율 -->
   <div id="kpi-reg-sop" class="kpi-reg-section" style="display:none;background:#fff;border-radius:10px;border:1px solid #e0e3e8;padding:20px;">
-    <div style="font-size:13px;color:#555;margin-bottom:14px;">SOP 현장 준수율 — 목표: 95점 이상</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div style="font-size:13px;color:#555;margin-bottom:14px;">SOP 현장 준수율 — 공정별 입력 (매엽·윤전·중철·코팅) · 목표: 95점 이상 · 평균은 자동 계산</div>
+    <div style="display:grid;grid-template-columns:0.9fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
       <div>
         <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">월</label>
         <select id="sop-month" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;">
@@ -670,13 +670,25 @@
         </select>
       </div>
       <div>
-        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">실적 (점)</label>
-        <input type="number" id="sop-actual" min="0" max="100" placeholder="95" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">매엽 (점)</label>
+        <input type="number" id="sop-maeyeop" min="0" max="100" placeholder="95" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
       </div>
       <div>
-        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">비고</label>
-        <input type="text" id="sop-note" placeholder="감점 사유 등" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">윤전 (점)</label>
+        <input type="number" id="sop-yunjeon" min="0" max="100" placeholder="95" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
       </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">중철 (점)</label>
+        <input type="number" id="sop-jungchul" min="0" max="100" placeholder="95" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">코팅 (점)</label>
+        <input type="number" id="sop-coating" min="0" max="100" placeholder="95" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">비고</label>
+      <input type="text" id="sop-note" placeholder="감점 사유 등" style="width:100%;padding:8px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;">
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <span id="sop-msg" style="font-size:12px;color:#27ae60;"></span>
@@ -1498,7 +1510,7 @@
       <!-- SOP 준수율 -->
       <div class="section-title" style="margin:24px 0 12px">③ SOP 현장 준수율 <span style="font-size:12px;color:#888;font-weight:400">목표: 월 95점 이상</span></div>
       <div class="card">
-        <div class="card-title">월별 SOP 준수율 점수</div>
+        <div class="card-title">월별 SOP 준수율 (공정별: 매엽·윤전·중철·코팅 + 평균)</div>
         <div class="chart-wrap" style="height:220px"><canvas id="chartSOP"></canvas></div>
       </div>
 
@@ -6099,13 +6111,16 @@ async function saveKpiCost() {
 // 열: D(3)=실적, F(5)=비고
 async function saveKpiSop() {
   const m = kv('sop-month');
-  const actual = kn('sop-actual');
+  const kNull = id => { const v = document.getElementById(id)?.value; return (v === '' || v == null) ? null : Number(v); };
+  const 매엽 = kNull('sop-maeyeop'), 윤전 = kNull('sop-yunjeon'), 중철 = kNull('sop-jungchul'), 코팅 = kNull('sop-coating');
   const note = kv('sop-note');
+  const parts = [매엽, 윤전, 중철, 코팅].filter(v => v != null && !isNaN(v) && v > 0);
+  const actual = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : null;   // 평균 = 실적
   const row = 4 + monthIdx(m);
 
   const ov = loadKpiOverrides();
   if (!ov.sop) ov.sop = [];
-  const entry = { m, actual, note };
+  const entry = { m, 매엽, 윤전, 중철, 코팅, actual, note };
   const ei = ov.sop.findIndex(r => r.m === m);
   if (ei >= 0) ov.sop[ei] = entry; else ov.sop.push(entry);
   saveKpiOverrides(ov);
@@ -6115,11 +6130,11 @@ async function saveKpiSop() {
   renderKpi && renderKpi();
 
   const saved = await writeKpiExcel('SOP 현장 준수율', [
-    {r:row, c:3, v:actual, t:'n'},
+    {r:row, c:3, v:actual, t:'n'},   // 평균(실적)
     {r:row, c:5, v:note,   t:'s'},
   ]);
-  kMsg('sop-msg', saved ? `✅ ${m} 엑셀 저장됨` : `✅ ${m} 저장됨 (엑셀 미연결)`, true);
-  renderKpiLog('sop', ov.sop, r => `${r.m} | ${r.actual}점 ${r.note||''}`);
+  kMsg('sop-msg', saved ? `✅ ${m} 저장 (평균 ${actual ?? '-'}점)` : `✅ ${m} 저장됨 (엑셀 미연결)`, true);
+  renderKpiLog('sop', ov.sop, r => `${r.m} | 매엽${r.매엽 ?? '-'} 윤전${r.윤전 ?? '-'} 중철${r.중철 ?? '-'} 코팅${r.코팅 ?? '-'} (평균 ${r.actual ?? '-'})`);
 }
 
 // 표준 위반 저장
@@ -6748,15 +6763,19 @@ function renderKpi() {
     if(chartInstances.chartSOP){chartInstances.chartSOP.destroy();}
     const ctx = document.getElementById('chartSOP');
     const sopM = D.sop.monthly.map(r=>r.m);
-    const sopA = D.sop.monthly.map(r=>r.actual!=null?r.actual:null);
+    const sopProcs = [['매엽','#17A2B8'],['윤전','#E67E22'],['중철','#8E44AD'],['코팅','#27AE60']];
+    const sopDs = [
+      {label:'평균', data:D.sop.monthly.map(r=>r.actual!=null?r.actual:null), borderColor:'#1d1d1f', backgroundColor:'rgba(0,0,0,0.04)', borderWidth:2.6, pointRadius:3.5, tension:0.35, fill:false, spanGaps:true}
+    ].concat(sopProcs.map(([k,c])=>({
+      label:k, data:D.sop.monthly.map(r=>r[k]!=null?r[k]:null),
+      borderColor:c, backgroundColor:c, borderWidth:1.6, pointRadius:2.5, tension:0.35, fill:false, spanGaps:true
+    })));
+    sopDs.push({label:'목표(95)', data:Array(sopM.length).fill(95), borderColor:'#c0392b', borderWidth:1.5, borderDash:[5,5], pointRadius:0, fill:false});
     if(ctx) chartInstances.chartSOP = new Chart(ctx, {
       type:'line',
-      data:{labels:sopM, datasets:[
-        {label:'준수율', data:sopA, borderColor:'#17A2B8', backgroundColor:'rgba(23,162,184,0.12)', borderWidth:2, pointRadius:4, tension:0.35, fill:true},
-        {label:'목표(95점)', data:Array(sopM.length).fill(95), borderColor:'#27ae60', borderWidth:1.5, borderDash:[5,5], pointRadius:0, fill:false}
-      ]},
+      data:{labels:sopM, datasets:sopDs},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
+        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}},datalabels:{display:false}},
         scales:{x:{ticks:{font:{size:11}},grid:{display:false}},
                 y:{min:80,max:100,ticks:{font:{size:11},callback:v=>v+'점'},grid:{color:'rgba(0,0,0,0.05)'}}}}
     });
