@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/11 16:41</span>
+      v<span id="build-stamp">08/11 16:52</span>
     </div>
   </aside>
 
@@ -1377,20 +1377,6 @@
         </span>
       </div>
 
-      <!-- 판정등급 · 설비 · 담당자 필터 -->
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
-        <span style="font-weight:600">필터</span>
-        <select id="worker-f-level" onchange="setWorkerFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px">
-          <option value="0">전체 등급</option>
-          <option value="1">면책 (Lv1)</option>
-          <option value="2">경고 (Lv2)</option>
-          <option value="3">중대경고 (Lv3)</option>
-          <option value="4">치명적위반 (Lv4)</option>
-        </select>
-        <select id="worker-f-equip" onchange="setWorkerFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="">전체 설비</option></select>
-        <select id="worker-f-emp" onchange="setWorkerFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="">전체 담당자</option></select>
-        <button class="claim-year-btn" onclick="resetWorkerFilters()" style="padding:4px 9px">필터 해제</button>
-      </div>
 
       <!-- 등급 요약 카드 -->
       <div class="metrics" id="worker-metrics" style="margin-bottom:20px"></div>
@@ -1436,6 +1422,18 @@
 
       <div class="card" style="margin-top:18px">
         <div class="card-title">사고 상세 목록 <span id="worker-detail-note" style="font-size:12px;font-weight:600;color:#888;margin-left:6px"></span></div>
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:2px 2px 12px;font-size:12.5px;color:#555">
+          <span style="font-weight:600">필터</span>
+          <input type="date" id="wd-f-from" onchange="setDetailFilters()" title="시작일" style="border:1px solid #d2d2d7;border-radius:7px;padding:4px 7px;font-size:12px">
+          <span>~</span>
+          <input type="date" id="wd-f-to" onchange="setDetailFilters()" title="종료일" style="border:1px solid #d2d2d7;border-radius:7px;padding:4px 7px;font-size:12px">
+          <select id="wd-f-level" onchange="setDetailFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px">
+            <option value="0">전체 등급</option><option value="1">면책</option><option value="2">경고</option><option value="3">중대경고</option><option value="4">치명적위반</option>
+          </select>
+          <select id="wd-f-emp" onchange="setDetailFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="">전체 담당자</option></select>
+          <select id="wd-f-equip" onchange="setDetailFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="">전체 설비</option></select>
+          <button class="claim-year-btn" onclick="resetDetailFilters()" style="padding:4px 9px">필터 해제</button>
+        </div>
         <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
           <table style="width:100%;font-size:12.5px">
             <thead><tr>
@@ -2003,6 +2001,22 @@ function toggleWorkerSingles() {
   workerShowSingles = !workerShowSingles;
   renderWorker(true);
 }
+// 사고 상세목록 전용 필터 (날짜/담당자/판정등급/설비)
+let detailFrom = '', detailTo = '', detailEmp = '', detailLevel = 0, detailEquip = '';
+function setDetailFilters() {
+  detailFrom = document.getElementById('wd-f-from')?.value || '';
+  detailTo = document.getElementById('wd-f-to')?.value || '';
+  detailLevel = parseInt(document.getElementById('wd-f-level')?.value, 10) || 0;
+  detailEmp = document.getElementById('wd-f-emp')?.value || '';
+  detailEquip = document.getElementById('wd-f-equip')?.value || '';
+  renderWorker(true);
+}
+function resetDetailFilters() {
+  detailFrom = ''; detailTo = ''; detailEmp = ''; detailEquip = ''; detailLevel = 0;
+  const f = document.getElementById('wd-f-from'), t = document.getElementById('wd-f-to');
+  if (f) f.value = ''; if (t) t.value = '';
+  renderWorker(true);
+}
 
 // MES 부적합내역(QUALITY_DATA) → 주문번호/제품명 매칭용 인덱스 (사내 우선)
 let _qualDetailIdx = null;
@@ -2138,11 +2152,29 @@ function renderWorker(skipTabs) {
     tb.innerHTML = _body || '<tr><td colspan="9" style="text-align:center;color:#999;padding:20px">데이터 없음 — import_workers.py 실행 필요</td></tr>';
   }
 
-  // 사고 상세 목록 (현재 필터 = 연도 + 등급)
+  // 사고 상세 목록 — 상세 전용 필터 (날짜/담당자/판정등급/설비)
   const wEsc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  // 상세목록 필터 드롭다운 채우기 (연도+월 필터된 rows 기준)
+  const _dEmps = [...new Set(rows.flatMap(r => String(r[1]||'').split(/[,，、\/·]/).map(s=>s.trim()).filter(Boolean)))].sort();
+  const _dEquips = [...new Set(rows.map(r => r[4]).filter(Boolean))].sort();
+  const _dFill = (id, vals, cur, allLabel, label) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = `<option value="">${allLabel}</option>` + vals.map(v => `<option value="${String(v).replace(/"/g,'&quot;')}" ${cur===v?'selected':''}>${label?label(v):v}</option>`).join('');
+    el.value = cur || '';
+  };
+  _dFill('wd-f-emp', _dEmps, detailEmp, '전체 담당자', wname);
+  _dFill('wd-f-equip', _dEquips, detailEquip, '전체 설비');
+  const _dLvEl = document.getElementById('wd-f-level'); if (_dLvEl) _dLvEl.value = String(detailLevel || 0);
+  // 상세 전용 필터 적용 (상단 필터로 걸러진 rows 위에 추가 적용)
+  let detailRows = rows;
+  if (detailLevel) detailRows = detailRows.filter(r => r[3] === detailLevel);
+  if (detailEmp) detailRows = detailRows.filter(r => String(r[1]||'').split(/[,，、\/·]/).map(s=>s.trim()).includes(detailEmp));
+  if (detailEquip) detailRows = detailRows.filter(r => (r[4]||'') === detailEquip);
+  if (detailFrom) detailRows = detailRows.filter(r => String(r[0]||'') >= detailFrom);
+  if (detailTo) detailRows = detailRows.filter(r => String(r[0]||'') <= detailTo);
   const dt = document.getElementById('worker-detail-tbody');
   if (dt) {
-    const sorted = rows.slice().sort((a, b) => String(b[0]||'').localeCompare(String(a[0]||'')));
+    const sorted = detailRows.slice().sort((a, b) => String(b[0]||'').localeCompare(String(a[0]||'')));
     dt.innerHTML = sorted.map(r => { const det = workerDefectDetail(r); return `<tr>
       <td style="text-align:center;white-space:nowrap;color:#666">${r[0]||''}</td>
       <td style="white-space:nowrap;font-weight:600">${wEsc(wname(r[1]))}</td>
@@ -2154,21 +2186,28 @@ function renderWorker(skipTabs) {
     </tr>`; }).join('') || '<tr><td colspan="7" style="text-align:center;color:#999;padding:16px">해당 없음</td></tr>';
   }
   const dnote = document.getElementById('worker-detail-note');
-  if (dnote) dnote.textContent = workerLevel ? (LV_NAMES[workerLevel] + ' ' + rows.length + '건') : ('전체 ' + rows.length + '건');
+  if (dnote) dnote.textContent = '표시 ' + detailRows.length + '건' + (rows.length !== detailRows.length ? ' / 전체 ' + rows.length + '건' : '');
 
   // 차트: 담당자 상위 10 (등급 누적)
   const top = ranked.slice(0, 10);
   const labels = top.map(t => wname(t[0]));
   const ds = [1,2,3,4].map(lv => ({
     label: LV_NAMES[lv], data: top.map(t => t[1].lv[lv]),
-    backgroundColor: LV_COLORS[lv], stack: 's'
+    backgroundColor: LV_COLORS[lv], stack: 's', maxBarThickness: 48
   }));
   if (window._wCharts.bar) window._wCharts.bar.destroy();
   const c1 = document.getElementById('chartWorkerBar');
   if (c1 && window.Chart) window._wCharts.bar = new Chart(c1, {
     type: 'bar', data: { labels, datasets: ds },
     options: { responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom' } },
+      plugins:{
+        legend:{ position:'bottom' },
+        datalabels:{
+          display: ctx => ctx.datasetIndex === ctx.chart.data.datasets.length - 1,   // 막대당 한 번만 (맨 위)
+          anchor:'end', align:'end', offset:2, color:'#1d1d1f', font:{ size:11, weight:'700' },
+          formatter:(v, ctx) => { const i=ctx.dataIndex; const tot=ctx.chart.data.datasets.reduce((s,d)=>s+(d.data[i]||0),0); return tot||''; }
+        }
+      },
       scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true, ticks:{ precision:0 } } } }
   });
 
