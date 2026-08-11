@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/12 08:09</span>
+      v<span id="build-stamp">08/12 08:49</span>
     </div>
   </aside>
 
@@ -1070,6 +1070,9 @@
           <input type="hidden" id="sched-f-id">
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">날짜</label>
           <input type="date" id="sched-f-date" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">담당자</label>
+          <input type="text" id="sched-f-person" list="sched-person-list" placeholder="이름 (예: 배원기)" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px">
+          <datalist id="sched-person-list"></datalist>
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">분류</label>
           <select id="sched-f-cat" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px"></select>
           <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">제목</label>
@@ -5032,7 +5035,7 @@ async function loadSchedule(){
     const nd=v=>(typeof v==='string'&&/\dT\d/.test(v))?new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}):v;
     schedEvents=(j&&j.ok&&Array.isArray(j.rows)?j.rows:[])
       .filter(row=>row&&row[0])
-      .map(row=>({ id:String(row[0]), date:String(nd(row[1])||'').slice(0,10), title:String(row[2]||''), cat:String(row[3]||'기타'), memo:String(row[4]||'') }))
+      .map(row=>({ id:String(row[0]), date:String(nd(row[1])||'').slice(0,10), title:String(row[2]||''), cat:String(row[3]||'기타'), memo:String(row[4]||''), person:String(row[6]||'') }))
       .filter(ev=>/^\d{4}-\d{2}-\d{2}$/.test(ev.date));   // 날짜 형식 맞는 것만 (백엔드 미갱신 시 클레임 오표시 방지)
     if(st) st.textContent='';
   }catch(e){ if(st) st.textContent='(오프라인 — 저장은 됨)'; console.warn('schedule load fail',e); }
@@ -5064,7 +5067,7 @@ function renderSchedule(){
       const dcolor=dow===0?'#c0392b':dow===6?'#2980b9':'#1d1d1f';
       html+=`<td onclick="schedAdd('${ds}')" style="height:96px;vertical-align:top;border:1px solid #f0f0ee;padding:3px 4px;cursor:pointer;${isToday?'background:rgba(23,162,184,0.07)':''}">
         <div style="font-size:12px;font-weight:${isToday?700:500};color:${dcolor};margin-bottom:2px">${day}${isToday?' <span style="font-size:9px;color:#17A2B8">오늘</span>':''}</div>
-        ${evs.map(ev=>`<div onclick="event.stopPropagation();schedEdit('${ev.id}')" title="${esc4(ev.title+(ev.memo?' — '+ev.memo:''))}" style="font-size:10.5px;background:${schedCatColor(ev.cat)};color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">${esc4(ev.title)}</div>`).join('')}
+        ${evs.map(ev=>`<div onclick="event.stopPropagation();schedEdit('${ev.id}')" title="${esc4((ev.person?'['+ev.person+'] ':'')+ev.title+(ev.memo?' — '+ev.memo:''))}" style="font-size:10.5px;background:${schedCatColor(ev.cat)};color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">${ev.person?'<b>'+esc4(ev.person)+'</b>·':''}${esc4(ev.title)}</div>`).join('')}
       </td>`;
     }
     html+='</tr>';
@@ -5077,12 +5080,16 @@ function renderSchedule(){
     html+='<div style="margin-top:8px">'+monthEvs.map(ev=>`<div onclick="schedEdit('${ev.id}')" style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid #f2f2f0;cursor:pointer;font-size:13px">
       <span style="color:#888;min-width:64px">${ev.date.slice(5).replace('-','/')}</span>
       <span style="background:${schedCatColor(ev.cat)};color:#fff;border-radius:4px;padding:1px 7px;font-size:11px;flex-shrink:0">${esc4(ev.cat)}</span>
+      ${ev.person?`<span style="color:#17A2B8;font-weight:700;flex-shrink:0;min-width:52px">${esc4(ev.person)}</span>`:'<span style="min-width:52px;color:#ccc">-</span>'}
       <span style="font-weight:500">${esc4(ev.title)}</span>
       <span style="color:#aaa;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc4(ev.memo||'')}</span></div>`).join('')+'</div>';
   } else {
     html+='<div style="margin-top:8px;color:#bbb;font-size:13px">등록된 일정이 없습니다. 날짜 칸이나 "+ 일정 추가"를 눌러 등록하세요.</div>';
   }
   el.innerHTML=html;
+  // 담당자 자동완성 목록 (기존 입력 이름들)
+  const _dl=document.getElementById('sched-person-list');
+  if(_dl){ const names=[...new Set(schedEvents.map(e=>e.person).filter(Boolean))].sort(); _dl.innerHTML=names.map(n=>`<option value="${esc4(n)}">`).join(''); }
 }
 function _schedFillCats(cur){
   const sel=document.getElementById('sched-f-cat'); if(!sel) return;
@@ -5093,6 +5100,7 @@ function schedAdd(date){
   document.getElementById('sched-f-id').value='';
   document.getElementById('sched-f-date').value=date||(schedYear+'-'+String(schedMonth+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0'));
   _schedFillCats('회의');
+  document.getElementById('sched-f-person').value='';
   document.getElementById('sched-f-title').value='';
   document.getElementById('sched-f-memo').value='';
   document.getElementById('sched-f-del').style.display='none';
@@ -5104,6 +5112,7 @@ function schedEdit(id){
   document.getElementById('sched-f-id').value=ev.id;
   document.getElementById('sched-f-date').value=ev.date;
   _schedFillCats(ev.cat);
+  document.getElementById('sched-f-person').value=ev.person||'';
   document.getElementById('sched-f-title').value=ev.title;
   document.getElementById('sched-f-memo').value=ev.memo;
   document.getElementById('sched-f-del').style.display='inline-block';
@@ -5115,16 +5124,17 @@ async function schedSave(){
   const date=document.getElementById('sched-f-date').value;
   const title=document.getElementById('sched-f-title').value.trim();
   const cat=document.getElementById('sched-f-cat').value;
+  const person=document.getElementById('sched-f-person').value.trim();
   const memo=document.getElementById('sched-f-memo').value.trim();
   if(!date){ alert('날짜를 선택하세요.'); return; }
   if(!title){ alert('제목을 입력하세요.'); return; }
   const i=schedEvents.findIndex(x=>x.id===id);
-  const ev={id,date,title,cat,memo};
+  const ev={id,date,title,cat,memo,person};
   if(i>=0) schedEvents[i]=ev; else schedEvents.push(ev);
   schedCloseModal(); renderSchedule();
   try{
     if(typeof CLAIM_SHEET_URL!=='undefined')
-      await fetch(CLAIM_SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:CLAIM_SHEET_KEY,type:'schedule',action:'save',id,date,title,category:cat,memo})});
+      await fetch(CLAIM_SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:CLAIM_SHEET_KEY,type:'schedule',action:'save',id,date,title,category:cat,memo,person})});
   }catch(e){ console.warn('schedule save fail',e); }
 }
 async function schedDelete(){
