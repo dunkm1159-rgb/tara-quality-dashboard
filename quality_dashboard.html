@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/11 08:38</span>
+      v<span id="build-stamp">08/11 09:03</span>
     </div>
   </aside>
 
@@ -2295,7 +2295,7 @@ function collectPrintTargets() {
   const t = (window.GAJEBON_TODAY && typeof window.GAJEBON_TODAY === 'object') ? window.GAJEBON_TODAY : {};
   const prog = (t.active_progress || t.new_progress || []).slice()
     .filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)))   // 완료 특례 제외
-    .sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || ''))).slice(0, 20);
+    .sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || '')));   // 진행중 전체 표시 (20개 제한 제거)
   return { done: t.new_completed || [], prog };
 }
 let _showOlderPrint = false;
