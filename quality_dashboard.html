@@ -441,7 +441,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/11 12:02</span>
+      v<span id="build-stamp">08/11 15:31</span>
     </div>
   </aside>
 
@@ -996,6 +996,7 @@
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
           <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">🆕 오늘 신규완료</button>
           <button type="button" onclick="exportGajebon()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap">⬇ 엑셀 내려받기</button>
+          <button type="button" onclick="bulkStampGajebon()" style="border:1px solid #c93400;background:#fff;color:#c93400;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap" title="현재 탭에서 ERP완료된 가제본 건을 오늘 날짜로 일괄 완료 처리">⚡ ERP완료 일괄처리</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -4808,6 +4809,35 @@ function renderGajebonTable() {
         return prog + GAJEBON_PARTS.map(p => partCell(order, p)).join('') + ovsCells(order); })()}
     </tr>`;
   }).join('');
+}
+
+// ── ERP완료 → 가제본 일괄 완료 처리 (현재 탭 기준, 일회성) ──
+async function bulkStampGajebon() {
+  const sheet = gajebonCurrentSheet;
+  const rows = gajebonSheets[sheet] || [];
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const targets = rows.filter(r =>
+    (r['진행상태'] === '완료') &&
+    (r['요청내용'] || '').includes('가제본') &&
+    !gajDate(r['주문번호'] || '') &&
+    !(typeof isStickerDone === 'function' && isStickerDone(r))
+  );
+  if (!targets.length) { alert('[' + sheet + '] 탭에 일괄 처리할 ERP완료 가제본 건이 없습니다.\n(이미 가제본일이 있는 건은 제외됩니다)'); return; }
+  if (!confirm('[' + sheet + '] 탭에서 ERP완료된 가제본 ' + targets.length + '건을\n오늘(' + today + ') 날짜로 일괄 가제본 완료 처리합니다.\n\n· 가제본일이 이미 있는 건은 제외\n· 되돌리려면 각 건의 날짜칸을 비우면 됩니다\n\n진행할까요?')) return;
+  let n = 0;
+  for (const r of targets) {
+    const order = String(r['주문번호'] || '').trim();
+    if (!order) continue;
+    gajebonDateStore[order] = today;
+    try {
+      if (typeof CLAIM_SHEET_URL !== 'undefined')
+        await fetch(CLAIM_SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: CLAIM_SHEET_KEY, type: 'gajebon', order: order, date: today }) });
+    } catch (e) { console.warn('bulk gajebon fail', order, e); }
+    n++;
+    await new Promise(res => setTimeout(res, 120));
+  }
+  renderGajebonTable();
+  alert(n + '건 일괄 완료 처리했습니다. (가제본일 ' + today + ')\n웹에도 저장됐어요.');
 }
 
 // ── 가제본 완료날짜 (구글시트 저장, ERP 자동수집과 무관하게 보존) ──
