@@ -387,6 +387,12 @@
     </div>
 
     <div class="sidebar-section">
+      <button class="nav-item" id="nav-schedule" onclick="showTab('schedule',this)">
+        <span class="nav-icon"><i class="ti ti-calendar-month"></i></span> 월간 일정
+      </button>
+    </div>
+
+    <div class="sidebar-section">
       <div class="sidebar-section-label">생산 현황</div>
       <button class="nav-item" id="nav-wip" onclick="showTab('wip',this)">
         <span class="nav-icon"><i class="ti ti-building-factory-2"></i></span> 설비별 작업현황
@@ -441,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/11 15:35</span>
+      v<span id="build-stamp">08/11 16:41</span>
     </div>
   </aside>
 
@@ -1032,6 +1038,43 @@
       </div>
     </div>
 
+    <!-- ============ 품질개선팀 월간 일정 ============ -->
+    <div id="tab-schedule" class="tab">
+      <div class="section-header">
+        <div class="section-title">📅 품질개선팀 월간 일정</div>
+        <button onclick="schedAdd()" style="border:1px solid #17A2B8;background:#17A2B8;color:#fff;border-radius:8px;padding:7px 15px;font-size:13px;cursor:pointer;font-weight:600">+ 일정 추가</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin:6px 0 16px;flex-wrap:wrap">
+        <button class="claim-year-btn" onclick="schedMove(-1)">◀ 이전달</button>
+        <span id="sched-month-label" style="font-size:17px;font-weight:700;min-width:150px;text-align:center"></span>
+        <button class="claim-year-btn" onclick="schedMove(1)">다음달 ▶</button>
+        <button class="claim-year-btn" onclick="schedToday()">오늘</button>
+        <span id="sched-status" style="font-size:12px;color:#999;margin-left:6px"></span>
+      </div>
+      <div id="sched-calendar"></div>
+      <div id="sched-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:14px;padding:22px 24px;width:380px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,0.25)">
+          <div style="font-size:15px;font-weight:700;margin-bottom:14px" id="sched-modal-title">일정 추가</div>
+          <input type="hidden" id="sched-f-id">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">날짜</label>
+          <input type="date" id="sched-f-date" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">분류</label>
+          <select id="sched-f-cat" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px"></select>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">제목</label>
+          <input type="text" id="sched-f-title" placeholder="예: 월간 품질회의" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:11px">
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:3px">메모 (선택)</label>
+          <textarea id="sched-f-memo" rows="2" style="width:100%;box-sizing:border-box;border:1px solid #d2d2d7;border-radius:8px;padding:7px 9px;font-size:13px;margin-bottom:14px;resize:vertical"></textarea>
+          <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+            <button id="sched-f-del" onclick="schedDelete()" style="border:1px solid #e0e0e0;background:#fff;color:#c0392b;border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer;display:none">삭제</button>
+            <div style="display:flex;gap:8px;margin-left:auto">
+              <button onclick="schedCloseModal()" style="border:1px solid #d2d2d7;background:#fff;color:#555;border-radius:8px;padding:7px 15px;font-size:13px;cursor:pointer">취소</button>
+              <button onclick="schedSave()" style="border:none;background:#17A2B8;color:#fff;border-radius:8px;padding:7px 17px;font-size:13px;cursor:pointer;font-weight:600">저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ 월간 리포트 ============ -->
     <div id="tab-monthly" class="tab">
       <div class="section-header">
@@ -1401,7 +1444,8 @@
               <th style="text-align:center;white-space:nowrap">판정등급</th>
               <th style="white-space:nowrap">설비</th>
               <th style="text-align:center;white-space:nowrap">금액(만원)</th>
-              <th>제품 / 사고 내용</th>
+              <th style="white-space:nowrap">제품명</th>
+              <th style="white-space:nowrap">부적합 상세내역 <span style="font-size:10px;color:#aaa;font-weight:400">(MES)</span></th>
             </tr></thead>
             <tbody id="worker-detail-tbody"></tbody>
           </table>
@@ -1960,6 +2004,37 @@ function toggleWorkerSingles() {
   renderWorker(true);
 }
 
+// MES 부적합내역(QUALITY_DATA) → 주문번호/제품명 매칭용 인덱스 (사내 우선)
+let _qualDetailIdx = null;
+function qualDetailIndex() {
+  if (_qualDetailIdx) return _qualDetailIdx;
+  const byOrder = {}, byProd = {}, byOrderAll = {}, byProdAll = {};
+  const M = (window.QUALITY_DATA && window.QUALITY_DATA.months) || {};
+  Object.values(M).forEach(mo => {
+    (mo.rows || []).forEach(x => {
+      // 상세내역(사유) 우선, 없으면 짧은 부적합내역
+      const dc = (String(x['사유'] || '').trim() || String(x['부적합내역'] || '').trim()); if (!dc) return;
+      const o = String(x['주문번호'] || '').trim();
+      const p = String(x['제품명'] || '').trim();
+      const inner = String(x['사내외주'] || '') === '사내';
+      if (o) { if (inner && !byOrder[o]) byOrder[o] = dc; if (!byOrderAll[o]) byOrderAll[o] = dc; }
+      if (p) { if (inner && !byProd[p]) byProd[p] = dc; if (!byProdAll[p]) byProdAll[p] = dc; }
+    });
+  });
+  _qualDetailIdx = { byOrder, byProd, byOrderAll, byProdAll };
+  return _qualDetailIdx;
+}
+function workerDefectDetail(r) {
+  const idx = qualDetailIndex();
+  const o = String(r[6] || '').trim();       // 주문번호 우선 매칭
+  if (o && idx.byOrder[o]) return idx.byOrder[o];
+  const p = String(r[5] || '').trim();        // 제품명 매칭
+  if (p && idx.byProd[p]) return idx.byProd[p];
+  if (o && idx.byOrderAll[o]) return idx.byOrderAll[o];   // 사내 매칭 없으면 전체에서
+  if (p && idx.byProdAll[p]) return idx.byProdAll[p];
+  return '';
+}
+
 function renderWorker(skipTabs) {
   const wd = (window.WORKER_DATA && window.WORKER_DATA.rows) ? window.WORKER_DATA.rows : [];
   const up = document.getElementById('worker-updated');
@@ -2068,14 +2143,15 @@ function renderWorker(skipTabs) {
   const dt = document.getElementById('worker-detail-tbody');
   if (dt) {
     const sorted = rows.slice().sort((a, b) => String(b[0]||'').localeCompare(String(a[0]||'')));
-    dt.innerHTML = sorted.map(r => `<tr>
+    dt.innerHTML = sorted.map(r => { const det = workerDefectDetail(r); return `<tr>
       <td style="text-align:center;white-space:nowrap;color:#666">${r[0]||''}</td>
       <td style="white-space:nowrap;font-weight:600">${wEsc(wname(r[1]))}</td>
       <td style="text-align:center;white-space:nowrap"><span style="color:${LV_COLORS[r[3]]||'#666'};font-weight:600">${LV_NAMES[r[3]]||r[2]||''}</span></td>
       <td style="white-space:nowrap;color:#666">${wEsc(r[4])}</td>
       <td style="text-align:right;white-space:nowrap;color:#c0392b">${r[8]?Math.round(r[8]/10000).toLocaleString():'-'}</td>
-      <td style="color:#444">${wEsc(r[5])}</td>
-    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:#999;padding:16px">해당 없음</td></tr>';
+      <td style="color:#444;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${wEsc(r[5])}">${wEsc(r[5])}</td>
+      <td style="color:#1d1d1f;max-width:300px" title="${wEsc(det)}">${det ? wEsc(det) : '<span style=\"color:#ccc\">-</span>'}</td>
+    </tr>`; }).join('') || '<tr><td colspan="7" style="text-align:center;color:#999;padding:16px">해당 없음</td></tr>';
   }
   const dnote = document.getElementById('worker-detail-note');
   if (dnote) dnote.textContent = workerLevel ? (LV_NAMES[workerLevel] + ' ' + rows.length + '건') : ('전체 ' + rows.length + '건');
@@ -2141,6 +2217,7 @@ function renderWorker(skipTabs) {
 // ========================
 const TAB_TITLES = {
   dashboard: '대시보드',
+  schedule: '품질개선팀 월간 일정',
   analysis: '부적합사고 분석',
   kpi: '품질 KPI',
   nccost: '품질사고 관리대장',
@@ -2207,6 +2284,7 @@ function showTab(name, btn) {
   if (name === 'nccost') renderNcCost();
   if (name === 'wip') renderWip();
   if (name === 'monthly') renderMonthly();
+  if (name === 'schedule') { renderSchedule(); loadSchedule(); }
 }
 
 // ========================
@@ -4879,6 +4957,136 @@ async function loadGajebonDates(){
   }catch(e){ console.warn('gajebon dates load fail',e); }
 }
 
+// ========================
+// 품질개선팀 월간 일정 (구글시트 공유)
+// ========================
+const SCHED_CATS = [
+  { k:'회의', c:'#17A2B8' }, { k:'보고', c:'#E67E22' }, { k:'점검', c:'#8E44AD' },
+  { k:'교육', c:'#27AE60' }, { k:'마감', c:'#C0392B' }, { k:'기타', c:'#7f8c8d' }
+];
+function schedCatColor(k){ const f=SCHED_CATS.find(x=>x.k===k); return f?f.c:'#7f8c8d'; }
+function esc4(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let schedEvents = [];
+const _schedNow = new Date();
+let schedYear = _schedNow.getFullYear();
+let schedMonth = _schedNow.getMonth();   // 0-indexed
+
+async function loadSchedule(){
+  const st = document.getElementById('sched-status');
+  try{
+    if(typeof CLAIM_SHEET_URL==='undefined'){ renderSchedule(); return; }
+    if(st) st.textContent='불러오는 중…';
+    const r=await fetch(CLAIM_SHEET_URL+'?type=schedule&t='+Date.now());
+    const j=await r.json();
+    const nd=v=>(typeof v==='string'&&/\dT\d/.test(v))?new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}):v;
+    schedEvents=(j&&j.ok&&Array.isArray(j.rows)?j.rows:[])
+      .filter(row=>row&&row[0])
+      .map(row=>({ id:String(row[0]), date:String(nd(row[1])||'').slice(0,10), title:String(row[2]||''), cat:String(row[3]||'기타'), memo:String(row[4]||'') }))
+      .filter(ev=>/^\d{4}-\d{2}-\d{2}$/.test(ev.date));   // 날짜 형식 맞는 것만 (백엔드 미갱신 시 클레임 오표시 방지)
+    if(st) st.textContent='';
+  }catch(e){ if(st) st.textContent='(오프라인 — 저장은 됨)'; console.warn('schedule load fail',e); }
+  renderSchedule();
+}
+function schedMove(d){ schedMonth+=d; if(schedMonth<0){schedMonth=11;schedYear--;} if(schedMonth>11){schedMonth=0;schedYear++;} renderSchedule(); }
+function schedToday(){ const n=new Date(); schedYear=n.getFullYear(); schedMonth=n.getMonth(); renderSchedule(); }
+
+function renderSchedule(){
+  const lab=document.getElementById('sched-month-label');
+  if(lab) lab.textContent=schedYear+'년 '+(schedMonth+1)+'월';
+  const el=document.getElementById('sched-calendar'); if(!el) return;
+  const startDow=new Date(schedYear,schedMonth,1).getDay();
+  const daysIn=new Date(schedYear,schedMonth+1,0).getDate();
+  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
+  const byDate={};
+  schedEvents.forEach(ev=>{ (byDate[ev.date]=byDate[ev.date]||[]).push(ev); });
+  const DOW=['일','월','화','수','목','금','토'];
+  let html='<table style="width:100%;table-layout:fixed;border-collapse:collapse">';
+  html+='<thead><tr>'+DOW.map((d,i)=>`<th style="padding:6px;font-size:12px;color:${i===0?'#c0392b':i===6?'#2980b9':'#666'};border-bottom:2px solid #e5e5e0">${d}</th>`).join('')+'</tr></thead><tbody>';
+  let day=1-startDow;
+  for(let w=0; w<6 && day<=daysIn; w++){
+    html+='<tr>';
+    for(let dow=0; dow<7; dow++, day++){
+      if(day<1||day>daysIn){ html+='<td style="height:96px;border:1px solid #f0f0ee;background:#fafafa"></td>'; continue; }
+      const ds=schedYear+'-'+String(schedMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const isToday=ds===today;
+      const evs=byDate[ds]||[];
+      const dcolor=dow===0?'#c0392b':dow===6?'#2980b9':'#1d1d1f';
+      html+=`<td onclick="schedAdd('${ds}')" style="height:96px;vertical-align:top;border:1px solid #f0f0ee;padding:3px 4px;cursor:pointer;${isToday?'background:rgba(23,162,184,0.07)':''}">
+        <div style="font-size:12px;font-weight:${isToday?700:500};color:${dcolor};margin-bottom:2px">${day}${isToday?' <span style="font-size:9px;color:#17A2B8">오늘</span>':''}</div>
+        ${evs.map(ev=>`<div onclick="event.stopPropagation();schedEdit('${ev.id}')" title="${esc4(ev.title+(ev.memo?' — '+ev.memo:''))}" style="font-size:10.5px;background:${schedCatColor(ev.cat)};color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">${esc4(ev.title)}</div>`).join('')}
+      </td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  const ym=schedYear+'-'+String(schedMonth+1).padStart(2,'0');
+  const monthEvs=schedEvents.filter(ev=>ev.date.slice(0,7)===ym).sort((a,b)=>a.date.localeCompare(b.date));
+  html+=`<div style="margin-top:16px;font-size:13px;font-weight:700;color:#555">이번 달 일정 (${monthEvs.length})</div>`;
+  if(monthEvs.length){
+    html+='<div style="margin-top:8px">'+monthEvs.map(ev=>`<div onclick="schedEdit('${ev.id}')" style="display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid #f2f2f0;cursor:pointer;font-size:13px">
+      <span style="color:#888;min-width:64px">${ev.date.slice(5).replace('-','/')}</span>
+      <span style="background:${schedCatColor(ev.cat)};color:#fff;border-radius:4px;padding:1px 7px;font-size:11px;flex-shrink:0">${esc4(ev.cat)}</span>
+      <span style="font-weight:500">${esc4(ev.title)}</span>
+      <span style="color:#aaa;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc4(ev.memo||'')}</span></div>`).join('')+'</div>';
+  } else {
+    html+='<div style="margin-top:8px;color:#bbb;font-size:13px">등록된 일정이 없습니다. 날짜 칸이나 "+ 일정 추가"를 눌러 등록하세요.</div>';
+  }
+  el.innerHTML=html;
+}
+function _schedFillCats(cur){
+  const sel=document.getElementById('sched-f-cat'); if(!sel) return;
+  sel.innerHTML=SCHED_CATS.map(c=>`<option value="${c.k}" ${cur===c.k?'selected':''}>${c.k}</option>`).join('');
+}
+function schedAdd(date){
+  document.getElementById('sched-modal-title').textContent='일정 추가';
+  document.getElementById('sched-f-id').value='';
+  document.getElementById('sched-f-date').value=date||(schedYear+'-'+String(schedMonth+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0'));
+  _schedFillCats('회의');
+  document.getElementById('sched-f-title').value='';
+  document.getElementById('sched-f-memo').value='';
+  document.getElementById('sched-f-del').style.display='none';
+  document.getElementById('sched-modal').style.display='flex';
+}
+function schedEdit(id){
+  const ev=schedEvents.find(x=>x.id===id); if(!ev) return;
+  document.getElementById('sched-modal-title').textContent='일정 수정';
+  document.getElementById('sched-f-id').value=ev.id;
+  document.getElementById('sched-f-date').value=ev.date;
+  _schedFillCats(ev.cat);
+  document.getElementById('sched-f-title').value=ev.title;
+  document.getElementById('sched-f-memo').value=ev.memo;
+  document.getElementById('sched-f-del').style.display='inline-block';
+  document.getElementById('sched-modal').style.display='flex';
+}
+function schedCloseModal(){ document.getElementById('sched-modal').style.display='none'; }
+async function schedSave(){
+  const id=document.getElementById('sched-f-id').value || ('S'+Date.now());
+  const date=document.getElementById('sched-f-date').value;
+  const title=document.getElementById('sched-f-title').value.trim();
+  const cat=document.getElementById('sched-f-cat').value;
+  const memo=document.getElementById('sched-f-memo').value.trim();
+  if(!date){ alert('날짜를 선택하세요.'); return; }
+  if(!title){ alert('제목을 입력하세요.'); return; }
+  const i=schedEvents.findIndex(x=>x.id===id);
+  const ev={id,date,title,cat,memo};
+  if(i>=0) schedEvents[i]=ev; else schedEvents.push(ev);
+  schedCloseModal(); renderSchedule();
+  try{
+    if(typeof CLAIM_SHEET_URL!=='undefined')
+      await fetch(CLAIM_SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:CLAIM_SHEET_KEY,type:'schedule',action:'save',id,date,title,category:cat,memo})});
+  }catch(e){ console.warn('schedule save fail',e); }
+}
+async function schedDelete(){
+  const id=document.getElementById('sched-f-id').value; if(!id) return;
+  if(!confirm('이 일정을 삭제할까요?')) return;
+  schedEvents=schedEvents.filter(x=>x.id!==id);
+  schedCloseModal(); renderSchedule();
+  try{
+    if(typeof CLAIM_SHEET_URL!=='undefined')
+      await fetch(CLAIM_SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:CLAIM_SHEET_KEY,type:'schedule',action:'delete',id})});
+  }catch(e){ console.warn('schedule delete fail',e); }
+}
+
 function updateGajebonField(idx, field, value) {
   const rows = gajebonSheets[gajebonCurrentSheet];
   if (!rows || !rows[idx]) return;
@@ -6980,6 +7188,7 @@ function initDashboard() {
   showTab('dashboard', document.getElementById('nav-dashboard'));
   loadSheetClaims();
   loadGajebonDates();
+  loadSchedule();
 }
 
 if (document.readyState === 'loading') {
