@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/12 16:33</span>
+      v<span id="build-stamp">08/13 07:48</span>
     </div>
   </aside>
 
@@ -5064,6 +5064,8 @@ const _schedNow = new Date();
 let schedYear = _schedNow.getFullYear();
 let schedMonth = _schedNow.getMonth();   // 0-indexed
 let schedMode = 'schedule';   // 'schedule' | 'gajebon'
+let gajExpanded = new Set();   // 가제본 완료 달력에서 '더보기' 펼친 날짜들
+function gajToggleDay(ds){ if(gajExpanded.has(ds)) gajExpanded.delete(ds); else gajExpanded.add(ds); renderSchedule(); }
 function setSchedMode(m){
   schedMode = m;
   const a=document.getElementById('sched-mode-sch'), b=document.getElementById('sched-mode-gaj');
@@ -5103,9 +5105,13 @@ function renderSchedule(){
   const isGaj = schedMode==='gajebon';
   const byDate={};
   schedEvents.forEach(ev=>{ schedDateRange(ev.date, ev.end).forEach(ds=>{ (byDate[ds]=byDate[ds]||[]).push(ev); }); });
-  const gajBy={};   // 가제본일 도장 → 날짜별 주문 목록
-  if(isGaj){ Object.entries(gajebonDateStore||{}).forEach(([order,d])=>{ if(!d) return; const k=String(d).slice(0,10); (gajBy[k]=gajBy[k]||[]).push(order); }); }
-  const prodOf=o=>((typeof productOfOrder==='function'?productOfOrder(o):'')||o);
+  const gajBy={}, gajProd={};   // 날짜 → Set(주문), 주문 → 제품명
+  if(isGaj){
+    const addG=(order,d,prod)=>{ order=String(order||'').trim(); const k=String(d||'').slice(0,10); if(!order||!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; (gajBy[k]=gajBy[k]||new Set()).add(order); if(prod&&!gajProd[order]) gajProd[order]=prod; };
+    Object.entries(gajebonDateStore||{}).forEach(([order,d])=>addG(order,d));                                  // 가제본일 도장
+    ((window.GAJEBON_TODAY&&window.GAJEBON_TODAY.new_completed)||[]).forEach(r=>addG(r['주문번호'],r['완료일'],r['제품명']));   // 최근 자동 완료
+  }
+  const prodOf=o=>(gajProd[o]||(typeof productOfOrder==='function'?productOfOrder(o):'')||o);
   const DOW=['일','월','화','수','목','금','토'];
   let html='<table style="width:100%;table-layout:fixed;border-collapse:collapse">';
   html+='<thead><tr>'+DOW.map((d,i)=>`<th style="padding:6px;font-size:12px;color:${i===0?'#c0392b':i===6?'#2980b9':'#666'};border-bottom:2px solid #e5e5e0">${d}</th>`).join('')+'</tr></thead><tbody>';
@@ -5121,10 +5127,13 @@ function renderSchedule(){
       const bg=isToday?'background:rgba(23,162,184,0.07);':(hol?'background:rgba(192,57,43,0.05);':'');
       let inner='';
       if(isGaj){
-        const orders=gajBy[ds]||[];
+        const orders=[...(gajBy[ds]||[])];
         if(orders.length){
+          const LIMIT=3, exp=gajExpanded.has(ds);
+          const shown=exp?orders:orders.slice(0,LIMIT);
           inner=`<div style="font-size:10px;background:#ddf4e2;color:#248a3d;border-radius:4px;padding:1px 6px;margin-bottom:3px;display:inline-block;font-weight:700">✓ ${orders.length}건</div>`
-            + orders.map(o=>`<div title="${esc4(o+' · '+prodOf(o))}" style="font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px">${esc4(prodOf(o))}</div>`).join('');
+            + shown.map(o=>`<div title="${esc4(o+' · '+prodOf(o))}" style="font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px">${esc4(prodOf(o))}</div>`).join('')
+            + (orders.length>LIMIT?`<div onclick="event.stopPropagation();gajToggleDay('${ds}')" style="font-size:9.5px;color:#17A2B8;cursor:pointer;font-weight:600">${exp?'접기 ▲':'+'+(orders.length-LIMIT)+' 더보기 ▼'}</div>`:'');
         }
       } else {
         inner=(byDate[ds]||[]).map(ev=>`<div onclick="event.stopPropagation();schedEdit('${ev.id}')" title="${esc4((ev.person?'['+ev.person+'] ':'')+ev.title+(ev.memo?' — '+ev.memo:''))}" style="font-size:10.5px;background:${schedCatColor(ev.cat)};color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer">${ev.person?'<b>'+esc4(ev.person)+'</b>·':''}${esc4(ev.title)}</div>`).join('');
@@ -5140,7 +5149,7 @@ function renderSchedule(){
   html+='</tbody></table>';
   if(isGaj){
     const list=[];
-    Object.entries(gajebonDateStore||{}).forEach(([order,d])=>{ if(d && String(d).slice(0,7)===ym) list.push([String(d).slice(0,10),order]); });
+    Object.keys(gajBy).forEach(k=>{ if(k.slice(0,7)===ym) [...gajBy[k]].forEach(o=>list.push([k,o])); });
     list.sort((a,b)=>a[0].localeCompare(b[0]));
     html+=`<div style="margin-top:16px;font-size:13px;font-weight:700;color:#555">이번 달 가제본 완료 (${list.length})</div>`;
     html+= list.length ? ('<div style="margin-top:8px">'+list.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid #f2f2f0;font-size:13px">
