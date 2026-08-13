@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/13 12:02</span>
+      v<span id="build-stamp">08/13 12:33</span>
     </div>
   </aside>
 
@@ -4924,10 +4924,10 @@ function renderGajebonTable() {
           </select>
           <input type="date" value="${gajDate(r['주문번호']||'')}" onchange="saveGajebonDate('${r['주문번호']||''}', this.value)"
             title="가제본 만든 날짜"
-            style="border:1px solid #d2d2d7;border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;">
+            style="border:1px solid ${gajDate(r['주문번호']||'')?'#e0a800':'#d2d2d7'};border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;background:${gajDate(r['주문번호']||'')?'#FFF3B0':'#fff'};">
           ${status==='완료' ? (gajDate(r['주문번호']||'')
-            ? '<div style="font-size:10px;color:#248a3d;font-weight:600">✓ 가제본 완료</div>'
-            : (isStickerDone(r) ? '<div style="font-size:10px;color:#248a3d;font-weight:600">✓ 스티커 특례 완료</div>' : '')) : ''}
+            ? '<div style="display:inline-block;font-size:10px;color:#7a5c00;font-weight:700;background:#FFE58A;border-radius:4px;padding:1px 7px;margin-top:2px">✓ 가제본 완료</div>'
+            : (isStickerDone(r) ? '<div style="display:inline-block;font-size:10px;color:#7a5c00;font-weight:700;background:#FFF0C2;border-radius:4px;padding:1px 7px;margin-top:2px">✓ 스티커 특례</div>' : '')) : ''}
         </div>
       </td>
       ${(() => { const order = r['주문번호']||'';
