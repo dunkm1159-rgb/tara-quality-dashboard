@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/13 12:37</span>
+      v<span id="build-stamp">08/13 12:52</span>
     </div>
   </aside>
 
@@ -4905,7 +4905,7 @@ function renderGajebonTable() {
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
     const gajDone = !!gajDate(r['주문번호']||'');   // 가제본일 도장 = 완료 → 행 전체 노랑
-    return `<tr style="${gajDone?'background:#FFF6D6;':''}">
+    return `<tr style="${gajDone?'background:#FFE9A8;':''}">
       <td style="white-space:nowrap;font-size:13px">${r['날짜']||'-'}</td>
       <td style="font-size:13px">${r['주문번호']||'-'}</td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['거래처']}">${r['거래처']||'-'}</td>
@@ -6365,6 +6365,20 @@ function loadGajebonExcel(input) {
 // ========================
 // 클레임 데이터 정규화
 // ========================
+// MES 부적합내역(QUALITY_DATA) 접수유형 → 주문번호 인덱스 (005·006·빈칸 제외)
+let _mesQualIdx = null;
+function mesQualByOrder() {
+  if (_mesQualIdx) return _mesQualIdx;
+  const M = (window.QUALITY_DATA && window.QUALITY_DATA.months) || {};
+  const m = {}, SKIP = new Set(['', '005', '006']);
+  Object.values(M).forEach(mo => (mo.rows || []).forEach(x => {
+    const o = String(x['주문번호'] || '').trim(), t = String(x['접수유형'] || '').trim();
+    if (o && t && !SKIP.has(t) && !m[o]) m[o] = t;
+  }));
+  if (Object.keys(M).length) _mesQualIdx = m;   // QUALITY_DATA 로드됐을 때만 캐시
+  return m;
+}
+
 function normalizeClaimData(rows) {
   const qualMap = {
     '검수중 발견':'검수중발견','검수중 발겨':'검수중발견','검수중불량':'검수중발견',
@@ -6376,6 +6390,7 @@ function normalizeClaimData(rows) {
     '용인 검수중 발견':'용인검수중발견','용인검수중 발견':'용인검수중발견','용인발견':'용인검수중발견',
     '?':'기타','확인중':'기타','':'기타',
   };
+  const _mq = mesQualByOrder();   // MES 접수유형 인덱스 (빈 품질유형 보완)
   const defMap = {
     '뒷뭍음':'뒷묻음','뒤뭍음':'뒷묻음','잉크 묻음':'잉크묻음','잉크 뜯김':'잉크뜯김',
     '더러움(인쇄뒷묻음)':'더러움','더러움(뒷묻음)':'더러움','더러움,표지 뒤집힘(무선)':'더러움',
@@ -6480,7 +6495,9 @@ function normalizeClaimData(rows) {
       return true;
     })
     .map(r => {
-      const q = (r[7]||'').trim(); if (qualMap[q]!==undefined) r[7]=qualMap[q];
+      let q = (r[7]||'').trim();
+      if (!q) { const t = _mq[String(r[1]||'').trim()]; if (t) q = r[7] = t; }   // 빈칸이면 MES 접수유형으로 채움
+      if (qualMap[q]!==undefined) r[7]=qualMap[q];
       const d = (r[8]||'').trim(); if (defMap[d]!==undefined) r[8]=defMap[d];
       r[2] = cleanClient(r[2]);
       return r;
