@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/13 12:34</span>
+      v<span id="build-stamp">08/13 12:37</span>
     </div>
   </aside>
 
@@ -4904,7 +4904,8 @@ function renderGajebonTable() {
     const status = (gajDate(r['주문번호']||'') || isStickerDone(r)) ? '완료' : (r['진행상태'] || '');
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
-    return `<tr>
+    const gajDone = !!gajDate(r['주문번호']||'');   // 가제본일 도장 = 완료 → 행 전체 노랑
+    return `<tr style="${gajDone?'background:#FFF6D6;':''}">
       <td style="white-space:nowrap;font-size:13px">${r['날짜']||'-'}</td>
       <td style="font-size:13px">${r['주문번호']||'-'}</td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['거래처']}">${r['거래처']||'-'}</td>
