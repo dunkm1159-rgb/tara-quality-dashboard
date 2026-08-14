@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/14 08:05</span>
+      v<span id="build-stamp">08/14 09:01</span>
     </div>
   </aside>
 
@@ -507,6 +507,18 @@
         </div>
         <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
         <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
+      </div>
+
+      <!-- 가제본 완료 달력 -->
+      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <div class="card-title" style="margin:0;"><i class="ti ti-bookmark"></i> 가제본 완료 달력</div>
+          <button class="claim-year-btn" onclick="gajCalMove(-1)" style="padding:3px 9px">◀</button>
+          <span id="gajcal-label" style="font-size:14px;font-weight:600;min-width:120px;text-align:center"></span>
+          <button class="claim-year-btn" onclick="gajCalMove(1)" style="padding:3px 9px">▶</button>
+          <button class="claim-year-btn" onclick="gajCalToday()" style="padding:3px 9px">오늘</button>
+        </div>
+        <div id="dash-gajcal"></div>
       </div>
 
       <div class="grid2" style="margin-bottom:16px;">
@@ -2583,6 +2595,7 @@ function refreshDash() {
   renderDashCharts(thisYear);
   renderEquipDefect();
   renderGajebonTodaySummary();
+  if (typeof renderGajCal === 'function') renderGajCal();
 }
 
 function renderDashCharts(year) {
@@ -5174,6 +5187,57 @@ function renderSchedule(){
   }
   el.innerHTML=html;
 }
+// ── 대시보드용 가제본 완료 달력 (가제본일 도장 + 최근 자동 완료) ──
+function gajCompletions(){
+  const by={}, prod={};
+  const addG=(order,d,p)=>{ order=String(order||'').trim(); const k=String(d||'').slice(0,10); if(!order||!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; (by[k]=by[k]||new Set()).add(order); if(p&&!prod[order]) prod[order]=p; };
+  Object.entries(gajebonDateStore||{}).forEach(([o,d])=>addG(o,d));
+  ((window.GAJEBON_TODAY&&window.GAJEBON_TODAY.new_completed)||[]).forEach(r=>addG(r['주문번호'],r['완료일'],r['제품명']));
+  return {by,prod};
+}
+const _gcNow=new Date();
+let gajCalYear=_gcNow.getFullYear(), gajCalMonth=_gcNow.getMonth();
+let gajCalExpanded=new Set();
+function gajCalMove(d){ gajCalMonth+=d; if(gajCalMonth<0){gajCalMonth=11;gajCalYear--;} if(gajCalMonth>11){gajCalMonth=0;gajCalYear++;} renderGajCal(); }
+function gajCalToday(){ const n=new Date(); gajCalYear=n.getFullYear(); gajCalMonth=n.getMonth(); renderGajCal(); }
+function gajCalToggle(ds){ if(gajCalExpanded.has(ds)) gajCalExpanded.delete(ds); else gajCalExpanded.add(ds); renderGajCal(); }
+function renderGajCal(){
+  const el=document.getElementById('dash-gajcal'); if(!el) return;
+  const lab=document.getElementById('gajcal-label'); if(lab) lab.textContent=gajCalYear+'년 '+(gajCalMonth+1)+'월';
+  const {by,prod}=gajCompletions();
+  const prodOf=o=>(prod[o]||(typeof productOfOrder==='function'?productOfOrder(o):'')||o);
+  const startDow=new Date(gajCalYear,gajCalMonth,1).getDay();
+  const daysIn=new Date(gajCalYear,gajCalMonth+1,0).getDate();
+  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
+  const DOW=['일','월','화','수','목','금','토'];
+  let html='<table style="width:100%;table-layout:fixed;border-collapse:collapse">';
+  html+='<thead><tr>'+DOW.map((d,i)=>`<th style="padding:5px;font-size:11px;color:${i===0?'#c0392b':i===6?'#2980b9':'#888'};border-bottom:2px solid #e5e5e0">${d}</th>`).join('')+'</tr></thead><tbody>';
+  let day=1-startDow, total=0;
+  for(let w=0;w<6&&day<=daysIn;w++){
+    html+='<tr>';
+    for(let dow=0;dow<7;dow++,day++){
+      if(day<1||day>daysIn){ html+='<td style="height:72px;border:1px solid #f0f0ee;background:#fafafa"></td>'; continue; }
+      const ds=gajCalYear+'-'+String(gajCalMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const isToday=ds===today, hol=KOR_HOLIDAYS[ds];
+      const dcolor=(hol||dow===0)?'#c0392b':dow===6?'#2980b9':'#1d1d1f';
+      const bg=isToday?'background:rgba(23,162,184,0.07);':(hol?'background:rgba(192,57,43,0.05);':'');
+      const orders=[...(by[ds]||[])]; total+=orders.length;
+      let inner='';
+      if(orders.length){
+        const LIMIT=3, exp=gajCalExpanded.has(ds);
+        const shown=exp?orders:orders.slice(0,LIMIT);
+        inner=`<div style="font-size:10px;background:#FFE58A;color:#7a5c00;border-radius:4px;padding:1px 5px;margin-bottom:2px;display:inline-block;font-weight:700">✓ ${orders.length}</div>`
+          +shown.map(o=>`<div title="${esc4(o+' · '+prodOf(o))}" style="font-size:9.5px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(prodOf(o))}</div>`).join('')
+          +(orders.length>LIMIT?`<div onclick="gajCalToggle('${ds}')" style="font-size:9px;color:#17A2B8;cursor:pointer;font-weight:600">${exp?'접기':'+'+(orders.length-LIMIT)}</div>`:'');
+      }
+      html+=`<td style="height:72px;vertical-align:top;border:1px solid #f0f0ee;padding:2px 3px;${bg}"><div style="font-size:11px;font-weight:${isToday?700:500};color:${dcolor}">${day}</div>${hol?`<div style="font-size:8.5px;color:#c0392b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(hol)}</div>`:''}${inner}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  el.innerHTML=`<div style="font-size:11px;color:#888;margin-bottom:6px">이 달 완료 <b style="color:#7a5c00">${total}</b>건</div>`+html;
+}
+
 function _schedFillCats(cur){
   const sel=document.getElementById('sched-f-cat'); if(!sel) return;
   sel.innerHTML=SCHED_CATS.map(c=>`<option value="${c.k}" ${cur===c.k?'selected':''}>${c.k}</option>`).join('');
