@@ -447,7 +447,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/14 09:01</span>
+      v<span id="build-stamp">08/14 09:48</span>
     </div>
   </aside>
 
@@ -2441,11 +2441,26 @@ function renderHomeWip() {
 }
 
 function collectPrintTargets() {
-  // 완료 = 최근 N일 완료(날짜기준) / 진행중 = 현재 진행중(최근순, 외주전용 제외)
+  // 완료 = 최근 N일 완료(날짜기준) / 진행중 = 미완료 가제본 전부 (30일 자동제외 없이)
   const t = (window.GAJEBON_TODAY && typeof window.GAJEBON_TODAY === 'object') ? window.GAJEBON_TODAY : {};
-  const prog = (t.active_progress || t.new_progress || []).slice()
-    .filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)))   // 완료 특례 제외
-    .sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || '')));   // 진행중 전체 표시 (20개 제한 제거)
+  const hasSheets = Object.values(gajebonSheets || {}).some(a => a && a.length);
+  let prog;
+  if (hasSheets) {
+    const seen = new Set(); prog = [];
+    Object.values(gajebonSheets).forEach(rows => (rows || []).forEach(r => {
+      if (r['진행상태'] !== '진행중') return;                       // 진행중만
+      if (!(r['요청내용'] || '').includes('가제본')) return;          // 가제본 요청 건만
+      const o = String(r['주문번호'] || '').trim();
+      if (!o || seen.has(o)) return;
+      if (gajDate(o)) return;                                        // 가제본일 도장 = 완료 제외
+      if (typeof isStickerDone === 'function' && isStickerDone(r)) return;
+      seen.add(o); prog.push(r);
+    }));
+  } else {
+    prog = (t.active_progress || t.new_progress || []).slice()
+      .filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)));
+  }
+  prog.sort((a, b) => String(b['날짜'] || '').localeCompare(String(a['날짜'] || '')));
   return { done: t.new_completed || [], prog };
 }
 let _showOlderPrint = false;
