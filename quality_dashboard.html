@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/14 · fix</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 품목명만</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 08:08</span>
+      v<span id="build-stamp">08/18 08:19</span>
     </div>
   </aside>
 
@@ -5161,7 +5161,7 @@ function renderSchedule(){
           const LIMIT=3, exp=gajExpanded.has(ds);
           const shown=exp?orders:orders.slice(0,LIMIT);
           inner=`<div style="font-size:10px;background:#FFE58A;color:#7a5c00;border-radius:4px;padding:1px 6px;margin-bottom:3px;display:inline-block;font-weight:700">✓ ${orders.length}건</div>`
-            + shown.map(o=>`<div title="${esc4(o+' · '+prodOf(o))}" style="font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px">${esc4(prodOf(o))}</div>`).join('')
+            + shown.map(o=>`<div title="${esc4(prodOf(o))}" style="font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px">${esc4(prodOf(o))}</div>`).join('')
             + (orders.length>LIMIT?`<div onclick="event.stopPropagation();gajToggleDay('${ds}')" style="font-size:9.5px;color:#17A2B8;cursor:pointer;font-weight:600">${exp?'접기 ▲':'+'+(orders.length-LIMIT)+' 더보기 ▼'}</div>`:'');
         }
       } else {
@@ -5183,7 +5183,6 @@ function renderSchedule(){
     html+=`<div style="margin-top:16px;font-size:13px;font-weight:700;color:#555">이번 달 가제본 완료 (${list.length})</div>`;
     html+= list.length ? ('<div style="margin-top:8px">'+list.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid #f2f2f0;font-size:13px">
       <span style="color:#888;min-width:44px;flex-shrink:0">${r[0].slice(5).replace('-','/')}</span>
-      <span style="color:#a07800;font-weight:600;font-family:monospace;flex-shrink:0">${esc4(r[1])}</span>
       <span style="color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc4(prodOf(r[1]))}</span></div>`).join('')+'</div>')
       : '<div style="margin-top:8px;color:#bbb;font-size:13px">이 달에 가제본 완료(가제본일 도장)된 건이 없습니다. 가제본 현황에서 가제본일을 입력하면 여기에 표시됩니다.</div>';
   } else {
@@ -5242,7 +5241,7 @@ function renderGajCal(){
         const LIMIT=3, exp=gajCalExpanded.has(ds);
         const shown=exp?orders:orders.slice(0,LIMIT);
         inner=`<div style="font-size:10px;background:#FFE58A;color:#7a5c00;border-radius:4px;padding:1px 5px;margin-bottom:2px;display:inline-block;font-weight:700">✓ ${orders.length}</div>`
-          +shown.map(o=>`<div title="${esc4(o+' · '+prodOf(o))}" style="font-size:9.5px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(prodOf(o))}</div>`).join('')
+          +shown.map(o=>`<div title="${esc4(prodOf(o))}" style="font-size:9.5px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(prodOf(o))}</div>`).join('')
           +(orders.length>LIMIT?`<div onclick="gajCalToggle('${ds}')" style="font-size:9px;color:#17A2B8;cursor:pointer;font-weight:600">${exp?'접기':'+'+(orders.length-LIMIT)}</div>`:'');
       }
       html+=`<td style="height:72px;vertical-align:top;border:1px solid #f0f0ee;padding:2px 3px;${bg}"><div style="font-size:11px;font-weight:${isToday?700:500};color:${dcolor}">${day}</div>${hol?`<div style="font-size:8.5px;color:#c0392b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(hol)}</div>`:''}${inner}</td>`;
