@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 제품명표기</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 완료달력전체</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 08:28</span>
+      v<span id="build-stamp">08/18 08:35</span>
     </div>
   </aside>
 
@@ -5136,9 +5136,9 @@ function renderSchedule(){
   schedEvents.forEach(ev=>{ schedDateRange(ev.date, ev.end).forEach(ds=>{ (byDate[ds]=byDate[ds]||[]).push(ev); }); });
   const gajBy={}, gajProd={};   // 날짜 → Set(주문), 주문 → 제품명
   if(isGaj){
-    const addG=(order,d,prod)=>{ order=String(order||'').trim(); const k=String(d||'').slice(0,10); if(!order||!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; (gajBy[k]=gajBy[k]||new Set()).add(order); if(prod&&!gajProd[order]) gajProd[order]=prod; };
-    Object.entries(gajebonDateStore||{}).forEach(([order,d])=>addG(order,d));                                  // 가제본일 도장
-    ((window.GAJEBON_TODAY&&window.GAJEBON_TODAY.new_completed)||[]).forEach(r=>addG(r['주문번호'],r['완료일'],r['제품명']));   // 최근 자동 완료
+    const gc=gajCompletions();   // 완료일 전체(done_dates)+최근완료+도장 통합
+    Object.assign(gajBy, gc.by);
+    Object.assign(gajProd, gc.prod);
   }
   const prodOf=o=>(gajProd[o]||(typeof productOfOrder==='function'?productOfOrder(o):'')||o);
   const DOW=['일','월','화','수','목','금','토'];
@@ -5203,10 +5203,15 @@ function renderSchedule(){
 }
 // ── 대시보드용 가제본 완료 달력 (가제본일 도장 + 최근 자동 완료) ──
 function gajCompletions(){
-  const by={}, prod={};
-  const addG=(order,d,p)=>{ order=String(order||'').trim(); const k=String(d||'').slice(0,10); if(!order||!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; (by[k]=by[k]||new Set()).add(order); if(p&&!prod[order]) prod[order]=p; };
-  Object.entries(gajebonDateStore||{}).forEach(([o,d])=>addG(o,d));
-  ((window.GAJEBON_TODAY&&window.GAJEBON_TODAY.new_completed)||[]).forEach(r=>addG(r['주문번호'],r['완료일'],r['제품명']));
+  const by={}, prod={}, dateOf={};
+  const ok=k=>/^\d{4}-\d{2}-\d{2}$/.test(k);
+  // 1) 전체 완료감지일 (기본) — done_dates: 주문 -> 완료 최초감지일
+  Object.entries(window.GAJEBON_DONE_DATES||{}).forEach(([o,d])=>{ o=String(o).trim(); const k=String(d||'').slice(0,10); if(o&&ok(k)) dateOf[o]=k; });
+  // 2) 최근 자동완료(완료일) — 없으면 보강 + 제품명 확보
+  ((window.GAJEBON_TODAY&&window.GAJEBON_TODAY.new_completed)||[]).forEach(r=>{ const o=String(r['주문번호']||'').trim(); const k=String(r['완료일']||'').slice(0,10); if(o&&ok(k)&&!dateOf[o]) dateOf[o]=k; if(o&&r['제품명']) prod[o]=r['제품명']; });
+  // 3) 가제본일 도장 — 있으면 최우선
+  Object.entries(gajebonDateStore||{}).forEach(([o,d])=>{ o=String(o).trim(); const k=String(d||'').slice(0,10); if(o&&ok(k)) dateOf[o]=k; });
+  Object.entries(dateOf).forEach(([o,k])=>{ (by[k]=by[k]||new Set()).add(o); });
   return {by,prod};
 }
 const _gcNow=new Date();
