@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 품목명만</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 제품명표기</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 08:19</span>
+      v<span id="build-stamp">08/18 08:23</span>
     </div>
   </aside>
 
@@ -5435,8 +5435,17 @@ function savePartStore() { try { localStorage.setItem('gajebonParts', JSON.strin
 function saveTemplates() { try { localStorage.setItem('gajebonPartTpl', JSON.stringify(gajebonPartTemplates)); } catch(e) {} }
 function getPart(order, part) { return (gajebonPartStore[order] || {})[part] || { st: '' }; }
 function productOfOrder(order) {
-  const rows = gajebonSheets[gajebonCurrentSheet] || [];
-  const r = rows.find(x => (x['주문번호']||'') === order);
+  order = String(order||'').trim();
+  // 현재 시트 먼저, 없으면 전체 거래처 시트에서 검색 (완료건이 다른 시트에 있을 수 있음)
+  const cur = gajebonSheets[gajebonCurrentSheet] || [];
+  let r = cur.find(x => String(x['주문번호']||'').trim() === order);
+  if (!r) {
+    for (const name in gajebonSheets) {
+      if (name === gajebonCurrentSheet) continue;
+      r = (gajebonSheets[name]||[]).find(x => String(x['주문번호']||'').trim() === order);
+      if (r) break;
+    }
+  }
   return r ? (r['제품명']||'') : '';
 }
 // 이름표가 채워진 파트만 '해당'으로 본다 (품목마다 다른 칸을 쓰므로)
