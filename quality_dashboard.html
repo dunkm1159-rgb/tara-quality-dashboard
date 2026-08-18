@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 표정리</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 완료일우선</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 08:43</span>
+      v<span id="build-stamp">08/18 09:10</span>
     </div>
   </aside>
 
@@ -5210,8 +5210,8 @@ function gajCompletions(){
   Object.entries(window.GAJEBON_DONE_DATES||{}).forEach(([o,d])=>{ o=String(o).trim(); const k=String(d||'').slice(0,10); if(o&&ok(k)) dateOf[o]=k; });
   // 2) 최근 자동완료(완료일) — 없으면 보강 + 제품명 확보
   ((window.GAJEBON_TODAY&&window.GAJEBON_TODAY.new_completed)||[]).forEach(r=>{ const o=String(r['주문번호']||'').trim(); const k=String(r['완료일']||'').slice(0,10); if(o&&ok(k)&&!dateOf[o]) dateOf[o]=k; if(o&&r['제품명']) prod[o]=r['제품명']; });
-  // 3) 가제본일 도장 — 있으면 최우선
-  Object.entries(gajebonDateStore||{}).forEach(([o,d])=>{ o=String(o).trim(); const k=String(d||'').slice(0,10); if(o&&ok(k)) dateOf[o]=k; });
+  // 3) 가제본일 도장 — done_dates/완료일에 없는 건만 보강 (일괄도장 몰림 방지: 실제 완료일 우선)
+  Object.entries(gajebonDateStore||{}).forEach(([o,d])=>{ o=String(o).trim(); const k=String(d||'').slice(0,10); if(o&&ok(k)&&!dateOf[o]) dateOf[o]=k; });
   Object.entries(dateOf).forEach(([o,k])=>{ (by[k]=by[k]||new Set()).add(o); });
   return {by,prod};
 }
