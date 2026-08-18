@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 막대상한</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 막대통일</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 13:27</span>
+      v<span id="build-stamp">08/18 16:32</span>
     </div>
   </aside>
 
@@ -2226,7 +2226,7 @@ function renderWorker(skipTabs) {
   const labels = top.map(t => wname(t[0]));
   const ds = [1,2,3,4].map(lv => ({
     label: LV_NAMES[lv], data: top.map(t => t[1].lv[lv]),
-    backgroundColor: LV_COLORS[lv], stack: 's', maxBarThickness: 48
+    backgroundColor: LV_COLORS[lv], stack: 's', maxBarThickness: 60
   }));
   if (window._wCharts.bar) window._wCharts.bar.destroy();
   const c1 = document.getElementById('chartWorkerBar');
@@ -7396,6 +7396,8 @@ function applyChartTheme() {
     // 요소: 둥근 막대 / 부드러운 선 / 깔끔한 도넛
     D.elements.bar.borderRadius = 5;
     D.elements.bar.borderSkipped = false;
+    // ── 모든 막대그래프 굵기 상한 통일 (데이터 1개여도 안 늘어나게) ──
+    if (D.datasets && D.datasets.bar) { D.datasets.bar.maxBarThickness = 60; D.datasets.bar.barPercentage = 0.9; D.datasets.bar.categoryPercentage = 0.8; }
     D.elements.line.tension = 0.35;
     D.elements.line.borderWidth = 2;
     D.elements.point.radius = 3;
