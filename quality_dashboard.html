@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · KPI공유</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 특례수정</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/19 08:08</span>
+      v<span id="build-stamp">08/19 08:31</span>
     </div>
   </aside>
 
@@ -4167,6 +4167,8 @@ function isStickerDone(r) {
   const order = String(r['주문번호'] || '').trim();
   if (FORCE_DONE_ORDERS.has(order)) return true;
   if (!String(r['거래처'] || '').includes('단비교육')) return false;
+  // 실제 가제본을 요청한 건(요청내용에 '가제본')은 특례 대상 아님 — 진행중/완료 정상 처리
+  if (String(r['요청내용'] || '').includes('가제본')) return false;
   const txt = String(r['구성'] || '') + ' ' + String(r['제품명'] || '');
   return DANBI_DONE_PATTERNS.some(p => txt.includes(p));
 }
