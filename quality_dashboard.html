@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 해외제품명풀</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 막대상한</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 12:05</span>
+      v<span id="build-stamp">08/18 13:27</span>
     </div>
   </aside>
 
@@ -2719,8 +2719,8 @@ function renderNcCost(){
     new Chart(cntCanvas, {
       type: 'bar',
       data: { labels: monLabels, datasets: [
-        { label: '내부(자사)', data: selfCnts, backgroundColor: '#34c759', stack: 'c' },
-        { label: '외주(협력사)', data: outCnts, backgroundColor: '#E67E22', stack: 'c' }
+        { label: '내부(자사)', data: selfCnts, backgroundColor: '#34c759', stack: 'c', maxBarThickness: 60 },
+        { label: '외주(협력사)', data: outCnts, backgroundColor: '#E67E22', stack: 'c', maxBarThickness: 60 }
       ] },
       options: { responsive: true, maintainAspectRatio: false,
         plugins: {
@@ -2821,7 +2821,7 @@ function ncMixedChart(id, labels, costs, goals){
   const ctx = document.getElementById(id); if (!ctx) return;
   chartInstances[id] = new Chart(ctx, {
     data: { labels, datasets: [
-      { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#17A2B8', borderRadius:6, order:2 },
+      { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#17A2B8', borderRadius:6, order:2, maxBarThickness:60 },
       { type:'line', label:'목표(만)', data:goals, borderColor:'#C0392B', backgroundColor:'#C0392B', borderWidth:2, borderDash:[5,4], pointRadius:0, tension:0.3, order:1 }
     ]},
     options: { responsive:true, maintainAspectRatio:false,
@@ -3445,7 +3445,7 @@ function renderBar(id, labels, data, colors) {
   try {
     chartInstances[id] = new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ data, backgroundColor: colors || '#17A2B8', borderRadius: 5 }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors || '#17A2B8', borderRadius: 5, maxBarThickness: 60 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}건` } } },
