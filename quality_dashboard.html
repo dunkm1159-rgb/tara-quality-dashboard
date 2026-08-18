@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 막대통일</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · KPI공유</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/18 16:32</span>
+      v<span id="build-stamp">08/18 16:58</span>
     </div>
   </aside>
 
@@ -6138,8 +6138,30 @@ let kpiExcelHandle = null;
 function loadKpiOverrides() {
   try { return JSON.parse(localStorage.getItem(KPI_LS_KEY) || '{}'); } catch { return {}; }
 }
-function saveKpiOverrides(obj) {
+function saveKpiOverridesLocal(obj) {
   try { localStorage.setItem(KPI_LS_KEY, JSON.stringify(obj)); } catch(e) {}
+}
+function saveKpiOverrides(obj) {
+  saveKpiOverridesLocal(obj);
+  // 구글시트에도 저장 → 팀원 4명 공유 (KPI 입력은 배원기가 주로 하므로 마지막 저장 우선으로 충분)
+  try {
+    if (typeof CLAIM_SHEET_URL !== 'undefined')
+      fetch(CLAIM_SHEET_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ key: CLAIM_SHEET_KEY, type:'kpi', data: JSON.stringify(obj) }) });
+  } catch(e){ console.warn('kpi 시트 저장 실패', e); }
+}
+// 구글시트에서 KPI 입력값 로드 → 4명이 같은 값 보게
+async function loadKpiFromSheet(){
+  try{
+    if (typeof CLAIM_SHEET_URL === 'undefined') return;
+    const r = await fetch(CLAIM_SHEET_URL + '?type=kpi&t=' + Date.now());
+    const j = await r.json();
+    if(!j || !j.ok || !j.data) return;
+    const ov = JSON.parse(j.data);
+    saveKpiOverridesLocal(ov);                      // 시트값(공유 원천)을 로컬 캐시에 반영
+    applyKpiOverrides();                            // KPI_DATA에 적용
+    if (typeof renderKpi === 'function') renderKpi();
+  }catch(e){ console.warn('kpi 시트 로드 실패', e); }
 }
 
 function applyKpiOverrides() {
@@ -7461,6 +7483,8 @@ function initDashboard() {
   loadSheetClaims();
   loadGajebonDates();
   loadSchedule();
+  applyKpiOverrides();   // 로컬 캐시 먼저 적용(새로고침 시 값 유지)
+  loadKpiFromSheet();    // 시트에서 공유값 로드(4명 동일)
 }
 
 if (document.readyState === 'loading') {
