@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 칸정렬</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 30일완료복구</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/19 10:21</span>
+      v<span id="build-stamp">08/19 10:39</span>
     </div>
   </aside>
 
@@ -2455,6 +2455,7 @@ function collectPrintTargets() {
       if (!o || seen.has(o)) return;
       if (gajDate(o)) return;                                        // 가제본일 도장 = 완료 제외
       if (typeof isStickerDone === 'function' && isStickerDone(r)) return;
+      if (typeof isStaleGajebon === 'function' && isStaleGajebon(r)) return;   // 30일 초과 = 자동완료 제외
       seen.add(o); prog.push(r);
     }));
   } else {
@@ -4153,7 +4154,12 @@ function isAllOutsourced(r) {
 // 오래된 진행중이 '완료만 보이기'에 섞이고 진행중 목록에서 빠지는 문제로 끔.
 // → 진행중은 실제 완료(가제본일 도장 · ERP완료 · 스티커특례) 전까지 계속 진행중 유지.
 function isStaleGajebon(r) {
-  return false;
+  // 접수 30일 초과 진행중 = 사실상 완료로 간주 (외주/오래된 건 자동 완료 처리)
+  if ((r['진행상태'] || '') !== '진행중') return false;
+  const d = String(r['날짜'] || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const cut = new Date(); cut.setDate(cut.getDate() - 30);
+  return d < cut.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 }
 // 완료 특례: 대수마감 N이어도 가제본 완료로 처리
 //  (1) 단비교육 '스티커' 품목  (2) 아래 수동 완료 주문번호 목록 — 데이터에 스티커 표시가 없는 건 여기에 번호 추가
@@ -4934,7 +4940,7 @@ function renderGajebonTable() {
   const prodStyle = ovsWide ? 'white-space:normal;word-break:break-word;min-width:220px;' : 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
   tbody.innerHTML = filtered.map(r => {
     const origIdx = allRows.indexOf(r);
-    const status = (gajDate(r['주문번호']||'') || isStickerDone(r)) ? '완료' : (r['진행상태'] || '');
+    const status = (gajDate(r['주문번호']||'') || isStickerDone(r) || isStaleGajebon(r)) ? '완료' : (r['진행상태'] || '');
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
     const gajDone = !!gajDate(r['주문번호']||'');   // 가제본일 도장 = 완료 → 행 전체 노랑
