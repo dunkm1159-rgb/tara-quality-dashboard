@@ -1,2 +1,2 @@
-// MES 당일작업일보 → 작업자 조회 (import_mes_worklog.py, 2026-08-20 08:00)
-window.WORKLOG_DATA = {"updated": "2026-08-20 08:00", "rows": []};
+// MES 당일작업일보 → 작업자 조회 (import_mes_worklog.py, 2026-08-20 08:43)
+window.WORKLOG_DATA = {"updated": "2026-08-20 08:43", "rows": []};
