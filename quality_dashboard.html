@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 마감일표시</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 완료수일치</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/19 13:32</span>
+      v<span id="build-stamp">08/19 13:33</span>
     </div>
   </aside>
 
@@ -6066,8 +6066,9 @@ function renderGajebonTodaySummary() {
     const t = window.GAJEBON_TODAY;
     // 완료 특례(스티커·수동목록) 제외한 실제 진행중
     const _actProg = (t.active_progress || []).filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)));
-    // 완료 = '오늘 완료된 것'만 (스티커·윙크 특례 제외 — 실제 오늘 완료건만)
-    const _todayDone = (t.new_completed || []).filter(r => String(r['완료일'] || '') === today && !(typeof isStickerDone === 'function' && isStickerDone(r)));
+    // 완료 = '진짜 오늘 완료'만 (스티커·윙크 특례 + 오래된 주문이 뒤늦게 완료된 건 제외 — 작업지시서 목록과 동일 기준)
+    const _ordCut = (() => { const c = new Date(); c.setDate(c.getDate() - 5); return c.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); })();
+    const _todayDone = (t.new_completed || []).filter(r => String(r['완료일'] || '') === today && !(typeof isStickerDone === 'function' && isStickerDone(r)) && String(r['날짜'] || '').slice(0,10) >= _ordCut);
     const done = _todayDone.length;
     const progress = _actProg.length;
     const total = done + progress;
