@@ -378,7 +378,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 특례수정</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/18 · 칸정렬</div>
     </div>
 
     <div class="sidebar-section">
@@ -448,7 +448,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/19 08:38</span>
+      v<span id="build-stamp">08/19 10:21</span>
     </div>
   </aside>
 
@@ -2477,11 +2477,11 @@ function renderPrintTargets() {
   if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const rowHtml = (r, color, showDate) => `<tr>
-     <td style="white-space:nowrap;color:#888;padding:2px 8px 2px 0">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</td>
-     <td style="white-space:nowrap;font-family:monospace;color:${color};padding:2px 8px 2px 0">${esc(r['주문번호'])}</td>
-     <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px;padding:2px 8px 2px 0" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
-     <td style="white-space:nowrap;color:#888">${esc(r['거래처'])}</td></tr>`;
-  const table = (arr, color, showDate) => `<table style="width:100%;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>`;
+     <td style="width:48px;white-space:nowrap;color:#888;padding:2px 8px 2px 0">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</td>
+     <td style="width:150px;white-space:nowrap;font-family:monospace;color:${color};padding:2px 8px 2px 0">${esc(r['주문번호'])}</td>
+     <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 8px 2px 0" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
+     <td style="width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#888;text-align:right">${esc(r['거래처'])}</td></tr>`;
+  const table = (arr, color, showDate) => `<table style="width:100%;table-layout:fixed;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>`;
   const head = (title, color, extra) => `<div style="font-weight:600;margin:8px 0 4px;color:${color}${extra || ''}">${title}</div>`;
   let html = '';
   if (todayDone.length) html += head(`✅ 오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
