@@ -379,7 +379,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/20 · 오늘+어제구분</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/20 · 오늘만+접기</div>
     </div>
 
     <div class="sidebar-section">
@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/20 10:26</span>
+      v<span id="build-stamp">08/20 10:30</span>
     </div>
   </aside>
 
@@ -2503,11 +2503,9 @@ function renderPrintTargets() {
   const { done, prog } = collectPrintTargets();
   const days = (window.GAJEBON_TODAY && window.GAJEBON_TODAY.recent_days) || 3;
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });   // YYYY-MM-DD
-  // '오늘 완료'는 오늘 것만. '어제 완료'는 따로(오늘 완료가 다음날까지 남게). 그 이전은 접기
-  const _yday = (() => { const c = new Date(); c.setDate(c.getDate() - 1); return c.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); })();
+  // '오늘 완료'만 펼침. 어제·이전은 '이전 완료' 접기로
   const todayDone = done.filter(r => String(r['완료일'] || '') === today && !isStickerDone(r));
-  const ydayDone = done.filter(r => String(r['완료일'] || '') === _yday && !isStickerDone(r));
-  const olderDone = done.filter(r => { const cd = String(r['완료일'] || ''); return cd !== today && cd !== _yday && !isStickerDone(r); });
+  const olderDone = done.filter(r => String(r['완료일'] || '') !== today && !isStickerDone(r));
   const cnt = document.getElementById('print-target-count');
   if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -2520,7 +2518,6 @@ function renderPrintTargets() {
   const head = (title, color, extra) => `<div style="font-weight:600;margin:8px 0 4px;color:${color}${extra || ''}">${title}</div>`;
   let html = '';
   if (todayDone.length) html += head(`✅ 오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
-  if (ydayDone.length) html += head(`🕐 어제 완료 (${ydayDone.length})`, '#8a94a6') + table(ydayDone, '#8a94a6', true);
   if (olderDone.length) {
     html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;font-weight:600;margin:8px 0 4px;color:#248a3d">`
       + `${_showOlderPrint ? '▾' : '▸'} 이전 완료 (${olderDone.length}) ${_showOlderPrint ? '접기' : '펼치기'}</div>`;
