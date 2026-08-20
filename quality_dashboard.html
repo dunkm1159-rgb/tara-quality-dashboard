@@ -379,7 +379,7 @@
     <div class="sidebar-logo">
       <div class="brand">타라TPS 품질개선팀</div>
       <div class="title">통합품질관리<span>시스템</span></div>
-      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/20 · 오늘만+접기</div>
+      <div style="font-size:10px;color:#8a94a6;margin-top:2px;">build 08/20 · 대수마감완료일+작업이력추적</div>
     </div>
 
     <div class="sidebar-section">
@@ -416,7 +416,7 @@
         <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
       </button>
       <button class="nav-item" id="nav-worklog" onclick="showTab('worklog',this);renderWorklog()">
-        <span class="nav-icon"><i class="ti ti-search"></i></span> 작업자 조회
+        <span class="nav-icon"><i class="ti ti-search"></i></span> 작업이력 추적
       </button>
     </div>
 
@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/20 13:57</span>
+      v<span id="build-stamp">08/20 14:35</span>
     </div>
   </aside>
 
@@ -1208,10 +1208,10 @@
     <!-- ============ 작업자 조회 (MES 당일작업일보) ============ -->
     <div id="tab-worklog" class="tab">
       <div class="card" style="padding:18px 20px">
-        <div class="section-title" style="margin-bottom:4px">🔍 작업품목 작업자 조회 <span id="worklog-updated" style="font-size:11px;font-weight:400;color:#aaa"></span></div>
-        <div style="font-size:12px;color:#86868b;margin-bottom:14px">불량 발생 시 추적용 — 품목·구성으로 검색하면 <b>언제·어느 설비에서·누가</b> 작업했는지 나옵니다. (MES 당일작업일보 기준)</div>
+        <div class="section-title" style="margin-bottom:4px">🔍 작업이력 추적 <span id="worklog-updated" style="font-size:11px;font-weight:400;color:#aaa"></span></div>
+        <div style="font-size:12px;color:#86868b;margin-bottom:14px">불량 발생 시 추적용 — 품목·구성으로 검색하면 <b>언제·어느 설비에서·주야 어느 조·누가</b> 작업했는지 나옵니다. (ERP 설비별 작업실적 + 조 편성표 기준)</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-          <input type="text" id="worklog-q" placeholder="품목명·구성(표지/본문)·작업자 검색… 예: 만점왕 4-2 표지" oninput="renderWorklog()" style="flex:1;min-width:260px;padding:9px 12px;border:1px solid #d0d3d8;border-radius:8px;font-size:13px">
+          <input type="text" id="worklog-q" placeholder="품목명·구성(표지/본문)·설비·작업자·주문번호 검색… 예: 만점왕 4-2 표지" oninput="renderWorklog()" style="flex:1;min-width:260px;padding:9px 12px;border:1px solid #d0d3d8;border-radius:8px;font-size:13px">
           <input type="date" id="worklog-from" onchange="renderWorklog()" title="시작일" style="padding:8px;border:1px solid #d0d3d8;border-radius:8px">
           <input type="date" id="worklog-to" onchange="renderWorklog()" title="종료일" style="padding:8px;border:1px solid #d0d3d8;border-radius:8px">
         </div>
@@ -1221,12 +1221,13 @@
             <thead><tr style="color:#888;text-align:left;border-bottom:1px solid #f0f0ee">
               <th style="padding:8px 10px;font-weight:600;white-space:nowrap">작업일</th>
               <th style="padding:8px 10px;font-weight:600;white-space:nowrap">설비</th>
+              <th style="padding:8px 10px;font-weight:600;text-align:center;white-space:nowrap">주야</th>
               <th style="padding:8px 10px;font-weight:600">품목</th>
               <th style="padding:8px 10px;font-weight:600;white-space:nowrap">구성</th>
               <th style="padding:8px 10px;font-weight:600;text-align:center;white-space:nowrap">대수</th>
               <th style="padding:8px 10px;font-weight:600">작업자</th>
             </tr></thead>
-            <tbody id="worklog-tbody"><tr><td colspan="6" style="padding:16px;color:#ccc">MES 당일작업일보 데이터가 없습니다. mes_export 폴더에 엑셀을 넣어주세요.</td></tr></tbody>
+            <tbody id="worklog-tbody"><tr><td colspan="7" style="padding:16px;color:#ccc">작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -4291,23 +4292,26 @@ function renderWorklog(){
   const from=document.getElementById('worklog-from')?.value||'';
   const to=document.getElementById('worklog-to')?.value||'';
   const terms=q.split(/\s+/).filter(Boolean);
+  const gv=(r,keys)=>{for(const k of keys){if(r[k]!=null&&r[k]!=='')return r[k];}return '';};
   const hit=rows.filter(r=>{
-    const d=String(r['날짜']||'');
+    const d=String(gv(r,['작업일','날짜'])||'');
     if(from&&d<from) return false;
     if(to&&d>to) return false;
     if(terms.length){
-      const hay=((r['품명']||'')+' '+(r['구성']||'')+' '+(r['작업자']||'')+' '+(r['설비']||'')).toLowerCase();
+      const hay=(gv(r,['품목','품명'])+' '+(r['세부품목']||'')+' '+(r['구성']||'')+' '+(r['작업자']||'')+' '+(r['설비']||'')+' '+(r['주문번호']||'')).toLowerCase();
       if(!terms.every(t=>hay.includes(t))) return false;
     }
     return true;
   });
   const cnt=document.getElementById('worklog-count'); if(cnt) cnt.textContent='총 '+rows.length+'건 중 '+hit.length+'건';
-  if(!hit.length){ tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'MES 당일작업일보 데이터가 없습니다. mes_export 폴더에 엑셀을 넣어주세요.')+'</td></tr>'; return; }
-  hit.sort((a,b)=>String(b['날짜']||'').localeCompare(String(a['날짜']||'')));
+  if(!hit.length){ tb.innerHTML='<tr><td colspan="7" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</td></tr>'; return; }
+  hit.sort((a,b)=>String(gv(b,['작업일','날짜'])||'').localeCompare(String(gv(a,['작업일','날짜'])||'')));
+  const shBadge=s=>{const t=String(s||'');const day=t.includes('주');return '<span style="background:'+(day?'#fff4e0':'#e8ecff')+';color:'+(day?'#b26a00':'#3a49b0')+';font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap">'+wipEsc(t||'-')+'</span>';};
   tb.innerHTML=hit.slice(0,500).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
-    <td style="padding:7px 10px;white-space:nowrap;color:#666">${wipEsc(r['날짜'])}</td>
+    <td style="padding:7px 10px;white-space:nowrap;color:#666">${wipEsc(gv(r,['작업일','날짜']))}</td>
     <td style="padding:7px 10px;white-space:nowrap">${wipEsc(r['설비'])}</td>
-    <td style="padding:7px 10px">${wipEsc(r['품명'])}</td>
+    <td style="padding:7px 10px;text-align:center">${shBadge(r['주야'])}</td>
+    <td style="padding:7px 10px">${wipEsc(gv(r,['품목','품명']))}${r['세부품목']?'<span style="color:#aaa;font-size:11px"> · '+wipEsc(r['세부품목'])+'</span>':''}</td>
     <td style="padding:7px 10px;white-space:nowrap"><span style="background:#eef3ff;color:#3355aa;font-size:11px;padding:2px 8px;border-radius:6px">${wipEsc(r['구성']||'-')}</span></td>
     <td style="padding:7px 10px;text-align:center;white-space:nowrap;color:#666">${wipEsc(r['대수']||'')}</td>
     <td style="padding:7px 10px;font-weight:500;color:#1d5c99">${wipEsc(r['작업자']||'-')}</td></tr>`).join('');
