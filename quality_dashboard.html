@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/20 17:02</span>
+      v<span id="build-stamp">08/20 17:11</span>
     </div>
   </aside>
 
@@ -1218,8 +1218,9 @@
         #worklog-q::placeholder{color:#aeb4c7}
         #worklog-q:focus{box-shadow:0 0 0 3px rgba(129,140,248,.55),0 6px 20px rgba(0,0,0,.18);transform:translateY(-1px)}
         #wl-dates{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:#cdd6f4}
-        #wl-dates input[type=date]{padding:8px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:9px;font-size:12.5px;color-scheme:dark}
-        #wl-dates input[type=date]:focus{outline:none;border-color:#a5b4fc;background:rgba(255,255,255,.2)}
+        #wl-dates input[type=date],#wl-dates select{padding:8px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:9px;font-size:12.5px;color-scheme:dark}
+        #wl-dates input[type=date]:focus,#wl-dates select:focus{outline:none;border-color:#a5b4fc;background:rgba(255,255,255,.2)}
+        #wl-dates select option{color:#1a1a2e}
         #worklog-count{font-size:12px;color:#888;margin:2px 0 10px;font-weight:500}
       </style>
       <div class="card" style="padding:18px 20px;background:transparent;box-shadow:none;border:none">
@@ -1231,6 +1232,9 @@
             <input type="text" id="worklog-q" placeholder="품목·구성(표지/본문)·설비·작업자·주문번호 검색…  예: 만점왕 4-2 표지" oninput="renderWorklog()">
           </div>
           <div id="wl-dates">
+            <span style="opacity:.85"><i class="ti ti-settings" style="vertical-align:-2px"></i> 설비</span>
+            <select id="worklog-equip" onchange="renderWorklog()" title="설비 선택"><option value="">전체 설비</option></select>
+            <span style="opacity:.5;margin:0 4px">|</span>
             <span style="opacity:.85"><i class="ti ti-calendar" style="vertical-align:-2px"></i> 기간</span>
             <input type="date" id="worklog-from" onchange="renderWorklog()" title="시작일">
             <span style="opacity:.6">~</span>
@@ -4327,12 +4331,20 @@ function renderWorklog(){
   const q=(document.getElementById('worklog-q')?.value||'').trim().toLowerCase();
   const from=document.getElementById('worklog-from')?.value||'';
   const to=document.getElementById('worklog-to')?.value||'';
+  // 설비 드롭다운 채우기(1회) + 선택값
+  const eqSel=document.getElementById('worklog-equip');
+  if(eqSel && eqSel.options.length<=1 && rows.length){
+    const eqs=[...new Set(rows.map(r=>String(r['설비']||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+    eqSel.insertAdjacentHTML('beforeend', eqs.map(e=>'<option value="'+e.replace(/"/g,'&quot;')+'">'+wipEsc(e)+'</option>').join(''));
+  }
+  const equip=eqSel?eqSel.value:'';
   const terms=q.split(/\s+/).filter(Boolean);
   const gv=(r,keys)=>{for(const k of keys){if(r[k]!=null&&r[k]!=='')return r[k];}return '';};
   // 실제 작업일 = 작업종료(END) 날짜 우선, 없으면 작업일(WRK_DT)
   const wDate=r=>{const e=String(r['종료']||'').slice(0,10); return e||String(gv(r,['작업일','날짜'])||'');};
   const wTime=r=>{const e=String(r['종료']||''); return e.length>=16?e.slice(11,16):'';};
   const hit=rows.filter(r=>{
+    if(equip && String(r['설비']||'').trim()!==equip) return false;
     const d=wDate(r);
     if(from&&d<from) return false;
     if(to&&d>to) return false;
@@ -4342,8 +4354,8 @@ function renderWorklog(){
     }
     return true;
   });
-  const searching=(terms.length||from||to);
-  const CAP=searching?2000:200;   // 검색 전엔 최근 200행만(가볍게), 검색하면 넉넉히
+  const searching=(terms.length||from||to||equip);
+  const CAP=searching?2000:200;   // 검색/설비선택 전엔 최근 200행만(가볍게), 조건 있으면 넉넉히
   const cnt=document.getElementById('worklog-count'); if(cnt) cnt.textContent='총 '+rows.length+'건 중 '+hit.length+'건'+(hit.length>CAP?(' (상위 '+CAP+'건 표시 — 검색으로 좁혀보세요)'):'');
   if(!hit.length){ tb.innerHTML='<tr><td colspan="5" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</td></tr>'; return; }
   hit.sort((a,b)=>((wDate(b)+' '+wTime(b)).localeCompare(wDate(a)+' '+wTime(a))));
