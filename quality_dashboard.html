@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 14:18</span>
+      v<span id="build-stamp">08/21 14:26</span>
     </div>
   </aside>
 
@@ -4345,7 +4345,10 @@ function ensureWorklog(cb){
   _wlLoading=true;
   const tb=document.getElementById('worklog-tbody');
   if(tb) tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#aaa">작업이력 불러오는 중…</td></tr>';
-  const d=new Date(); const ver=''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  // 캐시 기준 = 배포시각(build-stamp). 배포할 때마다 값이 바뀌어 새 worklog를 받음(하루 여러 번 갱신 대응).
+  const d=new Date(); const dstr=''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const bs=(document.getElementById('build-stamp')?.textContent||'').replace(/[^0-9]/g,'');
+  const ver = bs || dstr;
   const s=document.createElement('script');
   s.src='worklog_data.js?v='+ver;
   s.onload=()=>{ _wlLoaded=true; _wlLoading=false; cb&&cb(); };
