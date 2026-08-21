@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 08:21</span>
+      v<span id="build-stamp">08/21 10:16</span>
     </div>
   </aside>
 
@@ -4212,11 +4212,11 @@ function isAllOutsourced(r) {
 // 오래된 진행중이 '완료만 보이기'에 섞이고 진행중 목록에서 빠지는 문제로 끔.
 // → 진행중은 실제 완료(가제본일 도장 · ERP완료 · 스티커특례) 전까지 계속 진행중 유지.
 function isStaleGajebon(r) {
-  // 접수 30일 초과 진행중 = 사실상 완료로 간주 (외주/오래된 건 자동 완료 처리)
+  // 접수 60일 초과 진행중만 사실상 완료로 간주 (ERP가 완료를 정확히 잡으므로, 장기작업 오판 방지 위해 30→60일로 완화)
   if ((r['진행상태'] || '') !== '진행중') return false;
   const d = String(r['날짜'] || '').slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
-  const cut = new Date(); cut.setDate(cut.getDate() - 30);
+  const cut = new Date(); cut.setDate(cut.getDate() - 60);
   return d < cut.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 }
 // 완료 특례: 대수마감 N이어도 가제본 완료로 처리
