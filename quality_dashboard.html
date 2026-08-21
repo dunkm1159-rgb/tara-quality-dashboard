@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 12:07</span>
+      v<span id="build-stamp">08/21 13:12</span>
     </div>
   </aside>
 
@@ -2532,7 +2532,7 @@ function renderPrintTargets() {
   const _yst = new Date(); _yst.setDate(_yst.getDate() - 1);
   const yesterday = _yst.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   // 오늘·어제 완료 + 오늘 새로 감지분은 펼쳐서 표시. 그 이전은 '이전 완료' 접기로
-  const _isFreshDone = r => { const d = String(r['완료일'] || ''); return d === today || d === yesterday || r['신규완료'] === true; };
+  const _isFreshDone = r => { const d = String(r['완료일'] || ''); return d === today || d === yesterday; };   // 완료일이 오늘·어제인 것만 (계획일 기준)
   const todayDone = done.filter(r => _isFreshDone(r) && !isStickerDone(r));
   const olderDone = done.filter(r => !_isFreshDone(r) && !isStickerDone(r));
   const cnt = document.getElementById('print-target-count');
@@ -4978,7 +4978,7 @@ function renderGajebonTable() {
   const _gjYesterday = _gjY.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const newCompletedSet = new Set(
     ((window.GAJEBON_TODAY && window.GAJEBON_TODAY.new_completed) || [])
-      .filter(x => { const d = String(x['완료일'] || ''); return d === _gjToday || d === _gjYesterday || x['신규완료'] === true; })
+      .filter(x => { const d = String(x['완료일'] || ''); return d === _gjToday || d === _gjYesterday; })
       .map(x => x['주문번호'])
   );
   const empSel = document.getElementById('gajebon-emp')?.value || '';
@@ -6207,7 +6207,7 @@ function renderGajebonTodaySummary() {
     // 완료 = '오늘 완료된 것'만 (스티커·윙크 특례 제외) — 작업지시서 목록과 동일 기준
     const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
     const _yesterday = _yd.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
-    const _todayDone = (t.new_completed || []).filter(r => { const d = String(r['완료일'] || ''); return (d === today || d === _yesterday || r['신규완료'] === true) && !(typeof isStickerDone === 'function' && isStickerDone(r)); });
+    const _todayDone = (t.new_completed || []).filter(r => { const d = String(r['완료일'] || ''); return (d === today || d === _yesterday) && !(typeof isStickerDone === 'function' && isStickerDone(r)); });
     const done = _todayDone.length;
     const progress = _actProg.length;
     const total = done + progress;
