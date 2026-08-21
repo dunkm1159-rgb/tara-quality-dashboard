@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 14:46</span>
+      v<span id="build-stamp">08/21 15:26</span>
     </div>
   </aside>
 
@@ -2528,7 +2528,7 @@ function toggleOlderPrint() { _showOlderPrint = !_showOlderPrint; renderPrintTar
 function gajTodayDoneWindow() {
   const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const base = new Date(todayStr + 'T00:00:00');
-  const end = new Date(base); end.setDate(end.getDate() - 1);            // 어제
+  const end = new Date(base);                                            // 오늘 (당일 완료도 포함 — 야간조 아침취합 전 완료분)
   const start = new Date(base);
   do { start.setDate(start.getDate() - 1); } while (start.getDay() === 0 || start.getDay() === 6); // 직전 영업일(주말 skip)
   const sv = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
