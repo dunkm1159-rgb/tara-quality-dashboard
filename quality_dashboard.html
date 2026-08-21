@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 14:31</span>
+      v<span id="build-stamp">08/21 14:46</span>
     </div>
   </aside>
 
@@ -1031,7 +1031,6 @@
           <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
           <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">🆕 오늘 신규완료</button>
           <button type="button" onclick="exportGajebon()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap">⬇ 엑셀 내려받기</button>
-          <button type="button" onclick="bulkStampGajebon()" style="border:1px solid #c93400;background:#fff;color:#c93400;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap" title="현재 탭에서 ERP완료된 가제본 건을 오늘 날짜로 일괄 완료 처리">⚡ ERP완료 일괄처리</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -4077,7 +4076,9 @@ function exportClaims() {
   downloadCSV('부적합사고_취합대장_' + yr + '.csv', H, out);
 }
 function exportGajebon() {
-  const rows = (typeof gajebonSheets !== 'undefined' && gajebonSheets[gajebonCurrentSheet]) ? gajebonSheets[gajebonCurrentSheet] : [];
+  // 현재 화면에 보이는(필터·검색 적용된) 행만 내려받기. 없으면 현재 탭 전체.
+  const visible = (Array.isArray(window._gajebonVisibleRows) && window._gajebonVisibleRows.length) ? window._gajebonVisibleRows : null;
+  const rows = visible || ((typeof gajebonSheets !== 'undefined' && gajebonSheets[gajebonCurrentSheet]) ? gajebonSheets[gajebonCurrentSheet] : []);
   if (!rows.length) { alert('내려받을 데이터가 없습니다.'); return; }
   const COLS = ['날짜', '주문번호', '거래처', '제품명', '요청내용', '설비명', '검수일자', '진행상태', '담당자', '부서', '구성'];
   const out = rows.map(r => COLS.map(c => r[c]));
@@ -5088,6 +5089,7 @@ function renderGajebonTable() {
   filtered.sort((a, b) => gajebonDateSort === 'asc'
     ? (a['날짜']||'').localeCompare(b['날짜']||'')
     : (b['날짜']||'').localeCompare(a['날짜']||''));
+  window._gajebonVisibleRows = filtered;   // 엑셀 내려받기가 현재 필터로 보이는 행만 담게
 
   // 원본 인덱스 매핑
   const allRows = gajebonSheets[gajebonCurrentSheet] || [];
