@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 11:05</span>
+      v<span id="build-stamp">08/21 11:09</span>
     </div>
   </aside>
 
@@ -4972,11 +4972,13 @@ function renderGajebonTable() {
   const onlyProgress = gajebonFilters.onlyProgress;
   const needGajebon  = gajebonFilters.needGajebon;
   const todayDone    = gajebonFilters.todayDone;
-  // '오늘 신규완료' = 완료일이 오늘(KST)인 건만. (최근 3일 목록에서 오늘 것만 추림 → 어제·그제 완료 제외)
+  // '오늘 신규완료' = 오늘·어제 완료 + 오늘 새로 감지된 것 (대수마감 계획일이 어제여도 아침에 보이게)
   const _gjToday = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const _gjY = new Date(); _gjY.setDate(_gjY.getDate() - 1);
+  const _gjYesterday = _gjY.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const newCompletedSet = new Set(
     ((window.GAJEBON_TODAY && window.GAJEBON_TODAY.new_completed) || [])
-      .filter(x => String(x['완료일'] || '') === _gjToday)
+      .filter(x => { const d = String(x['완료일'] || ''); return d === _gjToday || d === _gjYesterday || x['신규완료'] === true; })
       .map(x => x['주문번호'])
   );
   const empSel = document.getElementById('gajebon-emp')?.value || '';
