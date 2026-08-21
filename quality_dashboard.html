@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 10:26</span>
+      v<span id="build-stamp">08/21 10:47</span>
     </div>
   </aside>
 
@@ -2881,12 +2881,14 @@ function ncMixedChart(id, labels, costs, goals){
   const ctx = document.getElementById(id); if (!ctx) return;
   chartInstances[id] = new Chart(ctx, {
     data: { labels, datasets: [
-      { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#17A2B8', borderRadius:6, order:2, maxBarThickness:60 },
-      { type:'line', label:'목표(만)', data:goals, borderColor:'#C0392B', backgroundColor:'#C0392B', borderWidth:2, borderDash:[5,4], pointRadius:0, tension:0.3, order:1 }
+      { type:'bar', label:'발생비용(만)', data:costs, backgroundColor:'#17A2B8', borderRadius:6, order:2, maxBarThickness:60,
+        datalabels:{ anchor:'end', align:'top', clip:false, color:'#0d6b7a', font:{size:10,weight:'600'}, formatter:v=> v? Math.round(v).toLocaleString():'' } },
+      { type:'line', label:'목표(만)', data:goals, borderColor:'#C0392B', backgroundColor:'#C0392B', borderWidth:2, borderDash:[5,4], pointRadius:0, tension:0.3, order:1, datalabels:{ display:false } }
     ]},
     options: { responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ top:24 } },
       plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 } } },
-      scales:{ y:{ beginAtZero:true, ticks:{ font:{size:11} } }, x:{ ticks:{ font:{size:11} } } } }
+      scales:{ y:{ beginAtZero:true, ticks:{ font:{size:11} }, grace:'12%' }, x:{ ticks:{ font:{size:11} } } } }
   });
 }
 function ncYearChart(id, years, goals, costs){
@@ -3505,12 +3507,14 @@ function renderBar(id, labels, data, colors) {
   try {
     chartInstances[id] = new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ data, backgroundColor: colors || '#17A2B8', borderRadius: 5, maxBarThickness: 60 }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors || '#17A2B8', borderRadius: 5, maxBarThickness: 60,
+        datalabels:{ anchor:'end', align:'top', clip:false, color:'#333', font:{size:10,weight:'600'}, formatter:v=> (v||v===0)? Math.round(v).toLocaleString():'' } }] },
       options: {
         responsive: true, maintainAspectRatio: false,
+        layout:{ padding:{ top:24 } },
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}건` } } },
         scales: {
-          y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' }, grace:'12%' },
           x: { ticks: { font: { size: 11 } }, grid: { display: false } }
         }
       }
@@ -4213,12 +4217,10 @@ function isAllOutsourced(r) {
 // 오래된 진행중이 '완료만 보이기'에 섞이고 진행중 목록에서 빠지는 문제로 끔.
 // → 진행중은 실제 완료(가제본일 도장 · ERP완료 · 스티커특례) 전까지 계속 진행중 유지.
 function isStaleGajebon(r) {
-  // 접수 60일 초과 진행중만 사실상 완료로 간주 (ERP가 완료를 정확히 잡으므로, 장기작업 오판 방지 위해 30→60일로 완화)
-  if ((r['진행상태'] || '') !== '진행중') return false;
-  const d = String(r['날짜'] || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
-  const cut = new Date(); cut.setDate(cut.getDate() - 60);
-  return d < cut.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  // [비활성화] 나이(접수일) 기반 자동완료는 실제 진행중 품목을 완료로 오판해서
+  // '작업지시서 출력대상(진행중)'과 '가제본 완료 달력'이 어긋나게 만듦.
+  // ERP 대수마감으로 완료를 정확히 잡으므로, 완료 판정은 실제 상태로만 → 두 화면 1:1 일치.
+  return false;
 }
 // 완료 특례: 대수마감 N이어도 가제본 완료로 처리
 //  (1) 단비교육 '스티커' 품목  (2) 아래 수동 완료 주문번호 목록 — 데이터에 스티커 표시가 없는 건 여기에 번호 추가
@@ -4362,7 +4364,7 @@ function renderWorklog(){
   if(!hit.length){ tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</td></tr>'; return; }
   hit.sort((a,b)=>((wDate(b)+' '+wTime(b)).localeCompare(wDate(a)+' '+wTime(a))));
   const shBadge=s=>{const t=String(s||'');const day=t.includes('주');return '<span style="background:'+(day?'#fff4e0':'#e8ecff')+';color:'+(day?'#b26a00':'#3a49b0')+';font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap">'+wipEsc(t||'-')+'</span>';};
-  const partBadge=r=>{const c=String(r['구성']||'').trim();const n=String(r['대수']||'').trim();if(!c&&!n)return '';const txt=(c||'')+(n?(c?' ':'')+n+'대':'');return '<span style="background:#eef3ff;color:#3355aa;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:6px;white-space:nowrap;margin-left:6px">'+wipEsc(txt)+'</span>';};
+  const partBadge=r=>{const c=String(r['구성']||'').trim();const n=String(r['대수']||'').trim();const ab=String(r['대수AB']||'').trim();if(!c&&!n&&!ab)return '';let txt=(c||'')+(n?(c?' ':'')+n+'대':'');if(ab)txt+=(txt?' ':'')+'('+ab+')';return '<span style="background:#eef3ff;color:#3355aa;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:6px;white-space:nowrap;margin-left:6px">'+wipEsc(txt)+'</span>';};
   tb.innerHTML=hit.slice(0,CAP).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
     <td style="padding:3px 10px;white-space:nowrap;color:#444">${wipEsc(wDate(r))}${wTime(r)?'<span style="color:#adb2bd;font-size:11px;margin-left:5px">'+wipEsc(wTime(r))+'</span>':''}</td>
     <td style="padding:3px 10px;white-space:nowrap;font-family:monospace;font-size:11.5px;color:#667">${wipEsc(r['주문번호']||'')}</td>
