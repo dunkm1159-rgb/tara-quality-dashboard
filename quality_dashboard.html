@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 10:16</span>
+      v<span id="build-stamp">08/21 10:26</span>
     </div>
   </aside>
 
@@ -1246,12 +1246,13 @@
           <table style="width:auto;max-width:100%;border-collapse:collapse;font-size:12.5px">
             <thead><tr style="color:#888;text-align:left;border-bottom:1px solid #f0f0ee">
               <th style="padding:5px 10px;font-weight:600;white-space:nowrap">작업일</th>
+              <th style="padding:5px 10px;font-weight:600;white-space:nowrap">주문번호</th>
               <th style="padding:5px 10px;font-weight:600;white-space:nowrap">설비</th>
               <th style="padding:5px 10px;font-weight:600;text-align:center;white-space:nowrap">주야</th>
               <th style="padding:5px 10px;font-weight:600">품목 · 구성/대수</th>
               <th style="padding:5px 10px;font-weight:600">작업자</th>
             </tr></thead>
-            <tbody id="worklog-tbody"><tr><td colspan="5" style="padding:16px;color:#ccc">작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.</td></tr></tbody>
+            <tbody id="worklog-tbody"><tr><td colspan="6" style="padding:16px;color:#ccc">작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -4316,12 +4317,12 @@ function ensureWorklog(cb){
   if(_wlLoading) return;
   _wlLoading=true;
   const tb=document.getElementById('worklog-tbody');
-  if(tb) tb.innerHTML='<tr><td colspan="5" style="padding:16px;color:#aaa">작업이력 불러오는 중…</td></tr>';
+  if(tb) tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#aaa">작업이력 불러오는 중…</td></tr>';
   const d=new Date(); const ver=''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
   const s=document.createElement('script');
   s.src='worklog_data.js?v='+ver;
   s.onload=()=>{ _wlLoaded=true; _wlLoading=false; cb&&cb(); };
-  s.onerror=()=>{ _wlLoading=false; if(tb) tb.innerHTML='<tr><td colspan="5" style="padding:16px;color:#ccc">작업이력 데이터가 없습니다.</td></tr>'; };
+  s.onerror=()=>{ _wlLoading=false; if(tb) tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#ccc">작업이력 데이터가 없습니다.</td></tr>'; };
   document.head.appendChild(s);
 }
 function renderWorklog(){
@@ -4358,12 +4359,13 @@ function renderWorklog(){
   const searching=(terms.length||from||to||equip);
   const CAP=searching?2000:200;   // 검색/설비선택 전엔 최근 200행만(가볍게), 조건 있으면 넉넉히
   const cnt=document.getElementById('worklog-count'); if(cnt) cnt.textContent='총 '+rows.length+'건 중 '+hit.length+'건'+(hit.length>CAP?(' (상위 '+CAP+'건 표시 — 검색으로 좁혀보세요)'):'');
-  if(!hit.length){ tb.innerHTML='<tr><td colspan="5" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</td></tr>'; return; }
+  if(!hit.length){ tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</td></tr>'; return; }
   hit.sort((a,b)=>((wDate(b)+' '+wTime(b)).localeCompare(wDate(a)+' '+wTime(a))));
   const shBadge=s=>{const t=String(s||'');const day=t.includes('주');return '<span style="background:'+(day?'#fff4e0':'#e8ecff')+';color:'+(day?'#b26a00':'#3a49b0')+';font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap">'+wipEsc(t||'-')+'</span>';};
   const partBadge=r=>{const c=String(r['구성']||'').trim();const n=String(r['대수']||'').trim();if(!c&&!n)return '';const txt=(c||'')+(n?(c?' ':'')+n+'대':'');return '<span style="background:#eef3ff;color:#3355aa;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:6px;white-space:nowrap;margin-left:6px">'+wipEsc(txt)+'</span>';};
   tb.innerHTML=hit.slice(0,CAP).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
     <td style="padding:3px 10px;white-space:nowrap;color:#444">${wipEsc(wDate(r))}${wTime(r)?'<span style="color:#adb2bd;font-size:11px;margin-left:5px">'+wipEsc(wTime(r))+'</span>':''}</td>
+    <td style="padding:3px 10px;white-space:nowrap;font-family:monospace;font-size:11.5px;color:#667">${wipEsc(r['주문번호']||'')}</td>
     <td style="padding:3px 10px;white-space:nowrap">${wipEsc(r['설비'])}</td>
     <td style="padding:3px 10px;text-align:center">${shBadge(r['주야'])}</td>
     <td style="padding:3px 10px">${wipEsc(gv(r,['품목','품명']))}${partBadge(r)}${r['세부품목']?'<span style="color:#aaa;font-size:11px"> · '+wipEsc(r['세부품목'])+'</span>':''}</td>
