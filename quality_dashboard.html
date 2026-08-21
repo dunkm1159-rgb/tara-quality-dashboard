@@ -452,7 +452,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/21 10:50</span>
+      v<span id="build-stamp">08/21 11:00</span>
     </div>
   </aside>
 
@@ -2529,12 +2529,14 @@ function renderPrintTargets() {
   const { done, prog } = collectPrintTargets();
   const days = (window.GAJEBON_TODAY && window.GAJEBON_TODAY.recent_days) || 3;
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });   // YYYY-MM-DD
-  // '오늘 완료'만 펼침. 어제·이전은 '이전 완료' 접기로
-  const _isFreshDone = r => (String(r['완료일'] || '') === today || r['신규완료'] === true);   // 오늘 완료 or 오늘 새로 감지
+  const _yst = new Date(); _yst.setDate(_yst.getDate() - 1);
+  const yesterday = _yst.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  // 오늘·어제 완료 + 오늘 새로 감지분은 펼쳐서 표시. 그 이전은 '이전 완료' 접기로
+  const _isFreshDone = r => { const d = String(r['완료일'] || ''); return d === today || d === yesterday || r['신규완료'] === true; };
   const todayDone = done.filter(r => _isFreshDone(r) && !isStickerDone(r));
   const olderDone = done.filter(r => !_isFreshDone(r) && !isStickerDone(r));
   const cnt = document.getElementById('print-target-count');
-  if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
+  if (cnt) cnt.textContent = `최근 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const rowHtml = (r, color, showDate) => `<tr>
      <td style="width:48px;white-space:nowrap;color:#888;padding:2px 8px 2px 0">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</td>
@@ -2544,7 +2546,7 @@ function renderPrintTargets() {
   const table = (arr, color, showDate) => `<table style="width:100%;table-layout:fixed;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>`;
   const head = (title, color, extra) => `<div style="font-weight:600;margin:8px 0 4px;color:${color}${extra || ''}">${title}</div>`;
   let html = '';
-  if (todayDone.length) html += head(`✅ 오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
+  if (todayDone.length) html += head(`✅ 최근 완료 · 오늘·어제 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
   if (olderDone.length) {
     html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;font-weight:600;margin:8px 0 4px;color:#248a3d">`
       + `${_showOlderPrint ? '▾' : '▸'} 이전 완료 (${olderDone.length}) ${_showOlderPrint ? '접기' : '펼치기'}</div>`;
@@ -4217,10 +4219,19 @@ function isAllOutsourced(r) {
 // 오래된 진행중이 '완료만 보이기'에 섞이고 진행중 목록에서 빠지는 문제로 끔.
 // → 진행중은 실제 완료(가제본일 도장 · ERP완료 · 스티커특례) 전까지 계속 진행중 유지.
 function isStaleGajebon(r) {
-  // [비활성화] 나이(접수일) 기반 자동완료는 실제 진행중 품목을 완료로 오판해서
-  // '작업지시서 출력대상(진행중)'과 '가제본 완료 달력'이 어긋나게 만듦.
-  // ERP 대수마감으로 완료를 정확히 잡으므로, 완료 판정은 실제 상태로만 → 두 화면 1:1 일치.
-  return false;
+  // 작업이력 기반: 접수 45일 초과 + 최근 21일간 실제 작업활동 없음 = 사실상 완료/중단 → 진행중에서 제외.
+  // 최근 작업활동이 있으면(개념원리 등 장기 대작업) 계속 진행중 유지. (나이만으로 완료 처리하지 않음)
+  if ((r['진행상태'] || '') !== '진행중') return false;
+  const d = String(r['날짜'] || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const now = new Date();
+  const recvCut = new Date(now); recvCut.setDate(recvCut.getDate() - 45);
+  const actCut  = new Date(now); actCut.setDate(actCut.getDate() - 21);
+  const sv = x => x.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  if (d >= sv(recvCut)) return false;                       // 접수 45일 이내 → 진행중 유지
+  const last = (window.GAJEBON_ACTIVITY || {})[String(r['주문번호'] || '').trim()] || '';
+  if (last && last >= sv(actCut)) return false;             // 최근 작업활동 있음 → 진행중 유지
+  return true;                                              // 오래됨 + 활동없음 → 숨김
 }
 // 완료 특례: 대수마감 N이어도 가제본 완료로 처리
 //  (1) 단비교육 '스티커' 품목  (2) 아래 수동 완료 주문번호 목록 — 데이터에 스티커 표시가 없는 건 여기에 번호 추가
@@ -6192,7 +6203,9 @@ function renderGajebonTodaySummary() {
     // 완료 특례(스티커·수동목록) 제외한 실제 진행중
     const _actProg = (t.active_progress || []).filter(r => !(typeof isStickerDone === 'function' && isStickerDone(r)));
     // 완료 = '오늘 완료된 것'만 (스티커·윙크 특례 제외) — 작업지시서 목록과 동일 기준
-    const _todayDone = (t.new_completed || []).filter(r => (String(r['완료일'] || '') === today || r['신규완료'] === true) && !(typeof isStickerDone === 'function' && isStickerDone(r)));
+    const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+    const _yesterday = _yd.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+    const _todayDone = (t.new_completed || []).filter(r => { const d = String(r['완료일'] || ''); return (d === today || d === _yesterday || r['신규완료'] === true) && !(typeof isStickerDone === 'function' && isStickerDone(r)); });
     const done = _todayDone.length;
     const progress = _actProg.length;
     const total = done + progress;
