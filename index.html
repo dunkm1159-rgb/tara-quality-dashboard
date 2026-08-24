@@ -11,8 +11,13 @@
 <body>
 <div>통합품질관리시스템 최신 화면을 여는 중...</div>
 <script>
-  // 매번 새로운 타임스탬프를 붙여 캐시를 우회 → 항상 최신 대시보드
-  location.replace('quality_dashboard.html?t=' + Date.now());
+  // github.io(로그인 없음) → Cloudflare(로그인 있음)로 자동 이동
+  if (location.hostname.indexOf('github.io') >= 0) {
+    location.replace('https://tara-quality-dashboard.pages.dev/quality_dashboard.html');
+  } else {
+    // 매번 새로운 타임스탬프를 붙여 캐시를 우회 → 항상 최신 대시보드
+    location.replace('quality_dashboard.html?t=' + Date.now());
+  }
 </script>
 </body>
 </html>
