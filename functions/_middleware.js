@@ -85,36 +85,74 @@ function loginPage(errMsg) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>타라TPS 품질관리시스템 · 로그인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
 <style>
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
-    background:linear-gradient(135deg,#1e293b 0%,#334f8c 55%,#4f46e5 100%);}
-  .card{width:340px;background:#fff;border-radius:18px;padding:36px 30px 30px;
-    box-shadow:0 20px 60px rgba(0,0,0,.35);}
-  .logo{text-align:center;font-size:22px;font-weight:800;color:#1e293b;letter-spacing:-.3px}
-  .logo span{color:#17A2B8}
-  .sub{text-align:center;color:#8a93a8;font-size:12.5px;margin:6px 0 22px}
-  label{display:block;font-size:12px;color:#556;font-weight:600;margin:14px 0 5px}
-  input{width:100%;padding:12px 13px;border:1px solid #d7dbe3;border-radius:10px;font-size:14px;outline:none;transition:.15s}
-  input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
-  button{width:100%;margin-top:22px;padding:13px;border:0;border-radius:10px;cursor:pointer;
-    font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#334f8c,#4f46e5);transition:.15s}
-  button:hover{filter:brightness(1.08)}
-  .err{background:#fdecef;color:#c0392b;font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:6px;text-align:center}
-  .foot{text-align:center;color:#aab;font-size:11px;margin-top:18px}
+  html,body{height:100%}
+  body{margin:0;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-family:'Noto Sans KR',-apple-system,'Malgun Gothic',sans-serif;color:#eaf0ff;
+    background:#0b1024;}
+  /* 움직이는 오로라 배경 */
+  .aurora{position:fixed;inset:-30%;z-index:0;filter:blur(70px);opacity:.9;
+    background:
+      radial-gradient(38% 45% at 22% 30%, #4f46e5 0%, transparent 60%),
+      radial-gradient(40% 42% at 78% 25%, #17A2B8 0%, transparent 60%),
+      radial-gradient(45% 50% at 60% 80%, #7c3aed 0%, transparent 62%),
+      radial-gradient(40% 45% at 25% 75%, #0ea5e9 0%, transparent 60%);
+    animation:drift 16s ease-in-out infinite alternate;}
+  @keyframes drift{0%{transform:translate(0,0) scale(1) rotate(0deg)}
+    50%{transform:translate(3%,-2%) scale(1.08) rotate(8deg)}
+    100%{transform:translate(-3%,3%) scale(1.04) rotate(-6deg)}}
+  .grid{position:fixed;inset:0;z-index:0;opacity:.06;
+    background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+    background-size:46px 46px;mask-image:radial-gradient(circle at center,#000 40%,transparent 78%)}
+  /* 글래스 카드 */
+  .card{position:relative;z-index:2;width:360px;padding:40px 34px 30px;border-radius:22px;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+    backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+    box-shadow:0 30px 80px rgba(4,8,30,.55),inset 0 1px 0 rgba(255,255,255,.25);
+    animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .badge{width:56px;height:56px;margin:0 auto 16px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+    font-family:'Poppins';font-weight:800;font-size:22px;color:#fff;letter-spacing:.5px;
+    background:linear-gradient(135deg,#17A2B8,#4f46e5);box-shadow:0 10px 30px rgba(79,70,229,.55),0 0 0 1px rgba(255,255,255,.2) inset}
+  .logo{text-align:center;font-family:'Poppins';font-weight:800;font-size:22px;color:#fff;letter-spacing:-.2px;
+    text-shadow:0 2px 20px rgba(120,140,255,.5)}
+  .sub{text-align:center;color:#aab6e6;font-size:12.5px;margin:6px 0 24px}
+  label{display:block;font-size:12px;color:#c6cdf0;font-weight:500;margin:16px 0 6px}
+  .field{position:relative}
+  .field i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9aa6d8;font-size:18px}
+  input{width:100%;padding:13px 14px 13px 42px;border-radius:12px;font-size:14px;color:#fff;outline:none;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);transition:.18s}
+  input::placeholder{color:#8b96c4}
+  input:focus{border-color:#8ea2ff;background:rgba(255,255,255,.12);box-shadow:0 0 0 4px rgba(110,130,255,.22)}
+  button{width:100%;margin-top:26px;padding:14px;border:0;border-radius:12px;cursor:pointer;
+    font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;font-family:'Noto Sans KR';
+    background:linear-gradient(135deg,#17A2B8 0%,#4f46e5 60%,#7c3aed 100%);background-size:180% 180%;
+    box-shadow:0 12px 34px rgba(79,70,229,.5);transition:.2s;animation:sheen 6s linear infinite}
+  @keyframes sheen{0%{background-position:0% 50%}100%{background-position:180% 50%}}
+  button:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(79,70,229,.62)}
+  button:active{transform:translateY(0)}
+  .err{background:rgba(224,49,79,.16);color:#ffd0d8;border:1px solid rgba(255,120,140,.4);
+    font-size:12.5px;padding:10px 12px;border-radius:10px;margin-bottom:4px;text-align:center}
+  .foot{text-align:center;color:#7f8bc0;font-size:10.5px;margin-top:20px;letter-spacing:.4px}
 </style></head>
 <body>
+  <div class="aurora"></div>
+  <div class="grid"></div>
   <form class="card" method="POST" action="/__login" autocomplete="off">
-    <div class="logo">타라TPS <span>품질관리</span></div>
+    <div class="badge">TARA</div>
+    <div class="logo">타라TPS 품질관리</div>
     <div class="sub">품질개선팀 통합품질관리시스템</div>
     ${err}
     <label>아이디</label>
-    <input name="id" type="text" autofocus required>
+    <div class="field"><i class="ti ti-user"></i><input name="id" type="text" placeholder="아이디" autofocus required></div>
     <label>비밀번호</label>
-    <input name="pw" type="password" required>
+    <div class="field"><i class="ti ti-lock"></i><input name="pw" type="password" placeholder="비밀번호" required></div>
     <button type="submit">로그인</button>
-    <div class="foot">TARA TPS · Quality Management System</div>
+    <div class="foot">TARA TPS · QUALITY MANAGEMENT SYSTEM</div>
   </form>
 </body></html>`;
   return new Response(html, {
