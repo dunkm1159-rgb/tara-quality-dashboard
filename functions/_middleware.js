@@ -1,8 +1,13 @@
-// TARA QMS 로그인 관문 (Cloudflare Pages Functions - 커스텀 로그인 페이지)
+// TARA QMS 로그인 관문 (Cloudflare Pages Functions - 커스텀 로그인 + 접속기록)
 // ─ 모든 요청을 가로채, 로그인 안 됐으면 예쁜 로그인 화면을 보여준다.
 // ─ 계정은 코드에 안 넣고 Cloudflare Pages 환경변수 LOGIN_USERS 에 저장.
 //   형식: "아이디1:비번1,아이디2:비번2,..."
-// ─ 로그인 성공 시 세션 쿠키(tara_auth)를 심어, 브라우저 세션 동안 재로그인 없이 통과.
+// ─ 로그인 성공 시: 세션 쿠키(tara_auth) + 사용자 쿠키(tara_user) 발급 + 접속기록을 구글시트에 저장.
+// ─ 접속기록/관리자 판별용 관리자 아이디는 ADMIN_USER.
+
+const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycby4dE8hBu5dhYa8aNUNfPKrgPjtAttT6WLDXJe-hQ8aeTXXNlzAssUKL0exCR0dvjVO/exec';
+const SHEET_KEY = 'tara2026';
+const ADMIN_USER = 'wkbae';   // 접속기록을 볼 수 있는 관리자 아이디
 
 export async function onRequest(context) {
   const { request, env, next } = context;
@@ -23,27 +28,27 @@ export async function onRequest(context) {
     } catch (e) {}
     if (allowed.has(user + ':' + pass)) {
       const token = btoa(unescape(encodeURIComponent(user + ':' + pass)));
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/quality_dashboard.html',
-          // 세션 쿠키(만료시간 없음) → 브라우저 닫으면 재로그인
-          'Set-Cookie': `tara_auth=${token}; Path=/; HttpOnly; Secure; SameSite=Lax`,
-        },
-      });
+      // 접속기록 저장 (완료 보장, 응답은 기다리지 않음)
+      const ip = request.headers.get('CF-Connecting-IP') || '';
+      const ua = request.headers.get('User-Agent') || '';
+      context.waitUntil(logAccess(user, ip, ua));
+      const h = new Headers();
+      h.set('Location', '/quality_dashboard.html');
+      // 세션 쿠키(브라우저 닫으면 재로그인). tara_user 는 화면에서 읽어 관리자 판별용(HttpOnly 아님)
+      h.append('Set-Cookie', `tara_auth=${token}; Path=/; HttpOnly; Secure; SameSite=Lax`);
+      h.append('Set-Cookie', `tara_user=${encodeURIComponent(user)}; Path=/; Secure; SameSite=Lax`);
+      return new Response(null, { status: 302, headers: h });
     }
     return loginPage('아이디 또는 비밀번호가 올바르지 않습니다.');
   }
 
   // 2) 로그아웃
   if (url.pathname === '/__logout') {
-    return new Response(null, {
-      status: 302,
-      headers: {
-        'Location': '/',
-        'Set-Cookie': 'tara_auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
-      },
-    });
+    const h = new Headers();
+    h.set('Location', '/');
+    h.append('Set-Cookie', 'tara_auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    h.append('Set-Cookie', 'tara_user=; Path=/; Secure; SameSite=Lax; Max-Age=0');
+    return new Response(null, { status: 302, headers: h });
   }
 
   // 3) 쿠키 인증 확인
@@ -59,10 +64,22 @@ export async function onRequest(context) {
   return loginPage('');
 }
 
+// 접속기록 한 줄을 구글시트에 저장 (변경이력과 같은 append 방식). row[1]='ACCESS'
+async function logAccess(user, ip, ua) {
+  try {
+    await fetch(APPS_SCRIPT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        key: SHEET_KEY,
+        row: ['', 'ACCESS', new Date().toISOString(), user, ip, String(ua).slice(0, 120)],
+      }),
+    });
+  } catch (e) {}
+}
+
 function loginPage(errMsg) {
-  const err = errMsg
-    ? `<div class="err">${errMsg}</div>`
-    : '';
+  const err = errMsg ? `<div class="err">${errMsg}</div>` : '';
   const html = `<!DOCTYPE html>
 <html lang="ko"><head>
 <meta charset="utf-8">
@@ -82,8 +99,7 @@ function loginPage(errMsg) {
   input{width:100%;padding:12px 13px;border:1px solid #d7dbe3;border-radius:10px;font-size:14px;outline:none;transition:.15s}
   input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
   button{width:100%;margin-top:22px;padding:13px;border:0;border-radius:10px;cursor:pointer;
-    font-size:15px;font-weight:700;color:#fff;
-    background:linear-gradient(135deg,#334f8c,#4f46e5);transition:.15s}
+    font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,#334f8c,#4f46e5);transition:.15s}
   button:hover{filter:brightness(1.08)}
   .err{background:#fdecef;color:#c0392b;font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:6px;text-align:center}
   .foot{text-align:center;color:#aab;font-size:11px;margin-top:18px}
