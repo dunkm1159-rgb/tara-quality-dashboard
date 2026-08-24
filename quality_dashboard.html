@@ -462,9 +462,12 @@
       <button class="nav-item" id="nav-access" onclick="showTab('access',this)" style="display:none">
         <span class="nav-icon"><i class="ti ti-lock-access"></i></span> 접속기록
       </button>
+      <button class="nav-item" id="nav-logout" onclick="if(confirm('로그아웃 할까요?'))location.href='/__logout'" style="display:none;color:#ffd9d9">
+        <span class="nav-icon"><i class="ti ti-logout"></i></span> <span id="logout-label">로그아웃</span>
+      </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/25 07:47</span>
+      v<span id="build-stamp">08/25 08:15</span>
     </div>
   </aside>
 
@@ -4024,6 +4027,9 @@ function _initAccessNav(){
   const user=_cookie('tara_user');
   const btn=document.getElementById('nav-access');
   if(btn && user && ACCESS_ADMIN.includes(user)) btn.style.display='';
+  // 로그인 상태(쿠키 있음)면 로그아웃 버튼 표시 + 아이디 붙이기
+  const lo=document.getElementById('nav-logout');
+  if(lo && user){ lo.style.display=''; const lb=document.getElementById('logout-label'); if(lb) lb.textContent='로그아웃 ('+user+')'; }
 }
 let _accessRows=[];
 async function loadAccessLog(){
