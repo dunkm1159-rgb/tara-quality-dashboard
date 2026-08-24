@@ -450,9 +450,12 @@
       <button class="nav-item" id="nav-log" onclick="showTab('log',this)">
         <span class="nav-icon"><i class="ti ti-history"></i></span> 변경 이력
       </button>
+      <button class="nav-item" id="nav-access" onclick="showTab('access',this)" style="display:none">
+        <span class="nav-icon"><i class="ti ti-lock-access"></i></span> 접속기록
+      </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/24 16:32</span>
+      v<span id="build-stamp">08/24 16:41</span>
     </div>
   </aside>
 
@@ -1677,6 +1680,31 @@
       </div>
     </div>
 
+    <div id="tab-access" class="tab">
+      <div class="section-header" style="margin-bottom:10px">
+        <div class="section-title">🔒 접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 이력</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="access-search" oninput="renderAccessLog()" placeholder="검색 (아이디·IP)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:200px">
+          <button onclick="loadAccessLog()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer">🔄 새로고침</button>
+        </div>
+      </div>
+      <div style="font-size:11.5px;color:#86868b;margin-bottom:12px">로그인 성공 시 자동 기록됩니다 — 누가·언제·어디서(IP) 접속했는지. (관리자만 볼 수 있어요)</div>
+      <div class="card" style="padding:0">
+        <div style="padding:9px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="access-count"></div>
+        <div style="overflow-x:auto;max-height:560px;overflow-y:auto">
+          <table style="width:100%;font-size:12.5px">
+            <thead><tr>
+              <th style="white-space:nowrap;text-align:left;padding:8px 12px">접속 일시</th>
+              <th style="white-space:nowrap;text-align:left;padding:8px 12px">아이디</th>
+              <th style="white-space:nowrap;text-align:left;padding:8px 12px">IP 주소</th>
+              <th style="text-align:left;padding:8px 12px">기기/브라우저</th>
+            </tr></thead>
+            <tbody id="access-tbody"><tr><td colspan="4" style="padding:16px;color:#ccc">불러오는 중…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-docs" class="tab">
       <div class="section-header" style="margin-bottom:20px">
         <div class="section-title">문서 관리</div>
@@ -2408,6 +2436,7 @@ function showTab(name, btn) {
   }
   if (name === 'docs') renderDocsList();
   if (name === 'log') { renderChangeLog(); loadLogFromSheet(true); }
+  if (name === 'access') { loadAccessLog(); }
   if (name === 'register') initRegForm();
   if (name === 'nccost') renderNcCost();
   if (name === 'wip') renderWip();
@@ -3978,6 +4007,45 @@ function logAction(action, target, detail) {
   } catch (e) {}
   if (typeof renderChangeLog === 'function') renderChangeLog();
 }
+
+// ── 접속기록 (관리자 전용) ──
+const ACCESS_ADMIN = ['wkbae'];   // 접속기록을 볼 수 있는 관리자 아이디
+function _cookie(name){ const m=(document.cookie||'').match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)')); return m?decodeURIComponent(m[1]):''; }
+function _initAccessNav(){
+  const user=_cookie('tara_user');
+  const btn=document.getElementById('nav-access');
+  if(btn && user && ACCESS_ADMIN.includes(user)) btn.style.display='';
+}
+let _accessRows=[];
+async function loadAccessLog(){
+  const tb=document.getElementById('access-tbody');
+  if(tb) tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#aaa">불러오는 중…</td></tr>';
+  try{
+    const r=await fetch(CLAIM_SHEET_URL+'?t='+Date.now());
+    const j=await r.json();
+    const rows=(j&&Array.isArray(j.rows))?j.rows:[];
+    _accessRows=rows.filter(row=>String(row[1]||'')==='ACCESS')
+      .map(row=>({t:row[2]||'',user:row[3]||'',ip:row[4]||'',ua:row[5]||''}));
+    renderAccessLog();
+  }catch(e){ if(tb) tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록 불러오기 실패</td></tr>'; }
+}
+function renderAccessLog(){
+  const tb=document.getElementById('access-tbody'); if(!tb) return;
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const fmt=t=>{try{return new Date(t).toLocaleString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,16);}catch(e){return t;}};
+  const q=(document.getElementById('access-search')?.value||'').toLowerCase();
+  let rows=_accessRows.slice().sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+  if(q) rows=rows.filter(r=>(r.user+' '+r.ip).toLowerCase().includes(q));
+  const cnt=document.getElementById('access-count'); if(cnt) cnt.textContent='총 '+_accessRows.length+'건'+(q?(' 중 '+rows.length+'건'):'');
+  tb.innerHTML=rows.length?rows.slice(0,1000).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
+    <td style="padding:6px 12px;white-space:nowrap;color:#555">${esc(fmt(r.t))}</td>
+    <td style="padding:6px 12px;white-space:nowrap;font-weight:600">${esc(r.user)}</td>
+    <td style="padding:6px 12px;white-space:nowrap;font-family:monospace;color:#667">${esc(r.ip)}</td>
+    <td style="padding:6px 12px;color:#999;font-size:11px;overflow:hidden;text-overflow:ellipsis;max-width:360px;white-space:nowrap" title="${esc(r.ua)}">${esc(r.ua)}</td></tr>`).join('')
+    :'<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록이 없습니다.</td></tr>';
+}
+try{ _initAccessNav(); }catch(e){}
+
 let _sheetLog = [];   // 시트에서 불러온 로그
 function renderChangeLog() {
   const tb = document.getElementById('log-tbody');
@@ -7501,7 +7569,7 @@ async function loadSheetClaims(){
     // 관리대장(파일본)은 시트보다 시간상 앞 → VOIDKEY 있으면 교체 대상으로 제거
     if(voidKeyIdx.size){ claimData = claimData.filter(r => !voidKeyIdx.has(rowKey(r))); }
     const haveOrders = new Set(claimData.map(r => String(r[1]||'').trim()));  // 이미 있는 작업번호
-    const isMarker = v => { v=String(v); return v.startsWith('TEST')||v.startsWith('VOID:')||v.startsWith('VOIDKEY:')||v.startsWith('TRASH:')||v.startsWith('UNTRASH:')||v==='LOG'; };
+    const isMarker = v => { v=String(v); return v.startsWith('TEST')||v.startsWith('VOID:')||v.startsWith('VOIDKEY:')||v.startsWith('TRASH:')||v.startsWith('UNTRASH:')||v==='LOG'||v==='ACCESS'; };
     const add = j.rows
       .map((row, idx) => ({ row, idx }))
       .filter(o => o.row && o.row[1] && !isMarker(o.row[1]))
