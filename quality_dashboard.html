@@ -467,7 +467,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/25 09:46</span>
+      v<span id="build-stamp">08/25 09:56</span>
     </div>
   </aside>
 
@@ -1696,7 +1696,7 @@
       <div class="section-header" style="margin-bottom:10px">
         <div class="section-title">🔒 접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 이력</span></div>
         <div style="display:flex;gap:8px;align-items:center">
-          <input id="access-search" oninput="renderAccessLog()" placeholder="검색 (아이디·IP)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:200px">
+          <input id="access-search" oninput="renderAccessLog()" placeholder="검색 (이름·아이디·IP)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:200px">
           <button onclick="loadAccessLog()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer">🔄 새로고침</button>
         </div>
       </div>
@@ -1707,7 +1707,7 @@
           <table style="width:100%;font-size:12.5px">
             <thead><tr>
               <th style="white-space:nowrap;text-align:left;padding:8px 12px">접속 일시</th>
-              <th style="white-space:nowrap;text-align:left;padding:8px 12px">아이디</th>
+              <th style="white-space:nowrap;text-align:left;padding:8px 12px">이름 (아이디)</th>
               <th style="white-space:nowrap;text-align:left;padding:8px 12px">IP 주소</th>
               <th style="text-align:left;padding:8px 12px">기기/브라우저</th>
             </tr></thead>
@@ -4022,14 +4022,17 @@ function logAction(action, target, detail) {
 
 // ── 접속기록 (관리자 전용) ──
 const ACCESS_ADMIN = ['wkbae'];   // 접속기록을 볼 수 있는 관리자 아이디
+// 아이디 → 실명 매핑
+const USER_NAMES = {'wkbae':'배원기','kmkang':'강경모','kimbS':'김배수','10011650':'정훈','phj':'박호정'};
+function userName(id){ id=String(id||'').trim(); return USER_NAMES[id] || id; }
 function _cookie(name){ const m=(document.cookie||'').match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)')); return m?decodeURIComponent(m[1]):''; }
 function _initAccessNav(){
   const user=_cookie('tara_user');
   const btn=document.getElementById('nav-access');
   if(btn && user && ACCESS_ADMIN.includes(user)) btn.style.display='';
-  // 로그인 상태(쿠키 있음)면 로그아웃 버튼 표시 + 아이디 붙이기
+  // 로그인 상태(쿠키 있음)면 로그아웃 버튼 표시 + 실명 붙이기
   const lo=document.getElementById('nav-logout');
-  if(lo && user){ lo.style.display=''; const lb=document.getElementById('logout-label'); if(lb) lb.textContent='로그아웃 ('+user+')'; }
+  if(lo && user){ lo.style.display=''; const lb=document.getElementById('logout-label'); if(lb) lb.textContent='로그아웃 ('+userName(user)+')'; }
 }
 let _accessRows=[];
 async function loadAccessLog(){
@@ -4050,11 +4053,11 @@ function renderAccessLog(){
   const fmt=t=>{try{return new Date(t).toLocaleString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,16);}catch(e){return t;}};
   const q=(document.getElementById('access-search')?.value||'').toLowerCase();
   let rows=_accessRows.slice().sort((a,b)=>String(b.t).localeCompare(String(a.t)));
-  if(q) rows=rows.filter(r=>(r.user+' '+r.ip).toLowerCase().includes(q));
+  if(q) rows=rows.filter(r=>(userName(r.user)+' '+r.user+' '+r.ip).toLowerCase().includes(q));
   const cnt=document.getElementById('access-count'); if(cnt) cnt.textContent='총 '+_accessRows.length+'건'+(q?(' 중 '+rows.length+'건'):'');
   tb.innerHTML=rows.length?rows.slice(0,1000).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
     <td style="padding:6px 12px;white-space:nowrap;color:#555">${esc(fmt(r.t))}</td>
-    <td style="padding:6px 12px;white-space:nowrap;font-weight:600">${esc(r.user)}</td>
+    <td style="padding:6px 12px;white-space:nowrap;font-weight:600">${esc(userName(r.user))}<span style="color:#aab;font-weight:400;font-size:11px"> (${esc(r.user)})</span></td>
     <td style="padding:6px 12px;white-space:nowrap;font-family:monospace;color:#667">${esc(r.ip)}</td>
     <td style="padding:6px 12px;color:#999;font-size:11px;overflow:hidden;text-overflow:ellipsis;max-width:360px;white-space:nowrap" title="${esc(r.ua)}">${esc(r.ua)}</td></tr>`).join('')
     :'<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록이 없습니다.</td></tr>';
