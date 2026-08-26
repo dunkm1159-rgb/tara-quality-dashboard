@@ -480,7 +480,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/27 08:07</span>
+      v<span id="build-stamp">08/26 23:30</span>
     </div>
   </aside>
 
@@ -1036,7 +1036,6 @@
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('정상제이엘에스',this)">전략사업본부(정상)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('영문거래처',this)">해외영업본부</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('해외영업본부(우즈벡)',this)">해외영업본부(우즈벡)</button>
-          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('해외영업본부(DNP)',this)">해외영업본부(DNP)</button>
         </div>
 
         <!-- 필터 -->
@@ -4303,8 +4302,8 @@ function splitEbsSheet() {
     if (dom.length) gajebonSheets['기타'] = (gajebonSheets['기타'] || []).concat(dom);
     const rest = ovs.filter(r => !isDomesticMgr(r));
     gajebonSheets[UZ_SHEET]  = rest.filter(isUz);
-    gajebonSheets[DNP_SHEET] = rest.filter(r => !isUz(r) && isDnp(r));
-    gajebonSheets['영문거래처'] = rest.filter(r => !isUz(r) && !isDnp(r));
+    // DNP 건은 해외영업본부(영문거래처)에 통합 (별도 탭 사용 안 함)
+    gajebonSheets['영문거래처'] = rest.filter(r => !isUz(r));
   }
   // 국내영업본부(기타)에서 단비교육·개념원리 분리 (모든 이동 반영 후 마지막에)
   const b2 = gajebonSheets['기타'];
@@ -5700,10 +5699,10 @@ function setOvs(order, key, val) {
   saveOvsStore();
 }
 // 해외영업본부(영문거래처) 탭에서만 사용
-const OVS_SHEETS = ['영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
+const OVS_SHEETS = ['영문거래처', '해외영업본부(우즈벡)'];
 function isOvsSheet() { return OVS_SHEETS.includes(gajebonCurrentSheet); }
 // 파트(표지/속표지/…) 구분을 쓰지 않는 시트 — EBS만 파트 사용
-const NO_PART_SHEETS = ['기타', '대교', '정상제이엘에스', '영문거래처', '해외영업본부(우즈벡)', '해외영업본부(DNP)'];
+const NO_PART_SHEETS = ['기타', '대교', '정상제이엘에스', '영문거래처', '해외영업본부(우즈벡)'];
 function showParts() { return !NO_PART_SHEETS.includes(gajebonCurrentSheet); }
 // 시트별 컬럼 표시/숨김 (헤더 + 표 최소너비)
 function syncOvsCols() {
