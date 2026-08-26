@@ -91,57 +91,34 @@ function loginPage(errMsg) {
 <style>
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;display:flex;align-items:center;justify-content:center;overflow:hidden;
-    font-family:'Noto Sans KR',-apple-system,'Malgun Gothic',sans-serif;color:#eaf0ff;
-    background:#0b1024;}
-  /* 움직이는 오로라 배경 */
-  .aurora{position:fixed;inset:-30%;z-index:0;filter:blur(70px);opacity:.9;
-    background:
-      radial-gradient(38% 45% at 22% 30%, #4f46e5 0%, transparent 60%),
-      radial-gradient(40% 42% at 78% 25%, #17A2B8 0%, transparent 60%),
-      radial-gradient(45% 50% at 60% 80%, #7c3aed 0%, transparent 62%),
-      radial-gradient(40% 45% at 25% 75%, #0ea5e9 0%, transparent 60%);
-    animation:drift 16s ease-in-out infinite alternate;}
-  @keyframes drift{0%{transform:translate(0,0) scale(1) rotate(0deg)}
-    50%{transform:translate(3%,-2%) scale(1.08) rotate(8deg)}
-    100%{transform:translate(-3%,3%) scale(1.04) rotate(-6deg)}}
-  .grid{position:fixed;inset:0;z-index:0;opacity:.06;
-    background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
-    background-size:46px 46px;mask-image:radial-gradient(circle at center,#000 40%,transparent 78%)}
-  /* 글래스 카드 */
-  .card{position:relative;z-index:2;width:360px;padding:40px 34px 30px;border-radius:22px;
-    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
-    backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
-    box-shadow:0 30px 80px rgba(4,8,30,.55),inset 0 1px 0 rgba(255,255,255,.25);
-    animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
-  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-  .logo-wrap{width:118px;margin:0 auto 18px;padding:12px 16px;border-radius:16px;display:flex;align-items:center;justify-content:center;
-    background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.5) inset}
-  .logo-img{display:block;width:100%;height:auto}
-  .logo{text-align:center;font-family:'Poppins';font-weight:800;font-size:22px;color:#fff;letter-spacing:-.2px;
-    text-shadow:0 2px 20px rgba(120,140,255,.5)}
-  .sub{text-align:center;color:#aab6e6;font-size:12.5px;margin:6px 0 24px}
-  label{display:block;font-size:12px;color:#c6cdf0;font-weight:500;margin:16px 0 6px}
+  body{margin:0;display:flex;align-items:center;justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif;
+    color:#1d1d1f;background:#f5f5f7;}
+  .card{position:relative;width:372px;padding:38px 34px 26px;border-radius:18px;
+    background:#fff;border:1px solid #e8e8ed;box-shadow:0 10px 40px rgba(0,0,0,.08);
+    animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .logo-wrap{width:104px;margin:0 auto 16px;padding:14px 16px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:#17A2B8;box-shadow:0 6px 18px rgba(23,162,184,.28)}
+  .logo-img{display:block;width:100%;height:auto;filter:brightness(0) invert(1)}
+  .logo{text-align:center;font-weight:700;font-size:20px;color:#1d1d1f;letter-spacing:-.2px}
+  .sub{text-align:center;color:#86868b;font-size:13px;margin:5px 0 22px}
+  label{display:block;font-size:12px;color:#86868b;font-weight:500;margin:14px 0 6px}
   .field{position:relative}
-  .field i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9aa6d8;font-size:18px}
-  input{width:100%;padding:13px 14px 13px 42px;border-radius:12px;font-size:14px;color:#fff;outline:none;
-    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);transition:.18s}
-  input::placeholder{color:#8b96c4}
-  input:focus{border-color:#8ea2ff;background:rgba(255,255,255,.12);box-shadow:0 0 0 4px rgba(110,130,255,.22)}
-  button{width:100%;margin-top:26px;padding:14px;border:0;border-radius:12px;cursor:pointer;
-    font-size:15px;font-weight:700;color:#fff;letter-spacing:.3px;font-family:'Noto Sans KR';
-    background:linear-gradient(135deg,#17A2B8 0%,#4f46e5 60%,#7c3aed 100%);background-size:180% 180%;
-    box-shadow:0 12px 34px rgba(79,70,229,.5);transition:.2s;animation:sheen 6s linear infinite}
-  @keyframes sheen{0%{background-position:0% 50%}100%{background-position:180% 50%}}
-  button:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(79,70,229,.62)}
-  button:active{transform:translateY(0)}
-  .err{background:rgba(224,49,79,.16);color:#ffd0d8;border:1px solid rgba(255,120,140,.4);
-    font-size:12.5px;padding:10px 12px;border-radius:10px;margin-bottom:4px;text-align:center}
-  .foot{text-align:center;color:#7f8bc0;font-size:10.5px;margin-top:20px;letter-spacing:.4px}
+  .field i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#a1a1a8;font-size:18px}
+  input{width:100%;padding:12px 14px 12px 40px;border-radius:10px;font-size:14px;color:#1d1d1f;outline:none;
+    background:#f5f5f7;border:1px solid #d2d2d7;transition:.16s}
+  input::placeholder{color:#a1a1a8}
+  input:focus{border-color:#17A2B8;background:#fff;box-shadow:0 0 0 4px rgba(23,162,184,.15)}
+  button{width:100%;margin-top:24px;padding:13px;border:0;border-radius:10px;cursor:pointer;
+    font-size:15px;font-weight:700;color:#fff;font-family:inherit;background:#17A2B8;transition:.18s}
+  button:hover{background:#138496}
+  button:active{transform:translateY(1px)}
+  .err{background:#fdeaec;color:#d70015;border:1px solid #f5c2c7;
+    font-size:12.5px;padding:10px 12px;border-radius:9px;margin-bottom:4px;text-align:center}
+  .foot{text-align:center;color:#b0b0b8;font-size:10.5px;margin-top:18px;letter-spacing:.4px}
 </style></head>
 <body>
-  <div class="aurora"></div>
-  <div class="grid"></div>
   <form class="card" method="POST" action="/__login" autocomplete="off">
     <div class="logo-wrap"><img class="logo-img" src="data:image/png;base64,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" alt="tara"></div>
     <div class="logo">생산본부 품질개선팀</div>
