@@ -480,7 +480,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/27 00:44</span>
+      v<span id="build-stamp">08/27 00:52</span>
     </div>
   </aside>
 
@@ -4047,17 +4047,22 @@ function _initAccessNav(){
   if(lo && user){ lo.style.display=''; const lb=document.getElementById('logout-label'); if(lb) lb.textContent='로그아웃 ('+userName(user)+')'; }
 }
 let _accessRows=[];
+// 시트 전체 rows 캐시 (접속기록·변경이력이 즉시 표시에 재사용)
+let _sheetAllCache = null;   // { rows, ts }
+async function fetchSheetAll(){
+  const r = await fetch(CLAIM_SHEET_URL + '?t=' + Date.now());
+  const j = await r.json();
+  if (j && Array.isArray(j.rows)) _sheetAllCache = { rows: j.rows, ts: Date.now() };
+  return _sheetAllCache ? _sheetAllCache.rows : [];
+}
 async function loadAccessLog(){
   const tb=document.getElementById('access-tbody');
-  if(tb) tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#aaa">불러오는 중…</td></tr>';
-  try{
-    const r=await fetch(CLAIM_SHEET_URL+'?t='+Date.now());
-    const j=await r.json();
-    const rows=(j&&Array.isArray(j.rows))?j.rows:[];
-    _accessRows=rows.filter(row=>String(row[1]||'')==='ACCESS')
-      .map(row=>({t:row[2]||'',user:row[3]||'',ip:row[4]||'',ua:row[5]||''}));
-    renderAccessLog();
-  }catch(e){ if(tb) tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록 불러오기 실패</td></tr>'; }
+  const build=rows=>{ _accessRows=(rows||[]).filter(row=>String(row[1]||'')==='ACCESS')
+      .map(row=>({t:row[2]||'',user:row[3]||'',ip:row[4]||'',ua:row[5]||''})); renderAccessLog(); };
+  if(_sheetAllCache && _sheetAllCache.rows){ build(_sheetAllCache.rows); }          // 캐시로 즉시 표시
+  else if(tb){ tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#aaa">불러오는 중…</td></tr>'; }
+  try{ const rows=await fetchSheetAll(); build(rows); }                             // 백그라운드 최신화
+  catch(e){ if(tb && !_accessRows.length) tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록 불러오기 실패</td></tr>'; }
 }
 function renderAccessLog(){
   const tb=document.getElementById('access-tbody'); if(!tb) return;
@@ -4102,14 +4107,12 @@ function renderChangeLog() {
 }
 async function loadLogFromSheet(silent) {
   const cnt = document.getElementById('log-count');
-  if (cnt && !silent) cnt.textContent = '불러오는 중…';
-  try {
-    const r = await fetch(CLAIM_SHEET_URL); const j = await r.json();
-    if (!j || !Array.isArray(j.rows)) return;
-    _sheetLog = j.rows.filter(row => String(row[1] || '') === 'LOG')
-      .map(row => ({ t: row[2] || '', u: row[3] || '', a: row[4] || '', tg: row[5] || '', d: row[6] || '' }));
-    renderChangeLog();
-  } catch (e) { if (!silent) alert('시트 로그 불러오기 실패'); }
+  const build=rows=>{ _sheetLog=(rows||[]).filter(row => String(row[1] || '') === 'LOG')
+      .map(row => ({ t: row[2] || '', u: row[3] || '', a: row[4] || '', tg: row[5] || '', d: row[6] || '' })); renderChangeLog(); };
+  if(_sheetAllCache && _sheetAllCache.rows){ build(_sheetAllCache.rows); }          // 캐시로 즉시 표시
+  else if (cnt && !silent) cnt.textContent = '불러오는 중…';
+  try { const rows = await fetchSheetAll(); build(rows); }                          // 백그라운드 최신화
+  catch (e) { if (!silent && !_sheetLog.length) alert('시트 로그 불러오기 실패'); }
 }
 function restoreClaims() {   // 전체 복원
   if (!checkDelPw()) return;
@@ -7650,6 +7653,7 @@ async function loadSheetClaims(){
     const r = await fetch(CLAIM_SHEET_URL);
     const j = await r.json();
     if(!j || !j.ok || !Array.isArray(j.rows)) return;
+    _sheetAllCache = { rows: j.rows, ts: Date.now() };   // 접속기록/변경이력 재사용 캐시
     const nd = v => (typeof v==='string' && /\dT\d/.test(v)) ? new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}) : v;
     // 무효(VOID:) / 휴지통(TRASH:·UNTRASH:) 마커 수집 (시트 순서 = 시간순)
     const voided = new Set();
