@@ -480,7 +480,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      v<span id="build-stamp">08/27 09:09</span>
+      v<span id="build-stamp">08/27 00:44</span>
     </div>
   </aside>
 
@@ -5105,6 +5105,33 @@ function toggleGajebonSort() {
   if (ar) ar.textContent = gajebonDateSort === 'desc' ? ' ▼' : ' ▲';
   renderGajebonTable();
 }
+let _gjRender = null;
+let _gjScrollBound = false;
+
+function renderGajebonMoreRows() {
+  if (!_gjRender) return;
+  const st = _gjRender;
+  if (st.rendered >= st.filtered.length) return;
+  const tbody = document.getElementById('gajebon-tbody');
+  if (!tbody) return;
+  const next = st.filtered.slice(st.rendered, st.rendered + st.chunk);
+  tbody.insertAdjacentHTML('beforeend', _buildGajebonRowsHTML(next));
+  st.rendered += next.length;
+}
+
+function setupGajebonInfiniteScroll() {
+  if (_gjScrollBound) return;
+  const c = document.querySelector('.content');
+  if (!c) return;
+  c.addEventListener('scroll', () => {
+    if (!_gjRender || _gjRender.rendered >= _gjRender.filtered.length) return;
+    const tb = document.getElementById('gajebon-tbody');
+    if (!tb || tb.offsetParent === null) return;   // 가제본 탭이 아닐 때 스킵
+    if (c.scrollTop + c.clientHeight >= c.scrollHeight - 800) renderGajebonMoreRows();
+  }, { passive: true });
+  _gjScrollBound = true;
+}
+
 function renderGajebonTable() {
   syncOvsCols();     // 해외영업본부 탭에서만 F&G/발송견본 등 컬럼 노출
   const rows = gajebonSheets[gajebonCurrentSheet] || [];
@@ -5220,12 +5247,22 @@ function renderGajebonTable() {
     : (b['날짜']||'').localeCompare(a['날짜']||''));
   window._gajebonVisibleRows = filtered;   // 엑셀 내려받기가 현재 필터로 보이는 행만 담게
 
-  // 원본 인덱스 매핑
+  // 원본 인덱스 매핑 (행 객체 -> 인덱스, O(1) 조회)
   const allRows = gajebonSheets[gajebonCurrentSheet] || [];
+  const idxMap = new Map(allRows.map((r, i) => [r, i]));
   const ovsWide = isOvsSheet();   // 해외탭(영문/우즈벡/DNP)은 제품명 줄바꿈해서 풀로 표시
   const prodStyle = ovsWide ? 'white-space:normal;word-break:break-word;min-width:220px;' : 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-  tbody.innerHTML = filtered.map(r => {
-    const origIdx = allRows.indexOf(r);
+  // 점진 렌더(스크롤 로딩): 첫 200행만 즉시 그리고, 스크롤 시 이어붙임
+  _gjRender = { filtered, allRows, idxMap, prodStyle, ovsWide, chunk: 200, rendered: 0 };
+  tbody.innerHTML = '';
+  renderGajebonMoreRows();
+  setupGajebonInfiniteScroll();
+}
+
+function _buildGajebonRowsHTML(rows) {
+  const { allRows, idxMap, prodStyle, ovsWide } = _gjRender;
+  return rows.map(r => {
+    const origIdx = idxMap.get(r);
     const status = (gajDate(r['주문번호']||'') || isStickerDone(r) || isStaleGajebon(r)) ? '완료' : (r['진행상태'] || '');
     const inspDate = r['검수일자'] || '';
     const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
