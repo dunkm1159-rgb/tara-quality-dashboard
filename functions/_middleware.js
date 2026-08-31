@@ -98,9 +98,8 @@ function loginPage(errMsg) {
     background:#fff;border:1px solid #e8e8ed;box-shadow:0 10px 40px rgba(0,0,0,.08);
     animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
   @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-  .logo-wrap{width:150px;margin:0 auto 16px;padding:16px 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-    background:#17A2B8;box-shadow:0 6px 18px rgba(23,162,184,.28)}
-  .logo-img{display:block;width:100%;height:auto;filter:brightness(0) invert(1)}
+  .logo-wrap{width:180px;margin:0 auto 10px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent}
+  .logo-img{display:block;width:100%;height:auto}
   .logo{text-align:center;font-weight:700;font-size:20px;color:#1d1d1f;letter-spacing:-.2px}
   .sub{text-align:center;color:#86868b;font-size:13px;margin:5px 0 22px}
   label{display:block;font-size:12px;color:#86868b;font-weight:500;margin:14px 0 6px}
