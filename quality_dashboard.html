@@ -479,7 +479,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      <span id="build-stamp">9/2 · v1.1.1</span>
+      <span id="build-stamp">9/1 · v1.1.1</span>
     </div>
   </aside>
 
@@ -4197,7 +4197,7 @@ function exportGajebon() {
       cells = comp.map((item, idx) => {
         const done = !!(item && item.y) || gdone || !!(typeof getEbsWork === 'function' && getEbsWork(order, idx));
         const nm = ((typeof shortPart === 'function' ? shortPart(item && item.n) : (item && item.n)) || '').trim();
-        return nm ? (nm + (done ? '(완료)' : '')) : '';
+        return (nm && !done) ? nm : '';   // 완료된 구성품은 내보내기에서 제외(빈칸)
       }).filter(x => x);
     } else {
       cells = r['구성'] ? [String(r['구성'])] : [];   // JSON 아니면 원본 그대로 한 칸
