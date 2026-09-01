@@ -1027,6 +1027,7 @@
 
         <!-- 시트 탭 -->
         <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:0">
+          <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('전체',this)">전체</button>
           <button class="gajebon-sheet-btn active" onclick="switchGajebonSheet('기타',this)">국내영업본부</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(EBS)',this)">국내영업본부(EBS)</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(단비)',this)">국내영업본부(단비)</button>
@@ -5992,6 +5993,11 @@ function clearGajebonDate() {
 
 function switchGajebonSheet(name, btn) {
   gajebonCurrentSheet = name;
+  if (name === '전체') {
+    const _all = [];
+    Object.keys(gajebonSheets).forEach(k => { if (k !== '전체' && Array.isArray(gajebonSheets[k])) _all.push(...gajebonSheets[k]); });
+    gajebonSheets['전체'] = _all;
+  }
   document.querySelectorAll('.gajebon-sheet-btn').forEach(b => b.classList.remove('active'));
   if (btn && btn.classList) btn.classList.add('active');
   else document.querySelectorAll('.gajebon-sheet-btn').forEach(b => { if ((b.getAttribute('onclick') || '').includes("'" + name + "'")) b.classList.add('active'); });
