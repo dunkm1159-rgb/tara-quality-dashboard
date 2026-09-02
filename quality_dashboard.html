@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>타라TPS 품질개선팀 통합품질관리시스템</title>
-<!--BUILD:ui4-054924-->
+<!--BUILD:ui5-230427-->
 <script>
 /* 로그인 없는 GitHub Pages(github.io)로 접속하면 → 로그인 있는 Cloudflare 주소로 자동 이동 */
 (function(){try{
@@ -481,7 +481,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      <span id="build-stamp">9/3 · v1.1.1</span>
+      <span id="build-stamp">9/2 · v1.1.1</span>
     </div>
   </aside>
 
@@ -1236,24 +1236,25 @@
     <!-- ============ 작업자 조회 (MES 당일작업일보) ============ -->
     <div id="tab-worklog" class="tab">
       <style>
-        #wl-hero{background:linear-gradient(135deg,#1e293b 0%,#334f8c 55%,#4f46e5 100%);border-radius:16px;padding:22px 24px 24px;color:#fff;box-shadow:0 10px 30px rgba(51,79,140,.28);margin-bottom:18px}
-        #wl-hero .wl-title{font-size:18px;font-weight:700;letter-spacing:-.2px;display:flex;align-items:center;gap:9px}
-        #wl-hero .wl-sub{font-size:12.5px;color:#c9d4f5;margin-top:6px;line-height:1.5}
-        #wl-hero .wl-sub b{color:#fff;font-weight:600}
+        #wl-hero{background:#fff;border:1px solid #e7edee;border-radius:12px;padding:20px 22px 22px;color:#182a31;box-shadow:0 1px 2px rgba(24,42,49,.04);margin-bottom:18px}
+        #wl-hero .wl-title{font-size:18px;font-weight:700;letter-spacing:-.2px;display:flex;align-items:center;gap:9px;color:#182a31}
+        #wl-hero .wl-title i{color:#17A2B8}
+        #wl-hero .wl-sub{font-size:12.5px;color:#6b7b82;margin-top:6px;line-height:1.5}
+        #wl-hero .wl-sub b{color:#182a31;font-weight:600}
         #wl-searchbar{position:relative;margin-top:16px}
-        #wl-searchbar .wl-ic{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:19px;color:#8a93b8;pointer-events:none}
-        #worklog-q{width:100%;box-sizing:border-box;padding:14px 16px 14px 46px;border:0;border-radius:12px;font-size:14px;background:#fff;color:#1a1a2e;box-shadow:0 4px 14px rgba(0,0,0,.12);transition:box-shadow .18s,transform .18s;outline:none}
-        #worklog-q::placeholder{color:#aeb4c7}
-        #worklog-q:focus{box-shadow:0 0 0 3px rgba(129,140,248,.55),0 6px 20px rgba(0,0,0,.18);transform:translateY(-1px)}
-        #wl-dates{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:#cdd6f4}
-        #wl-dates input[type=date],#wl-dates select{padding:8px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:9px;font-size:12.5px;color-scheme:dark}
-        #wl-dates input[type=date]:focus,#wl-dates select:focus{outline:none;border-color:#a5b4fc;background:rgba(255,255,255,.2)}
-        #wl-dates select option{color:#1a1a2e}
-        #worklog-count{font-size:12px;color:#888;margin:2px 0 10px;font-weight:500}
+        #wl-searchbar .wl-ic{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:19px;color:#9aa7ad;pointer-events:none}
+        #worklog-q{width:100%;box-sizing:border-box;padding:13px 16px 13px 46px;border:1px solid #dfe6e8;border-radius:10px;font-size:14px;background:#fff;color:#182a31;transition:border-color .15s,box-shadow .15s;outline:none}
+        #worklog-q::placeholder{color:#aeb4b8}
+        #worklog-q:focus{border-color:#17A2B8;box-shadow:0 0 0 3px rgba(23,162,184,.15)}
+        #wl-dates{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:#6b7b82}
+        #wl-dates input[type=date],#wl-dates select{padding:8px 10px;border:1px solid #dfe6e8;background:#fff;color:#182a31;border-radius:9px;font-size:12.5px}
+        #wl-dates input[type=date]:focus,#wl-dates select:focus{outline:none;border-color:#17A2B8;box-shadow:0 0 0 3px rgba(23,162,184,.15)}
+        #wl-dates select option{color:#182a31}
+        #worklog-count{font-size:12px;color:#8a999f;margin:2px 0 10px;font-weight:500}
       </style>
       <div class="card" style="padding:18px 20px;background:transparent;box-shadow:none;border:none">
         <div id="wl-hero">
-          <div class="wl-title"><i class="ti ti-user-search"></i> 작업이력 추적 <span id="worklog-updated" style="font-size:11px;font-weight:400;color:#aab6e6"></span></div>
+          <div class="wl-title"><i class="ti ti-user-search"></i> 작업이력 추적 <span id="worklog-updated" style="font-size:11px;font-weight:400;color:#8a999f"></span></div>
           <div class="wl-sub">불량 발생 시 추적용 — 품목·구성으로 검색하면 <b>언제·어느 설비·주야 어느 조·누가</b> 작업했는지 바로 나옵니다. <span style="opacity:.75">(ERP 작업실적 + 조 편성표 기준)</span></div>
           <div id="wl-searchbar">
             <i class="ti ti-search wl-ic"></i>
