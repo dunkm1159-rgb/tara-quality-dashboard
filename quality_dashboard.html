@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>타라TPS 품질개선팀 통합품질관리시스템</title>
-<!--BUILD:ui5-230427-->
+<!--BUILD:ui6-232331-->
 <script>
 /* 로그인 없는 GitHub Pages(github.io)로 접속하면 → 로그인 있는 Cloudflare 주소로 자동 이동 */
 (function(){try{
@@ -481,7 +481,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      <span id="build-stamp">9/3 · v1.1.1</span>
+      <span id="build-stamp">9/2 · v1.1.1</span>
     </div>
   </aside>
 
@@ -524,15 +524,6 @@
         </div>
       </div>
 
-      <!-- 지금 인쇄 중 -->
-      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #eef3f4;">
-          <div class="card-title" style="margin:0;"><i class="ti ti-printer"></i> 지금 인쇄 중 <span id="home-wip-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
-          <button onclick="showTab('wip',document.getElementById('nav-wip'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
-        </div>
-        <div id="home-wip-list"></div>
-      </div>
-
       <!-- 작업지시서 출력 대상 -->
       <div class="card" style="margin-bottom:16px;padding:16px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #eef3f4;">
@@ -541,6 +532,15 @@
         </div>
         <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
         <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
+      </div>
+
+      <!-- 지금 인쇄 중 -->
+      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #eef3f4;">
+          <div class="card-title" style="margin:0;"><i class="ti ti-printer"></i> 지금 인쇄 중 <span id="home-wip-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
+          <button onclick="showTab('wip',document.getElementById('nav-wip'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
+        </div>
+        <div id="home-wip-list"></div>
       </div>
 
       <!-- 가제본 완료 달력 -->
