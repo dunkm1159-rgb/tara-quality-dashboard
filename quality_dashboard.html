@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>타라TPS 품질개선팀 통합품질관리시스템</title>
-<!--BUILD:ui6-232331-->
+<!--BUILD:sched-225936-->
 <script>
 /* 로그인 없는 GitHub Pages(github.io)로 접속하면 → 로그인 있는 Cloudflare 주소로 자동 이동 */
 (function(){try{
@@ -5446,9 +5446,17 @@ function setSchedMode(m){
 
 async function loadSchedule(){
   const st = document.getElementById('sched-status');
+  // 캐시 즉시 표시(읽기 전용 사본 — 원본/백업은 구글시트) → 뒤에서 최신본으로 갱신
+  try{
+    const _c = localStorage.getItem('tara_sched_cache');
+    if(_c && (!Array.isArray(schedEvents) || !schedEvents.length)){
+      const _a = JSON.parse(_c);
+      if(Array.isArray(_a) && _a.length){ schedEvents = _a; renderSchedule(); }
+    }
+  }catch(e){}
   try{
     if(typeof CLAIM_SHEET_URL==='undefined'){ renderSchedule(); return; }
-    if(st) st.textContent='불러오는 중…';
+    if(st) st.textContent = (Array.isArray(schedEvents)&&schedEvents.length) ? '최신 확인 중…' : '불러오는 중…';
     const r=await fetch(CLAIM_SHEET_URL+'?type=schedule&t='+Date.now());
     const j=await r.json();
     const nd=v=>(typeof v==='string'&&/\dT\d/.test(v))?new Date(v).toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'}):v;
@@ -5456,6 +5464,7 @@ async function loadSchedule(){
       .filter(row=>row&&row[0])
       .map(row=>{ const raw=String(nd(row[1])||''); let d=raw, e=''; if(raw.indexOf('~')>=0){ const p=raw.split('~'); d=(p[0]||'').trim(); e=(p[1]||'').trim(); } return { id:String(row[0]), date:d.slice(0,10), end:e.slice(0,10), title:String(row[2]||''), cat:String(row[3]||'기타'), memo:String(row[4]||''), person:String(row[6]||'') }; })
       .filter(ev=>/^\d{4}-\d{2}-\d{2}$/.test(ev.date));   // 시작일 형식 맞는 것만
+    try{ localStorage.setItem('tara_sched_cache', JSON.stringify(schedEvents)); }catch(e){}
     if(st) st.textContent='';
   }catch(e){ if(st) st.textContent='(오프라인 — 저장은 됨)'; console.warn('schedule load fail',e); }
   renderSchedule();
