@@ -51,6 +51,21 @@ export async function onRequest(context) {
     return new Response(null, { status: 302, headers: h });
   }
 
+  // 2.5) 페이지 조회 기록 — 로그인 사용자가 어떤 메뉴를 열었는지
+  if (request.method === 'POST' && url.pathname === '/__pageview') {
+    let user = '';
+    const ck = request.headers.get('Cookie') || '';
+    const mm = ck.match(/(?:^|;\s*)tara_auth=([^;]+)/);
+    if (mm) { try { const v = decodeURIComponent(escape(atob(mm[1]))); if (allowed.has(v)) user = v.split(':')[0]; } catch (e) {} }
+    if (user) {
+      let tab = '';
+      try { const b = await request.json(); tab = String(b.tab || '').slice(0, 60); } catch (e) {}
+      const ip = request.headers.get('CF-Connecting-IP') || '';
+      context.waitUntil(logPageview(user, tab, ip));
+    }
+    return new Response(null, { status: 204 });
+  }
+
   // 3) 쿠키 인증 확인
   const cookie = request.headers.get('Cookie') || '';
   const m = cookie.match(/(?:^|;\s*)tara_auth=([^;]+)/);
@@ -73,6 +88,20 @@ async function logAccess(user, ip, ua) {
       body: JSON.stringify({
         key: SHEET_KEY,
         row: ['', 'ACCESS', new Date().toISOString(), user, ip, String(ua).slice(0, 120)],
+      }),
+    });
+  } catch (e) {}
+}
+
+// 페이지 조회 기록 한 줄 저장. row[1]='PAGEVIEW'
+async function logPageview(user, tab, ip) {
+  try {
+    await fetch(APPS_SCRIPT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        key: SHEET_KEY,
+        row: ['', 'PAGEVIEW', new Date().toISOString(), user, tab, ip],
       }),
     });
   } catch (e) {}
