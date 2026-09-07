@@ -1653,18 +1653,6 @@
           <div class="chart-wrap" style="height:250px"><canvas id="chartProofNG"></canvas></div>
         </div>
       </div>
-      <div class="card" style="margin-top:16px">
-        <div class="card-title">측정 상세 <span id="proof-cnt" style="font-size:11px;font-weight:400;color:#aaa"></span></div>
-        <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
-          <table style="width:100%;font-size:12.5px;white-space:nowrap">
-            <thead><tr>
-              <th>측정일</th><th>장비</th><th>색상</th>
-              <th style="text-align:right">ΔE</th><th style="text-align:right">농도</th><th style="text-align:center">판정</th>
-            </tr></thead>
-            <tbody id="proof-tbody"></tbody>
-          </table>
-        </div>
-      </div>
 
       <!-- 컬러 클레임 -->
       <div class="section-title" style="margin:24px 0 12px">⑤ 컬러 클레임 관리 대장</div>
@@ -7320,7 +7308,7 @@ function renderKpi() {
         {label:'월목표', data:Array(12).fill(monthTarget), type:'line', borderColor:'#e67e22', borderWidth:2, borderDash:[4,4], pointRadius:0, fill:false}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}},
+        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}},datalabels:{display:false},
           tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${Math.round((c.parsed.y||0)/10000).toLocaleString()}만원`}}},
         scales:{x:{ticks:{font:{size:11}},grid:{display:false}},
                 y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>(v/10000).toLocaleString()+'만'},grid:{color:'rgba(0,0,0,0.05)'}}}}
