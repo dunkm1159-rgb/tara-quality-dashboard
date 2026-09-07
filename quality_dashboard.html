@@ -2428,6 +2428,7 @@ function closeTab(name) {
 
 function showTab(name, btn) {
   if (!openTabs.includes(name)) openTabs.push(name);
+  try { fetch('/__pageview', { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ tab: (typeof TAB_TITLES!=='undefined' && TAB_TITLES[name]) ? TAB_TITLES[name] : name }), keepalive:true }); } catch(e){}
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
