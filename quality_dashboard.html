@@ -1691,7 +1691,7 @@
 
     <div id="tab-access" class="tab">
       <div class="section-header" style="margin-bottom:10px">
-        <div class="section-title">🔒 접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 이력</span></div>
+        <div class="section-title">🔒 접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 · 페이지 열람 이력</span></div>
         <div style="display:flex;gap:8px;align-items:center">
           <input id="access-search" oninput="renderAccessLog()" placeholder="검색 (이름·아이디·IP)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:200px">
           <button onclick="loadAccessLog()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer">🔄 새로고침</button>
@@ -1705,8 +1705,8 @@
             <thead><tr>
               <th style="white-space:nowrap;text-align:left;padding:8px 12px">접속 일시</th>
               <th style="white-space:nowrap;text-align:left;padding:8px 12px">이름 (아이디)</th>
+              <th style="white-space:nowrap;text-align:left;padding:8px 12px">동작 · 페이지</th>
               <th style="white-space:nowrap;text-align:left;padding:8px 12px">IP 주소</th>
-              <th style="text-align:left;padding:8px 12px">기기/브라우저</th>
             </tr></thead>
             <tbody id="access-tbody"><tr><td colspan="4" style="padding:16px;color:#ccc">불러오는 중…</td></tr></tbody>
           </table>
@@ -4045,8 +4045,10 @@ async function fetchSheetAll(){
 }
 async function loadAccessLog(){
   const tb=document.getElementById('access-tbody');
-  const build=rows=>{ _accessRows=(rows||[]).filter(row=>String(row[1]||'')==='ACCESS')
-      .map(row=>({t:row[2]||'',user:row[3]||'',ip:row[4]||'',ua:row[5]||''})); renderAccessLog(); };
+  const build=rows=>{ _accessRows=(rows||[]).filter(row=>{const k=String(row[1]||'');return k==='ACCESS'||k==='PAGEVIEW';})
+      .map(row=>{const k=String(row[1]||'');return k==='PAGEVIEW'
+        ? {t:row[2]||'',user:row[3]||'',act:'📄 '+(row[4]||''),ip:row[5]||''}
+        : {t:row[2]||'',user:row[3]||'',act:'🔑 로그인',ip:row[4]||''};}); renderAccessLog(); };
   if(_sheetAllCache && _sheetAllCache.rows){ build(_sheetAllCache.rows); }          // 캐시로 즉시 표시
   else if(tb){ tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#aaa">불러오는 중…</td></tr>'; }
   try{ const rows=await fetchSheetAll(); build(rows); }                             // 백그라운드 최신화
@@ -4058,13 +4060,13 @@ function renderAccessLog(){
   const fmt=t=>{try{return new Date(t).toLocaleString('sv-SE',{timeZone:'Asia/Seoul'}).slice(0,16);}catch(e){return t;}};
   const q=(document.getElementById('access-search')?.value||'').toLowerCase();
   let rows=_accessRows.slice().sort((a,b)=>String(b.t).localeCompare(String(a.t)));
-  if(q) rows=rows.filter(r=>(userName(r.user)+' '+r.user+' '+r.ip).toLowerCase().includes(q));
+  if(q) rows=rows.filter(r=>(userName(r.user)+' '+r.user+' '+r.ip+' '+(r.act||'')).toLowerCase().includes(q));
   const cnt=document.getElementById('access-count'); if(cnt) cnt.textContent='총 '+_accessRows.length+'건'+(q?(' 중 '+rows.length+'건'):'');
   tb.innerHTML=rows.length?rows.slice(0,1000).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
     <td style="padding:6px 12px;white-space:nowrap;color:#555">${esc(fmt(r.t))}</td>
     <td style="padding:6px 12px;white-space:nowrap;font-weight:600">${esc(userName(r.user))}<span style="color:#aab;font-weight:400;font-size:11px"> (${esc(r.user)})</span></td>
-    <td style="padding:6px 12px;white-space:nowrap;font-family:monospace;color:#667">${esc(r.ip)}</td>
-    <td style="padding:6px 12px;color:#999;font-size:11px;overflow:hidden;text-overflow:ellipsis;max-width:360px;white-space:nowrap" title="${esc(r.ua)}">${esc(r.ua)}</td></tr>`).join('')
+    <td style="padding:6px 12px;white-space:nowrap;color:#334">${esc(r.act)}</td>
+    <td style="padding:6px 12px;white-space:nowrap;font-family:monospace;color:#667">${esc(r.ip)}</td></tr>`).join('')
     :'<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록이 없습니다.</td></tr>';
 }
 try{ _initAccessNav(); }catch(e){}
