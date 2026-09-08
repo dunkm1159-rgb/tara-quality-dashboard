@@ -7029,6 +7029,25 @@ if (window.KPI_DATA_SRC) {
   }
 }
 
+// ERP 부적합(quality_data.js)에서 '색상' + 클레임성(클레임/003/006) 자동 병합 → 컬러클레임
+try {
+  if (window.QUALITY_DATA && window.QUALITY_DATA.months) {
+    const CLAIM = new Set(['클레임', '003', '006']);
+    const cbase = KPI_DATA.colorClaim || [];
+    const ckey = r => [r.date, r.client, String(r.product || '').replace(/\s+/g, '')].join('|');
+    const cseen = new Set(cbase.map(ckey));
+    Object.values(window.QUALITY_DATA.months).forEach(mv => (mv.rows || []).forEach(r => {
+      if (String(r['부적합내역'] || '').includes('색상') && CLAIM.has(String(r['접수유형'] || ''))) {
+        const item = { date: r['접수일'] || '', client: r['거래처'] || '', product: r['제품명'] || '',
+          detail: r['부적합내역'] || '', cause: r['사유'] || '', action: r['조치'] || '', _erp: true };
+        if (!cseen.has(ckey(item))) { cseen.add(ckey(item)); cbase.push(item); }
+      }
+    }));
+    cbase.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    KPI_DATA.colorClaim = cbase;
+  }
+} catch (e) {}
+
 // 품질비용은 '품질사고 관리대장'을 단일 원천으로 사용 (기안 기준과 동일하게 통일)
 (function syncCostWithLedger() {
   const NC = window.NCCOST_DATA; if (!NC) return;
