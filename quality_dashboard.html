@@ -7095,9 +7095,10 @@ function renderKpi() {
   const NC = window.NCCOST_DATA || {};
   const nc2026 = NC['2026'] || { totalCost: 0, months: {} };
   const nc2025 = NC['2025'] || { totalCost: 0 };
-  const costTotal  = nc2026.totalCost || 0;                    // 품질사고 관리대장 전체(자사+외주) — 기안 기준과 동일
-  const costPrev   = nc2025.totalCost || 0;                    // 전년(2025) 전체 실적
-  const costTarget = Math.round(costPrev * 0.5) || 30000000;    // 전년 대비 50% 감소 목표
+  // 품질비용: 운영전략 결과보고 엑셀(D.cost) 기준 — 관리대장은 월판정 버그로 7·8월 리셋되어 임시로 운영전략 사용
+  const costTotal  = (D.cost.monthly||[]).reduce((a,r)=>a+(r.소계||0),0);
+  const costPrev   = D.cost.actual2025 || 0;
+  const costTarget = D.cost.target2026 || 60000000;
   const costRate   = costTarget ? Math.round(costTotal/costTarget*100) : 0;
   const sopVals   = D.sop.monthly.filter(r=>r.actual!=null&&r.actual>0).map(r=>r.actual);
   const sopAvg    = sopVals.length ? Math.round(sopVals.reduce((a,b)=>a+b,0)/sopVals.length) : '-';
@@ -7315,7 +7316,8 @@ function renderKpi() {
     if(chartInstances.chartCostMonthly){chartInstances.chartCostMonthly.destroy();}
     const ctx = document.getElementById('chartCostMonthly');
     const MONS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    const costVals = MONS.map(m => (nc2026.months && nc2026.months[m] ? nc2026.months[m].cost : 0) || 0);
+    const _cm = m => ((D.cost.monthly||[]).find(r=>r.m===m)||{}).소계 || 0;
+    const costVals = MONS.map(m => _cm(m));
     const monthTarget = Math.round(costTarget/12);
     if(ctx) chartInstances.chartCostMonthly = new Chart(ctx, {
       type:'bar',
@@ -7335,8 +7337,8 @@ function renderKpi() {
   try {
     if(chartInstances.chartCostProcess){chartInstances.chartCostProcess.destroy();}
     const ctx = document.getElementById('chartCostProcess');
-    const NC_PROCS=['제판','매엽','윤전','코팅','제본','외주','특재외'];
-    const procPairs = NC_PROCS.map(p=>[p, Object.values(nc2026.months||{}).reduce((s,mv)=>s+((mv.proc&&mv.proc[p])||0),0)]).filter(x=>x[1]>0);
+    const NC_PROCS=['제판','매엽','윤전','코팅','제본','외주','기타'];
+    const procPairs = NC_PROCS.map(p=>[p, (D.cost.monthly||[]).reduce((s,r)=>s+((r[p])||0),0)]).filter(x=>x[1]>0);
     const procs = procPairs.length ? procPairs.map(x=>x[0]) : ['데이터없음'];
     const pVals = procPairs.length ? procPairs.map(x=>x[1]) : [0];
     const pColors = TARA_COLORS;
