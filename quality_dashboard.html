@@ -3567,7 +3567,7 @@ function renderBar(id, labels, data, colors) {
       options: {
         responsive: true, maintainAspectRatio: false,
         layout:{ padding:{ top:24 } },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}건` } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${(c.parsed.y||0).toLocaleString()}만원` } } },
         scales: {
           y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' }, grace:'12%' },
           x: { ticks: { font: { size: 11 } }, grid: { display: false } }
