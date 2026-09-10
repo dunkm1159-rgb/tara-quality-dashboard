@@ -1347,7 +1347,7 @@
                 <th style="white-space:nowrap">접수일</th><th style="white-space:nowrap">번호</th>
                 <th style="white-space:nowrap">접수유형</th><th style="white-space:nowrap">구분</th>
                 <th style="white-space:nowrap">거래처</th><th>제품명</th>
-                <th style="white-space:nowrap">부적합</th><th style="white-space:nowrap">공정/설비</th>
+                <th style="white-space:nowrap">부적합</th><th style="white-space:nowrap">상세내용</th><th style="white-space:nowrap">공정/설비</th>
                 <th style="white-space:nowrap">책임부서</th><th style="text-align:right;white-space:nowrap">금액(만)</th>
               </tr></thead>
               <tbody id="erp-detail-tbody"></tbody>
@@ -1972,10 +1972,11 @@ function renderErp() {
       <td style="white-space:nowrap">${esc(r['거래처'])}</td>
       <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
       <td style="white-space:nowrap">${esc(r['부적합내역'])}</td>
+      <td style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#555" title="${esc(r['사유'])}${r['조치'] ? ' → 조치: ' + esc(r['조치']) : ''}">${esc(r['사유'])}</td>
       <td style="white-space:nowrap;color:#666">${esc(r['발생공정'] || r['설비명'])}</td>
       <td style="white-space:nowrap;color:#666">${esc(r['책임부서'])}</td>
       <td style="text-align:right;white-space:nowrap;color:#C0392B;font-weight:600">${num(r) ? man(num(r)) : '-'}</td>
-    </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;color:#ccc;padding:18px">데이터 없음 — auto_collect_quality.py 실행 필요</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="12" style="text-align:center;color:#ccc;padding:18px">데이터 없음 — auto_collect_quality.py 실행 필요</td></tr>';
 }
 
 // ========================
