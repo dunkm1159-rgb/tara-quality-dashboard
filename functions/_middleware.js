@@ -9,8 +9,13 @@ const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycby4dE8hBu5dhYa8aNUN
 const SHEET_KEY = 'tara2026';
 const ADMIN_USER = 'wkbae';   // 접속기록을 볼 수 있는 관리자 아이디
 
+// ── 임시 스위치 (2026-09-10, 본부장 지시): true = 비밀번호 없이 전체 공개. 다시 잠그려면 false 로 바꿔 재배포. ──
+const AUTH_OFF = true;
+
 export async function onRequest(context) {
   const { request, env, next } = context;
+
+  if (AUTH_OFF) return next();   // 잠금 해제 상태: 로그인 화면 없이 바로 통과
 
   const raw = (env.LOGIN_USERS || '').trim();
   const allowed = new Set(raw.split(',').map((s) => s.trim()).filter(Boolean));
