@@ -1222,7 +1222,7 @@
 
       <div class="grid2">
         <div class="card">
-          <div class="card-title">연도별 부적합비용 추이 <span style="font-size:11px;font-weight:400;color:#aaa">목표 vs 발생</span></div>
+          <div class="card-title">연도별 부적합비용 추이 <span style="font-size:11px;font-weight:400;color:#aaa">단위: 만원 · 해당 연도 수집월 누적</span></div>
           <div class="chart-wrap"><canvas id="nccost-chart-year"></canvas></div>
         </div>
         <div class="card">
@@ -1470,7 +1470,7 @@
           <div style="font-size:12px;color:#888" id="worker-updated"></div>
         </div>
       </div>
-      <div style="font-size:12.5px;color:#666;margin-bottom:14px">품질사고 관리대장 기준 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
+      <div style="font-size:12.5px;color:#666;margin-bottom:14px">월별 품질사고 관리대장 확정등급 기준 · 월/분기는 관리대장의 해당 월로 집계 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
 
       <!-- 연도 탭 -->
       <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0" id="worker-year-tabs"></div>
@@ -1537,9 +1537,9 @@
         <div class="card-title">사고 상세 목록 <span id="worker-detail-note" style="font-size:12px;font-weight:600;color:#888;margin-left:6px"></span></div>
         <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:2px 2px 12px;font-size:12.5px;color:#555">
           <span style="font-weight:600">필터</span>
-          <input type="date" id="wd-f-from" onchange="setDetailFilters()" title="시작일" style="border:1px solid #d2d2d7;border-radius:7px;padding:4px 7px;font-size:12px">
+          <input type="month" id="wd-f-from" onchange="setDetailFilters()" title="시작 관리월" style="border:1px solid #d2d2d7;border-radius:7px;padding:4px 7px;font-size:12px">
           <span>~</span>
-          <input type="date" id="wd-f-to" onchange="setDetailFilters()" title="종료일" style="border:1px solid #d2d2d7;border-radius:7px;padding:4px 7px;font-size:12px">
+          <input type="month" id="wd-f-to" onchange="setDetailFilters()" title="종료 관리월" style="border:1px solid #d2d2d7;border-radius:7px;padding:4px 7px;font-size:12px">
           <select id="wd-f-level" onchange="setDetailFilters()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px">
             <option value="0">전체 등급</option><option value="1">면책</option><option value="2">경고</option><option value="3">중대경고</option><option value="4">치명적위반</option>
           </select>
@@ -1550,13 +1550,13 @@
         <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
           <table style="width:100%;font-size:12.5px">
             <thead><tr>
-              <th style="text-align:center;white-space:nowrap">날짜</th>
+              <th style="text-align:center;white-space:nowrap">관리월</th>
               <th style="white-space:nowrap">담당자</th>
               <th style="text-align:center;white-space:nowrap">판정등급</th>
               <th style="white-space:nowrap">설비</th>
               <th style="text-align:center;white-space:nowrap">금액(만원)</th>
               <th style="white-space:nowrap">제품명</th>
-              <th style="white-space:nowrap">부적합 상세내역 <span style="font-size:10px;color:#aaa;font-weight:400">(MES)</span></th>
+              <th style="white-space:nowrap">부적합 상세내역 <span style="font-size:10px;color:#aaa;font-weight:400">(관리대장)</span></th>
             </tr></thead>
             <tbody id="worker-detail-tbody"></tbody>
           </table>
@@ -2106,9 +2106,12 @@ function setWorkerQuarter(from, to, btn) {
   if (btn) btn.classList.add('active');
   renderWorker(true);
 }
+function workerPeriod(r) {
+  return String(r[9] || r[0] || '').slice(0, 7);
+}
 function workerMonthMatch(r) {
   if (!workerMonFrom && !workerMonTo) return true;
-  const m = parseInt(String(r[0] || '').slice(5, 7), 10);
+  const m = parseInt(workerPeriod(r).slice(5, 7), 10);
   return m >= (workerMonFrom || 1) && m <= (workerMonTo || 12);
 }
 
@@ -2168,6 +2171,7 @@ function qualDetailIndex() {
   return _qualDetailIdx;
 }
 function workerDefectDetail(r) {
+  if (r.length > 10) return String(r[10] || ''); // 월별 원본의 사고 내용만 사용
   const idx = qualDetailIndex();
   const o = String(r[6] || '').trim();       // 주문번호 우선 매칭
   if (o && idx.byOrder[o]) return idx.byOrder[o];
@@ -2181,7 +2185,10 @@ function workerDefectDetail(r) {
 function renderWorker(skipTabs) {
   const wd = (window.WORKER_DATA && window.WORKER_DATA.rows) ? window.WORKER_DATA.rows : [];
   const up = document.getElementById('worker-updated');
-  if (up) up.textContent = window.WORKER_DATA ? ('갱신 ' + window.WORKER_DATA.updated) : '';
+  if (up) {
+    const periods = ((window.WORKER_DATA && window.WORKER_DATA.sources) || []).map(s => s.period).sort();
+    up.textContent = window.WORKER_DATA ? ('갱신 ' + window.WORKER_DATA.updated + (periods.length ? ' · 월별 원본 ' + periods[periods.length - 1] + '까지' : '')) : '';
+  }
   // 연도 탭
   if (!skipTabs) {
     const years = [...new Set(wd.map(r => r[7]).filter(Boolean))].sort();
@@ -2299,13 +2306,13 @@ function renderWorker(skipTabs) {
   if (detailLevel) detailRows = detailRows.filter(r => r[3] === detailLevel);
   if (detailEmp) detailRows = detailRows.filter(r => String(r[1]||'').split(/[,，、\/·]/).map(s=>s.trim()).includes(detailEmp));
   if (detailEquip) detailRows = detailRows.filter(r => (r[4]||'') === detailEquip);
-  if (detailFrom) detailRows = detailRows.filter(r => String(r[0]||'') >= detailFrom);
-  if (detailTo) detailRows = detailRows.filter(r => String(r[0]||'') <= detailTo);
+  if (detailFrom) detailRows = detailRows.filter(r => workerPeriod(r) >= detailFrom);
+  if (detailTo) detailRows = detailRows.filter(r => workerPeriod(r) <= detailTo);
   const dt = document.getElementById('worker-detail-tbody');
   if (dt) {
-    const sorted = detailRows.slice().sort((a, b) => String(b[0]||'').localeCompare(String(a[0]||'')));
+    const sorted = detailRows.slice().sort((a, b) => workerPeriod(b).localeCompare(workerPeriod(a)) || String(b[0]||'').localeCompare(String(a[0]||'')));
     dt.innerHTML = sorted.map(r => { const det = workerDefectDetail(r); return `<tr>
-      <td style="text-align:center;white-space:nowrap;color:#666">${r[0]||''}</td>
+      <td style="text-align:center;white-space:nowrap;color:#666" title="${wEsc(r[11] || '')}">${wEsc(workerPeriod(r))}</td>
       <td style="white-space:nowrap;font-weight:600">${wEsc(wname(r[1]))}</td>
       <td style="text-align:center;white-space:nowrap"><span style="color:${LV_COLORS[r[3]]||'#666'};font-weight:600">${LV_NAMES[r[3]]||r[2]||''}</span></td>
       <td style="white-space:nowrap;color:#666">${wEsc(r[4])}</td>
@@ -2817,9 +2824,12 @@ function renderNcCost(){
     <div class="metric"><div class="label">달성률(목표 대비)</div><div class="value" style="color:${over?'#d70015':'#248a3d'}">${rate}%</div><div class="sub neutral">${over?'목표 초과':'목표 이내'}</div></div>
     <div class="metric"><div class="label">발생 건수</div><div class="value">${dCnt}</div><div class="sub neutral">${rangeOn?monLabel+' 합계':'연간 누적'}</div></div>
   `;
-  // 미수록 안내 배너 제거 (사용자 요청)
+  // 현재 집계의 원본 범위를 표시한다.
   const gEl = document.getElementById('nccost-gap-note');
-  if (gEl) gEl.innerHTML = '';
+  if (gEl) {
+    const periods = (yd.sources || []).map(s => s.period).sort();
+    gEl.textContent = periods.length ? '월별 관리대장 기준 · ' + periods[0] + ' ~ ' + periods[periods.length - 1] + ' (' + periods.length + '개월)' : '';
+  }
   const ty = document.getElementById('nccost-trend-yr'); if (ty) ty.textContent = '('+nccostYear+'년'+(monLabel?' '+monLabel:'')+', 만원)';
   const goals = monLabels.map(m => (yd.months[m]?.goal||0)/10000);
   const costs = monLabels.map(m => (yd.months[m]?.cost||0)/10000);
@@ -2953,12 +2963,14 @@ function ncYearChart(id, years, goals, costs){
   chartInstances[id] = new Chart(ctx, {
     type:'bar',
     data: { labels: years.map(y=>y+'년'), datasets: [
-      { label:'목표(만)', data:goals, backgroundColor:'#c7c7cc', borderRadius:6 },
-      { label:'발생(만)', data:costs, backgroundColor: costs.map((c,i)=> c>goals[i]?'#ff3b30':'#34c759'), borderRadius:6 }
+      { label:'목표(만원)', data:goals, backgroundColor:'#c7c7cc', borderRadius:6 },
+      { label:'발생(만원)', data:costs, backgroundColor: costs.map((c,i)=> c>goals[i]?'#ff3b30':'#34c759'), borderRadius:6 }
     ]},
     options: { responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 } } },
-      scales:{ y:{ beginAtZero:true, ticks:{ font:{size:11} } }, x:{ ticks:{ font:{size:11} } } } }
+      plugins:{ legend:{ labels:{ font:{size:11}, boxWidth:12 } },
+        datalabels:{ anchor:'end', align:'top', color:'#333', font:{size:10}, formatter:v=>Math.round(v).toLocaleString() },
+        tooltip:{ callbacks:{ label:c=>' ' + c.dataset.label + ': ' + Math.round(c.parsed.y * 10000).toLocaleString() + '원' } } },
+      scales:{ y:{ beginAtZero:true, grace:'10%', title:{display:true,text:'만원'}, ticks:{ font:{size:11}, callback:v=>Number(v).toLocaleString() } }, x:{ ticks:{ font:{size:11} } } } }
   });
 }
 
