@@ -2889,7 +2889,11 @@ function renderNcCost(){
         { label: '외주(협력사)', data: out.map(v => Math.round(v / 10000)), backgroundColor: '#E67E22', stack: 's' }
       ] },
       options: { responsive: true, maintainAspectRatio: false,
-        plugins: { tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString() + '만원' } } },
+        plugins: {
+          datalabels: { anchor:'center', align:'center', display:'auto', clamp:true, clip:true, padding:0,
+            color:'#fff', font:{size:10,weight:'600'}, formatter:v=>v ? Math.round(v).toLocaleString() : '' },
+          tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toLocaleString() + '만원' } }
+        },
         scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { callback: v => v.toLocaleString() + '만' } } } }
     });
   } catch (e) { console.warn('inout', e); }
@@ -5867,8 +5871,16 @@ function getEbsWork(order, idx) { return (gajebonEbsWork[order] || {})[idx] || n
 function toggleEbsWork(order, idx) {
   const o = String(order);
   if (!gajebonEbsWork[o]) gajebonEbsWork[o] = {};
-  if (gajebonEbsWork[o][idx]) delete gajebonEbsWork[o][idx];
-  else gajebonEbsWork[o][idx] = { st: 'done', date: new Date().toISOString().slice(0, 10) };
+  const shipmentEnabled = [EBS_SHEET, GAENYUM_SHEET].includes(gajebonCurrentSheet);
+  const work = getEbsWork(o, idx) || (gajDate(o) ? {st:'done',date:gajDate(o)} : null);
+  const now = new Date();
+  const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  if (shipmentEnabled && work) {
+    gajebonEbsWork[o][idx] = work.st === 'shipped'
+      ? {st:'done',date:work.workDate || work.date}
+      : {st:'shipped',date:today,workDate:work.date || today};
+  } else if (gajebonEbsWork[o][idx]) delete gajebonEbsWork[o][idx];
+  else gajebonEbsWork[o][idx] = { st: 'done', date: today };
   if (!Object.keys(gajebonEbsWork[o]).length) delete gajebonEbsWork[o];
   try { localStorage.setItem('gajebonEbsWork', JSON.stringify(gajebonEbsWork)); } catch (e) {}
   renderGajebonTable();
@@ -5895,8 +5907,10 @@ function partCellAuto(item, dateStr, order, idx) {
   const click = `onclick="toggleEbsWork('${o}',${idx})" style="cursor:pointer"`;
   let check;
   if (work) {
-    // 한 번 누르면: 작업완료 (파란 배지 + 날짜)
-    check = `<div ${click} title="클릭하면 해제"><div style="display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:6px;background:#1F5C99;color:#fff;font-size:10px;font-weight:700;white-space:nowrap">작업완료</div>
+    const shipped = work.st === 'shipped';
+    const canShip = [EBS_SHEET, GAENYUM_SHEET].includes(gajebonCurrentSheet);
+    const title = shipped ? '클릭하면 출고완료 취소 (작업완료로 복원)' : canShip ? '클릭하면 출고완료로 변경' : '클릭하면 해제';
+    check = `<div ${click} title="${title}"><div style="display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:6px;background:${shipped ? '#248a3d' : '#1F5C99'};color:#fff;font-size:10px;font-weight:700;white-space:nowrap">${shipped ? '출고완료' : '작업완료'}</div>
       <div style="font-size:9px;color:#86868b;margin-top:1px;white-space:nowrap;">${(work.date || '').slice(5)}</div></div>`;
   } else if (item.y) {
     // ERP 인쇄완료 (초록 체크) + 완료 날짜: 대수 마감일(item.d) 우선 → 주문 완료일 → 접수일(fallback)
@@ -7779,6 +7793,20 @@ const TARA_COLORS = ['#17A2B8','#1F5C99','#7B4EA0','#E67E22','#27AE60','#C0392B'
 // 필터/창 크기가 바뀔 때마다 실제 값(누적막대 합계 포함)에 맞춰 눈금과 여백을 계산한다.
 const chartAxisFitPlugin = {
   id: 'taraAxisFit',
+  afterDataLimits(chart, {scale}) {
+    if (!chart.canvas.id.startsWith('nccost-chart-') || scale.type !== 'linear') return;
+    // 관리대장: 실제 막대/누적합/목표선 최댓값보다 25% 여유를 둔 보기 좋은 눈금.
+    const high = Math.max(0, scale.max);
+    const low = Math.min(0, scale.min);
+    const rough = ((high - low) || 1) * 1.25 / 5;
+    const power = 10 ** Math.floor(Math.log10(rough));
+    let step = [1, 2, 2.5, 5, 10].find(n => n * power >= rough) * power;
+    if (chart.canvas.id === 'nccost-chart-cnt') step = Math.max(1, Math.ceil(step));
+    scale.min = low < 0 ? Math.floor(low * 1.25 / step) * step : 0;
+    scale.max = Math.max(step, Math.ceil((high || step) * 1.25 / step) * step);
+    scale.options.ticks.stepSize = step;
+    scale.options.ticks.maxTicksLimit = 6;
+  },
   beforeInit(chart) {
     if (chart.options.indexAxis === 'y' && chart.canvas.parentElement) {
       const count = (chart.data.labels || []).length;
@@ -7814,7 +7842,7 @@ const chartAxisFitPlugin = {
       }).flatMap(ds => ds.data).filter(v => typeof v === 'number' && Number.isFinite(v));
       if (values.every(Number.isInteger)) ticks.precision = 0;
       // Chart.js의 자동 범위 계산을 사용하므로 이중축·누적막대·목표선도 함께 반영된다.
-      scale.options.grace = chart.canvas.id === 'chartSOP' ? 0 : (chart.height < 260 && !horizontal ? '30%' : '22%');
+      scale.options.grace = chart.canvas.id === 'chartSOP' || chart.canvas.id.startsWith('nccost-chart-') ? 0 : (chart.height < 260 && !horizontal ? '30%' : '22%');
     }
   }
 };
