@@ -481,7 +481,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      <span id="build-stamp">9/11 · v1.1.1</span>
+      <span id="build-stamp">9/14 · v1.1.1</span>
     </div>
   </aside>
 
@@ -2023,10 +2023,14 @@ function renderVendor() {
   mkChart('chartVendorRank', 'vRank', {
     type: 'bar',
     data: { labels: rk.map(v => v.name), datasets: [
-      { label: '금액(만)', data: rk.map(v => Math.round(v.cost / 10000)), backgroundColor: '#E67E22', yAxisID: 'y' },
-      { type: 'line', label: '건수', data: rk.map(v => v.cnt), borderColor: '#1F5C99', backgroundColor: '#1F5C99', yAxisID: 'y1' }
+      { label: '금액(만)', data: rk.map(v => Math.round(v.cost / 10000)), backgroundColor: '#E67E22', xAxisID: 'x' },
+      { type: 'line', label: '건수', data: rk.map(v => v.cnt), borderColor: '#1F5C99', backgroundColor: '#1F5C99', xAxisID: 'x1' }
     ] },
-    options: { indexAxis: 'y', scales: { y: { position: 'top', title: { display: true, text: '금액(만)' } }, y1: { position: 'bottom', grid: { display: false }, title: { display: true, text: '건수' } } } }
+    options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, scales: {
+      x: { type:'linear', beginAtZero:true, position:'bottom', title:{display:true,text:'금액(만원)'} },
+      x1: { type:'linear', beginAtZero:true, position:'top', grid:{drawOnChartArea:false}, title:{display:true,text:'건수'}, ticks:{precision:0} },
+      y: { type:'category' }
+    } }
   });
   // 공정별 / 유형별 (외주 전체)
   const agg = (field) => { const o = {}; rows.forEach(r => { const k = (r[field] || '기타').trim(); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 8); };
@@ -2852,7 +2856,7 @@ function renderNcCost(){
         plugins: {
           legend: { display: true, labels: { boxWidth: 12, font: { size: 11 } } },
           tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y + '건' } },
-          datalabels: { display: ctx => (ctx.dataset.data[ctx.dataIndex]||0) > 0, formatter: v => v, color: '#fff', font: { size: 10, weight: '600' } }
+          datalabels: { display: ctx => (ctx.dataset.data[ctx.dataIndex]||0) > 0 ? 'auto' : false, anchor:'center', align:'center', formatter: v => v, color: '#fff', font: { size: 10, weight: '600' } }
         },
         scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } }
     });
@@ -3515,7 +3519,11 @@ const valueLabelPlugin = {
       ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(val + '건', bar.x + 5, bar.y);
+      const label = Number(val).toLocaleString() + '건';
+      const width = ctx.measureText(label).width;
+      const area = chart.chartArea;
+      const left = Math.max(area.left + 2, Math.min(bar.x + 5, area.right - width - 2));
+      ctx.fillText(label, left, Math.max(area.top + 7, Math.min(bar.y, area.bottom - 7)));
       ctx.restore();
     });
   }
@@ -3548,6 +3556,7 @@ function renderBarH(id, labels, data, color) {
         layout: { padding: { right: 45 } },
         plugins: {
           legend: { display: false },
+          datalabels: { display: false }, // 직접 그리는 건수와 중복 표시 방지
           tooltip: { callbacks: { label: c => ` ${c.parsed.x}건` } }
         },
         scales: {
@@ -7304,7 +7313,7 @@ function renderKpi() {
           tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}건`}}},
         scales:{x:{stacked:true,ticks:{font:{size:11}},grid:{display:false}},
                 y:{stacked:true,beginAtZero:true,ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'},
-                   max:Math.max(6, Math.ceil(D.top3.target/12)+1)}}}
+                   suggestedMax:Math.max(6, Math.ceil(D.top3.target/12)+1)}}}
     });
   } catch(e){}
 
@@ -7384,7 +7393,7 @@ function renderKpi() {
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}},datalabels:{display:false}},
         scales:{x:{ticks:{font:{size:11}},grid:{display:false}},
-                y:{min:80,max:100,ticks:{font:{size:11},callback:v=>v+'점'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+                y:{suggestedMin:80,suggestedMax:100,ticks:{font:{size:11},callback:v=>v+'점'},grid:{color:'rgba(0,0,0,0.05)'}}}}
     });
   } catch(e){}
 
@@ -7767,10 +7776,53 @@ async function loadSheetClaims(){
 
 // ── 차트 공통 테마 (팔레트 통일 + 고급화) ──
 const TARA_COLORS = ['#17A2B8','#1F5C99','#7B4EA0','#E67E22','#27AE60','#C0392B','#38BDF8','#F1C40F','#16A085','#98A2B3'];
+// 필터/창 크기가 바뀔 때마다 실제 값(누적막대 합계 포함)에 맞춰 눈금과 여백을 계산한다.
+const chartAxisFitPlugin = {
+  id: 'taraAxisFit',
+  beforeInit(chart) {
+    if (chart.options.indexAxis === 'y' && chart.canvas.parentElement) {
+      const count = (chart.data.labels || []).length;
+      chart.canvas.parentElement.style.minHeight = Math.max(220, count * 24 + 90) + 'px';
+    }
+  },
+  beforeLayout(chart) {
+    for (const scale of Object.values(chart.scales)) {
+      if (scale.type === 'category') {
+        scale.options.ticks.autoSkip = true;
+        scale.options.ticks.autoSkipPadding = 3;
+        scale.options.ticks.maxRotation = 30;
+        if (scale.axis === 'y') {
+          scale.options.ticks.autoSkip = false;
+          scale.options.ticks.callback = function(value) {
+            const label = String(this.getLabelForValue(value));
+            const limit = chart.width < 400 ? 12 : 18;
+            return label.length > limit ? label.slice(0, limit) + '…' : label;
+          };
+        }
+      }
+      if (scale.type !== 'linear') continue;
+      const horizontal = scale.axis === 'x';
+      const span = horizontal ? chart.width : chart.height;
+      const ticks = scale.options.ticks;
+      ticks.maxTicksLimit = Math.max(3, Math.min(6, Math.floor(span / (horizontal ? 90 : 45))));
+      ticks.autoSkip = true;
+      ticks.padding = 6;
+      const values = chart.data.datasets.filter((ds, i) => {
+        const axis = ds.indexAxis || chart.options.indexAxis || 'x';
+        const valueAxis = axis === 'y' ? 'x' : 'y';
+        return chart.isDatasetVisible(i) && (ds[valueAxis + 'AxisID'] || valueAxis) === scale.id;
+      }).flatMap(ds => ds.data).filter(v => typeof v === 'number' && Number.isFinite(v));
+      if (values.every(Number.isInteger)) ticks.precision = 0;
+      // Chart.js의 자동 범위 계산을 사용하므로 이중축·누적막대·목표선도 함께 반영된다.
+      scale.options.grace = chart.canvas.id === 'chartSOP' ? 0 : (chart.height < 260 && !horizontal ? '30%' : '22%');
+    }
+  }
+};
 function applyChartTheme() {
   if (!window.Chart || !Chart.defaults) return;
   const D = Chart.defaults;
   try {
+    Chart.register(chartAxisFitPlugin);
     D.font.family = "'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
     D.font.size = 11;
     D.color = '#6e6e73';
@@ -7814,7 +7866,7 @@ function applyChartTheme() {
       const isLine = ctx => cType(ctx) === 'line';
       const isPie = ctx => { const t = cType(ctx); return t === 'pie' || t === 'doughnut'; };
       D.plugins.datalabels = {
-        clamp: true, clip: false, textAlign: 'center',
+        clamp: true, clip: true, textAlign: 'center',
         color: ctx => isPie(ctx) ? '#fff' : '#555',
         font: { size: 10, weight: '700' },
         anchor: ctx => isPie(ctx) ? 'center' : 'end',
