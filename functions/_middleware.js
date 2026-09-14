@@ -9,19 +9,23 @@ const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycby4dE8hBu5dhYa8aNUN
 const SHEET_KEY = 'tara2026';
 const ADMIN_USER = 'wkbae';   // 접속기록을 볼 수 있는 관리자 아이디
 
-// ── 임시 스위치 (2026-09-10, 본부장 지시): true = 비밀번호 없이 전체 공개. 다시 잠그려면 false 로 바꿔 재배포. ──
-const AUTH_OFF = true;
-
 export async function onRequest(context) {
   const { request, env, next } = context;
+  const url = new URL(request.url);
 
-  if (AUTH_OFF) return next();   // 잠금 해제 상태: 로그인 화면 없이 바로 통과
+  // 계정 설정 상태와 무관하게 로그아웃은 항상 쿠키를 지운다.
+  if (url.pathname === '/__logout') {
+    const h = new Headers();
+    h.set('Location', '/');
+    h.set('Cache-Control', 'no-store');
+    h.append('Set-Cookie', 'tara_auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    h.append('Set-Cookie', 'tara_user=; Path=/; Secure; SameSite=Lax; Max-Age=0');
+    return new Response(null, { status: 302, headers: h });
+  }
 
   const raw = (env.LOGIN_USERS || '').trim();
   const allowed = new Set(raw.split(',').map((s) => s.trim()).filter(Boolean));
-  if (allowed.size === 0) return next(); // 미설정 시 잠그지 않음(먹통 방지)
-
-  const url = new URL(request.url);
+  if (allowed.size === 0) return loginPage('로그인 계정 설정이 필요합니다. 관리자에게 문의해 주세요.');
 
   // 1) 로그인 제출 처리
   if (request.method === 'POST' && url.pathname === '/__login') {
@@ -45,15 +49,6 @@ export async function onRequest(context) {
       return new Response(null, { status: 302, headers: h });
     }
     return loginPage('아이디 또는 비밀번호가 올바르지 않습니다.');
-  }
-
-  // 2) 로그아웃
-  if (url.pathname === '/__logout') {
-    const h = new Headers();
-    h.set('Location', '/');
-    h.append('Set-Cookie', 'tara_auth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
-    h.append('Set-Cookie', 'tara_user=; Path=/; Secure; SameSite=Lax; Max-Age=0');
-    return new Response(null, { status: 302, headers: h });
   }
 
   // 2.5) 페이지 조회 기록 — 로그인 사용자가 어떤 메뉴를 열었는지
