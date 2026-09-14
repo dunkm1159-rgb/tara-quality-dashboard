@@ -28,7 +28,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'IBM Plex Sans KR', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
-    background: #f4f6f6; color: #16211f; font-size: 14px;
+    background: #eaeff0; color: #16211f; font-size: 14px;
     height: 100vh; overflow: hidden;
     -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
   }
@@ -130,6 +130,7 @@
   }
   .metric {
     background: #fff; border: 1px solid #e6ecec;
+    border-left: 3px solid #17A2B8;
     border-radius: 12px; padding: 18px 20px;
     box-shadow: none;
     min-width: 0; overflow: hidden;
@@ -142,6 +143,21 @@
   .sub.up { color: #d70015; }
   .sub.down { color: #248a3d; }
   .sub.neutral { color: #86868b; }
+
+  /* ── 스킨A KPI 요약: 강조 히어로 카드 + 상태 뱃지 + 진행바 ── */
+  .metric.hero { background: linear-gradient(135deg,#17A2B8,#0f7f90); border: none; }
+  .metric.hero .label { color: rgba(255,255,255,0.85); }
+  .metric.hero .value { color: #ffffff; }
+  .metric.hero .sub { color: rgba(255,255,255,0.9); }
+  .kpi-pill { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; margin-bottom: 9px; letter-spacing: 0; }
+  .kpi-pill.good { background: #e6f5ee; color: #12996a; }
+  .kpi-pill.warn { background: #fdf0e6; color: #bd6a22; }
+  .kpi-pill.crit { background: #fbeaea; color: #c0392b; }
+  .metric.hero .kpi-pill { background: rgba(255,255,255,0.2); color: #fff; }
+  .kpi-prog { height: 5px; border-radius: 3px; background: #eef2f2; margin-top: 12px; overflow: hidden; }
+  .kpi-prog > i { display: block; height: 100%; border-radius: 3px; background: #12996a; }
+  .metric.hero .kpi-prog { background: rgba(255,255,255,0.25); }
+  .metric.hero .kpi-prog > i { background: #fff; }
 
   /* ── 2칸 그리드 ── */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
@@ -158,6 +174,7 @@
     font-size: 14px; font-weight: 600; color: #1d1d1f;
     letter-spacing: -0.01em;
     margin-bottom: 14px;
+    padding-left: 10px; border-left: 3px solid #17A2B8;
     display: flex; align-items: center; justify-content: space-between;
     white-space: nowrap; overflow: hidden; gap: 8px;
   }
@@ -7258,14 +7275,22 @@ function renderKpi() {
   const sopAvg    = sopVals.length ? Math.round(sopVals.reduce((a,b)=>a+b,0)/sopVals.length) : '-';
   const stdTotal  = D.std.monthly.reduce((s,r)=>s+(r.actual||0),0);
 
-  const kpiCard = (label, value, unit, sub, color) =>
-    `<div class="metric"><div class="label">${label}</div><div class="value" style="color:${color}">${value}<span style="font-size:13px;font-weight:400">${unit}</span></div><div class="sub neutral">${sub}</div></div>`;
+  const _pill = (txt, k) => `<span class="kpi-pill ${k}">${txt}</span>`;
+  const heroCard = (label, value, unit, pillTxt, pillK, sub, prog) =>
+    `<div class="metric hero">${_pill(pillTxt, pillK)}<div class="label">${label}</div><div class="value">${value}<span style="font-size:13px;font-weight:500">${unit}</span></div><div class="sub">${sub}</div><div class="kpi-prog"><i style="width:${Math.max(0,Math.min(100,prog))}%"></i></div></div>`;
+  const stCard = (label, value, unit, pillTxt, pillK, sub) =>
+    `<div class="metric">${_pill(pillTxt, pillK)}<div class="label">${label}</div><div class="value">${value}<span style="font-size:13px;font-weight:400">${unit}</span></div><div class="sub neutral">${sub}</div></div>`;
 
   document.getElementById('kpi-summary').innerHTML =
-    kpiCard('반복불량 재발건수', top3Total, '건', `목표 ${D.top3.target}건 | ${top3Rate}% 소진`, top3Rate<60?'#27ae60':'#c0392b') +
-    kpiCard('품질비용 누적', Math.round(costTotal/10000).toLocaleString(), '만원', `전년 ${Math.round(costPrev/10000).toLocaleString()}만 → 목표 ${Math.round(costTarget/10000).toLocaleString()}만 (${costRate}%)`, costRate<100?'#27ae60':'#c0392b') +
-    kpiCard('SOP 준수율 평균', sopAvg, '점', `목표 95점 이상`, sopAvg>=95?'#27ae60':sopAvg>=90?'#e67e22':'#c0392b') +
-    kpiCard('표준미준수 사고', stdTotal, '건', '목표 0건', stdTotal===0?'#27ae60':'#c0392b');
+    heroCard('품질비용 누적', Math.round(costTotal/10000).toLocaleString(), '만원',
+             '목표 대비 ' + costRate + '%', costRate<100?'good':'crit',
+             '연 목표 ' + Math.round(costTarget/10000).toLocaleString() + '만원 · 전년 ' + Math.round(costPrev/10000).toLocaleString() + '만', costRate) +
+    stCard('반복불량 재발', top3Total, '건',
+           '목표 ' + D.top3.target + '건 이내', top3Rate<60?'good':(top3Rate<100?'warn':'crit'), top3Rate + '% 소진') +
+    stCard('SOP 준수율 평균', sopAvg, '점',
+           (sopAvg!=='-'&&sopAvg>=95)?'우수':(sopAvg!=='-'&&sopAvg>=90?'주의':'개선 필요'), (sopAvg!=='-'&&sopAvg>=95)?'good':(sopAvg!=='-'&&sopAvg>=90?'warn':'crit'), '목표 95점 이상') +
+    stCard('표준미준수 사고', stdTotal, '건',
+           stdTotal===0?'목표 달성':'초과', stdTotal===0?'good':'crit', '목표 0건');
 
   // ── 월별 KPI 종합 표 ──
   try {
