@@ -689,11 +689,14 @@
     </div>
 
     <div class="sidebar-section">
-      <button class="nav-item nav-parent" id="nav-core" aria-expanded="false" onclick="showTab('core',this);toggleCoreMenu(this)">
+      <button class="nav-item nav-parent" id="nav-core" aria-expanded="false" onclick="toggleCoreMenu(this)">
         <span class="nav-icon"><i class="ti ti-chart-dots-3"></i></span> 품질 핵심지표
         <span class="nav-caret"><i class="ti ti-chevron-down"></i></span>
       </button>
       <div id="core-sub" class="core-sub collapsed">
+      <button class="nav-item nav-sub" id="nav-core-dash" onclick="showTab('core',this)">
+        <span class="nav-icon"><i class="ti ti-layout-dashboard"></i></span> 대시보드
+      </button>
       <button class="nav-item nav-sub" id="nav-nccost" onclick="showTab('nccost',this)">
         <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 본부 품질 KPI
       </button>
@@ -862,8 +865,19 @@
         <div class="section-title">품질 핵심지표</div>
       </div>
       <div style="font-size:12.5px;color:#8a93a0;font-weight:600;margin-bottom:16px;">아래 6개 화면의 핵심 숫자를 한 줄씩 모았어요 · 카드를 눌러 해당 화면으로 이동</div>
-      <div id="core-summary-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div id="core-summary-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">
         <div style="color:#aaa;font-size:13px;padding:20px;">데이터 로딩 중...</div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">월별 품질비용 추이 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="core-cost-year-label"></span></div>
+          <div class="chart-wrap"><canvas id="core-chart-cost"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">등급별 사고 분포 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="core-worker-year-label"></span></div>
+          <div class="chart-wrap"><canvas id="core-chart-worker"></canvas></div>
+        </div>
       </div>
     </div>
     <!-- ============ NCR 기록 ============ -->
@@ -2546,7 +2560,7 @@ function renderWorker(skipTabs) {
   let yearCost = 0;
   yearRows.forEach(r => { if (r[3]) lvCnt[r[3]] = (lvCnt[r[3]]||0) + 1; yearCost += (r[8]||0); });
   window.CORE_HEADLINES = window.CORE_HEADLINES || {};
-  window.CORE_HEADLINES.worker = { value: yearRows.length, unit: '건', label: '총 사고', sub: '중대경고 이상 ' + ((lvCnt[3]||0) + (lvCnt[4]||0)) + '건', warn: ((lvCnt[3]||0) + (lvCnt[4]||0)) > 0 };
+  window.CORE_HEADLINES.worker = { value: yearRows.length, unit: '건', label: '총 사고', sub: '중대경고 이상 ' + ((lvCnt[3]||0) + (lvCnt[4]||0)) + '건', warn: ((lvCnt[3]||0) + (lvCnt[4]||0)) > 0, lvCnt: { 1: lvCnt[1]||0, 2: lvCnt[2]||0, 3: lvCnt[3]||0, 4: lvCnt[4]||0 }, year: workerYear };
   const mcard = (lv, label, val, color) => {
     const on = (workerLevel === lv);
     return `<div class="metric" style="cursor:pointer;padding:10px 12px;${on ? 'outline:2.5px solid '+(color||'#17A2B8')+';outline-offset:-2px' : ''}" onclick="setWorkerLevel(${lv})">
@@ -2790,7 +2804,7 @@ function toggleCoreMenu(btn) {
   if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 }
 function syncCoreMenu(name) {
-  var core = ['nccost', 'kpi', 'analysis', 'worker', 'monthly'];  // 품질 핵심지표 하위
+  var core = ['core', 'nccost', 'kpi', 'analysis', 'worker', 'monthly'];  // 품질 핵심지표 하위
   var parent = document.getElementById('nav-core');
   var sub = document.getElementById('core-sub');
   if (!parent || !sub) return;
@@ -2837,6 +2851,26 @@ function renderCoreSummary() {
       <button onclick="${navCall}" style="margin-top:4px;align-self:flex-start;background:#14181d;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">자세히 보기 →</button>
     </div>`;
   }).join('');
+
+  // 월별 품질비용 추이 (본부 품질 KPI와 동일 데이터원)
+  try {
+    const ND = window.NCCOST_DATA || {};
+    const yd = ND[nccostYear];
+    const yLbl = document.getElementById('core-cost-year-label');
+    if (yLbl) yLbl.textContent = nccostYear ? nccostYear + '년' : '';
+    if (yd && yd.months) {
+      const costVals = NC_MONTHS.map(m => Math.round((yd.months[m]?.cost || 0) / 10000));
+      renderBar('core-chart-cost', NC_MONTHS, costVals, '#17A2B8');
+    }
+  } catch (e) { console.warn('core cost chart error', e); }
+
+  // 등급별 사고 분포 (공정별 심의판정결과와 동일 데이터원)
+  try {
+    const wLbl = document.getElementById('core-worker-year-label');
+    const lv = H.worker && H.worker.lvCnt;
+    if (wLbl) wLbl.textContent = (H.worker && H.worker.year) ? H.worker.year + '년' : '전체';
+    if (lv) renderPie('core-chart-worker', ['면책(Lv1)','경고(Lv2)','중대경고(Lv3)','치명적위반(Lv4)'], [lv[1]||0, lv[2]||0, lv[3]||0, lv[4]||0]);
+  } catch (e) { console.warn('core worker chart error', e); }
 }
 function showTab(name, btn) {
   if (!openTabs.includes(name)) openTabs.push(name);
