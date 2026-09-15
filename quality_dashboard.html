@@ -270,7 +270,7 @@
 
   /* Shared starting positions across the quality indicator pages. */
   .core-page-header {
-    box-sizing: border-box; min-height: 156px; padding-bottom: 12px;
+    box-sizing: border-box; min-height: 0; padding-bottom: 12px;
     display: flex; flex-direction: column; gap: 8px;
   }
   .core-page-header > :not([style*="display:none"]) { margin-top: 0 !important; margin-bottom: 0 !important; }
@@ -285,7 +285,6 @@
     overflow-x: auto; overflow-y: hidden; padding-bottom: 8px;
 
   }
-  @media (max-width: 1100px) { .core-page-header { min-height: 185px; } }
   @media (max-width: 760px) {
     .core-page-header { min-height: 0; }
     .core-page-header > div, .core-page-header span[style*="inline-flex"] { flex-wrap: wrap; }
@@ -456,6 +455,33 @@
     [style*="color:#86868b"], [style*="color: #86868b"],
     [style*="color:#888"], [style*="color: #888"]
   ) { color: #59676d !important; }
+
+
+  #tab-kpi #kpi-summary, #tab-kpi .team-month-grid {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-auto-flow: row; grid-auto-columns: auto; gap: 16px !important;
+    height: auto; min-height: 164px; overflow: visible; padding-bottom: 0; align-items: stretch;
+  }
+  #tab-kpi #kpi-summary .metric { padding: 18px 20px !important; }
+  #tab-kpi .team-card-heading { display:flex; align-items:start; justify-content:space-between; gap:8px; min-height:36px; }
+  #tab-kpi .team-card-heading .label { white-space:normal; margin:0; line-height:1.5; }
+  #tab-kpi .team-card-heading .kpi-pill { flex-shrink:0; margin:0; padding:3px 7px; font-size:10px; }
+  #tab-kpi #kpi-summary .value { margin-top:10px !important; margin-bottom:8px; }
+  #tab-kpi #kpi-summary .sub { white-space:normal; line-height:1.5; overflow:visible; }
+  #tab-kpi .team-month-card { min-height:188px; margin-bottom:0; }
+  #tab-kpi .team-month-card > div:first-child { min-height:36px; }
+  #tab-kpi .team-card-details, #tab-kpi .team-no-details {
+    margin-top:auto; padding-top:12px; border-top:1px solid #e3e9ec; font-size:12px; color:#59676d;
+  }
+  #tab-kpi .team-card-details summary { cursor:pointer; color:#166c7b; font-weight:600; }
+  #tab-kpi .team-detail-list { max-height:240px; overflow:auto; padding-top:10px; }
+  #tab-kpi .team-detail-list > div { padding:6px 0; line-height:1.6; color:#38464c; overflow-wrap:anywhere; }
+  @media (max-width:1100px) {
+    #tab-kpi #kpi-summary, #tab-kpi .team-month-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  }
+  @media (max-width:600px) {
+    #tab-kpi #kpi-summary, #tab-kpi .team-month-grid { grid-template-columns:minmax(0,1fr) !important; }
+  }
 
 </style>
 
@@ -7478,9 +7504,9 @@ function renderKpi() {
 
   const _pill = (txt, k) => `<span class="kpi-pill ${k}">${txt}</span>`;
   const heroCard = (label, value, unit, pillTxt, pillK, sub, prog) =>
-    `<div class="metric hero">${_pill(pillTxt, pillK)}<div class="label">${label}</div><div class="value">${value}<span style="font-size:13px;font-weight:500">${unit}</span></div><div class="sub">${sub}</div><div class="kpi-prog"><i style="width:${Math.max(0,Math.min(100,prog))}%"></i></div></div>`;
+    `<div class="metric hero"><div class="team-card-heading"><div class="label">${label}</div>${_pill(pillTxt, pillK)}</div><div class="value">${value}<span style="font-size:13px;font-weight:500">${unit}</span></div><div class="sub">${sub}</div><div class="kpi-prog"><i style="width:${Math.max(0,Math.min(100,prog))}%"></i></div></div>`;
   const stCard = (label, value, unit, pillTxt, pillK, sub) =>
-    `<div class="metric">${_pill(pillTxt, pillK)}<div class="label">${label}</div><div class="value">${value}<span style="font-size:13px;font-weight:400">${unit}</span></div><div class="sub neutral">${sub}</div></div>`;
+    `<div class="metric"><div class="team-card-heading"><div class="label">${label}</div>${_pill(pillTxt, pillK)}</div><div class="value">${value}<span style="font-size:13px;font-weight:400">${unit}</span></div><div class="sub neutral">${sub}</div></div>`;
 
   document.getElementById('kpi-summary').innerHTML =
     heroCard('품질비용 누적', Math.round(costTotal/10000).toLocaleString(), '만원',
@@ -7537,7 +7563,7 @@ function renderKpi() {
       const box = (M, val, note) => {
         const items = String(note || '').split('\n').map(x => x.replace(/^[※·\-\s]+/, '').trim()).filter(Boolean);
         const ok = M.ok(val);
-        return `<div class="card" style="padding:14px 16px;border-top:3px solid ${M.color};display:flex;flex-direction:column">
+        return `<div class="card team-month-card" style="padding:18px 20px;border-top:3px solid ${M.color};display:flex;flex-direction:column">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
             <span style="font-size:12.5px;font-weight:700;color:${M.color}">${M.label}</span>
             <span style="font-size:11px;color:${val == null ? '#ccc' : (ok ? '#248a3d' : '#C0392B')};font-weight:600">${val == null ? '' : (ok ? '달성' : '미달')}</span>
@@ -7546,15 +7572,14 @@ function renderKpi() {
             ${val == null ? '-' : val.toLocaleString()}<span style="font-size:12px;font-weight:500;color:#86868b;margin-left:2px">${val == null ? '' : M.unit}</span>
           </div>
           <div style="font-size:11px;color:#aaa;margin-bottom:${items.length ? '9px' : '0'}">목표 ${M.goal}</div>
-          ${items.length ? `<div style="border-top:1px dashed rgba(0,0,0,0.09);padding-top:8px">
-            ${items.map(x => `<div style="font-size:12.5px;color:#444;line-height:1.65;padding-left:12px;position:relative;margin-bottom:4px">
-                <span style="position:absolute;left:0;color:${M.color};font-weight:700">·</span>${esc(x)}</div>`).join('')}
-          </div>` : '<div style="font-size:11.5px;color:#ccc;border-top:1px dashed rgba(0,0,0,0.09);padding-top:8px">해당 내역 없음</div>'}
+          ${items.length ? `<details class="team-card-details"><summary>상세내역 ${items.length}건 보기</summary>
+            <div class="team-detail-list">${items.map(x => `<div>${esc(x)}</div>`).join('')}</div>
+          </details>` : '<div class="team-no-details">해당 내역 없음</div>'}
         </div>`;
       };
-      mb.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start">
-        ${box(METRICS.top3, t.total != null ? t.total : null, t.note)}
+      mb.innerHTML = `<div class="team-month-grid">
         ${box(METRICS.cost, c.소계 != null ? Math.round(c.소계 / 10000) : null, c.note)}
+        ${box(METRICS.top3, t.total != null ? t.total : null, t.note)}
         ${box(METRICS.sop, s.actual != null ? s.actual : null, s.note)}
         ${box(METRICS.std, st.actual != null ? st.actual : null, st.note)}
       </div>`;
