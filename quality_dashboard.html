@@ -167,6 +167,28 @@
   .metric.hero .kpi-prog { background: rgba(255,255,255,0.25); }
   .metric.hero .kpi-prog > i { background: #fff; }
 
+  /* ── 핵심지표 화면 통일: 각 화면 요약 첫 카드를 히어로로 ── */
+  #erp-metrics .metric:first-child,
+  #analysis-metrics .metric:first-child,
+  #worker-metrics .metric:first-child {
+    background: linear-gradient(135deg,#17A2B8,#0f7f90) !important;
+    border: none !important;
+  }
+  #erp-metrics .metric:first-child .label,
+  #analysis-metrics .metric:first-child .label,
+  #worker-metrics .metric:first-child .label,
+  #erp-metrics .metric:first-child .value,
+  #analysis-metrics .metric:first-child .value,
+  #worker-metrics .metric:first-child .value,
+  #erp-metrics .metric:first-child .value span,
+  #analysis-metrics .metric:first-child .value span,
+  #worker-metrics .metric:first-child .value span,
+  #erp-metrics .metric:first-child .sub,
+  #analysis-metrics .metric:first-child .sub,
+  #worker-metrics .metric:first-child .sub {
+    color: #ffffff !important;
+  }
+
   /* ── 2칸 그리드 ── */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
@@ -481,7 +503,7 @@
           <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 부적합사고 분석
         </button>
         <button class="nav-item nav-sub" id="nav-worker" onclick="showTab('worker',this)">
-          <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
+          <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 심의판정결과
         </button>
         <button class="nav-item nav-sub" id="nav-monthly" onclick="showTab('monthly',this)">
           <span class="nav-icon"><i class="ti ti-calendar"></i></span> 월간 리포트
@@ -1500,7 +1522,7 @@
     <!-- ============ 작업자 사고 현황 ============ -->
     <div id="tab-worker" class="tab">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
-        <div class="section-title">공정별 사고</div>
+        <div class="section-title">공정별 심의판정결과</div>
         <div style="display:flex;align-items:center;gap:10px">
           <button class="gj-toggle" id="worker-anon-btn" onclick="toggleWorkerAnon()" title="시연/공유 시 이름을 가립니다">🕶 익명 모드</button>
           <div style="font-size:12px;color:#888" id="worker-updated"></div>
@@ -2437,7 +2459,7 @@ const TAB_TITLES = {
   kpi: '품질 KPI',
   nccost: '품질사고 관리대장',
   claim: '부적합사고 취합대장',
-  worker: '공정별 사고',
+  worker: '공정별 심의판정결과',
   gajebon: '가제본 현황',
   wip: '설비별 작업현황',
   monthly: '월간 리포트',
@@ -5058,11 +5080,11 @@ function renderMonthly() {
   const tCounts = last.map(mk => rowsOf(mk).length);
   const tCosts = last.map(mk => Math.round(rowsOf(mk).reduce((s, r) => s + cost(r), 0) / 10000));
   const avgCost = curRows.length ? Math.round(curCost / curRows.length) : 0;
-  const bigCard = (label, val, unit, sub, color) => `
-    <div class="card" style="padding:18px 20px">
-      <div style="font-size:12px;color:#86868b;margin-bottom:6px">${label}</div>
-      <div style="font-size:30px;font-weight:700;letter-spacing:-0.02em;color:${color || '#1d1d1f'};white-space:nowrap">${val}<span style="font-size:14px;font-weight:500;color:#86868b;margin-left:3px">${unit || ''}</span></div>
-      <div style="font-size:12px;margin-top:5px;color:#86868b">${sub || ''}</div>
+  const bigCard = (label, val, unit, sub, color, hero) => `
+    <div class="card" style="padding:18px 20px${hero ? ';background:linear-gradient(135deg,#17A2B8,#0f7f90);border:none' : ''}">
+      <div style="font-size:12px;color:${hero ? 'rgba(255,255,255,0.85)' : '#86868b'};margin-bottom:6px">${label}</div>
+      <div style="font-size:30px;font-weight:700;letter-spacing:-0.02em;color:${hero ? '#fff' : (color || '#1d1d1f')};white-space:nowrap">${val}<span style="font-size:14px;font-weight:500;color:${hero ? 'rgba(255,255,255,0.8)' : '#86868b'};margin-left:3px">${unit || ''}</span></div>
+      <div style="font-size:12px;margin-top:5px;color:${hero ? 'rgba(255,255,255,0.9)' : '#86868b'}">${sub || ''}</div>
     </div>`;
   const barTbl = (title, rows, colorHex) => {
     const mx = Math.max(1, ...rows.map(x => x[1].c));
@@ -5154,7 +5176,7 @@ function renderMonthly() {
   }
   body.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin-bottom:16px">
-      ${bigCard('부적합 건수' + (isErpM(curM) ? ' (잠정)' : ''), curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length))}
+      ${bigCard('부적합 건수' + (isErpM(curM) ? ' (잠정)' : ''), curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length), null, true)}
       ${bigCard('품질비용' + (isErpM(curM) ? ' (잠정)' : ''), man(curCost), '만원', isErpM(curM) ? 'ERP 공정중발견 포함 · 미확정' : '전월 대비 ' + delta(curCost, prevCost), '#C0392B')}
       ${bigCard('건당 평균비용', man(avgCost), '만원', curRows.length + '건 기준')}
       ${extraCards}
