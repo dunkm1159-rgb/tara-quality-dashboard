@@ -90,6 +90,14 @@
   .nav-sub.active { border-left-color: #17A2B8; }
   .nav-icon { font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; }
 
+  /* ── 접이식 상위 메뉴 (품질 핵심지표) ── */
+  .nav-parent .nav-caret { margin-left: auto; font-size: 14px; color: #9aa6a6; transition: transform 0.18s; }
+  .nav-parent[aria-expanded="true"] .nav-caret { transform: rotate(180deg); }
+  .nav-parent[aria-expanded="true"] { background: #f2f7f8; color: #182a31; font-weight: 600; }
+  .nav-parent.has-active { color: #0a7a8a; }
+  .core-sub { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
+  .core-sub.collapsed { display: none; }
+
   /* ── 메인 영역 ── */
   .main-area {
     flex: 1; min-width: 0; min-height: 0;
@@ -458,22 +466,27 @@
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-section-label">품질 핵심지표</div>
-      <button class="nav-item" id="nav-kpi" onclick="showTab('kpi',this)">
-        <span class="nav-icon"><i class="ti ti-target"></i></span> 품질 KPI
+      <button class="nav-item nav-parent" id="nav-core" aria-expanded="false" onclick="toggleCoreMenu(this)">
+        <span class="nav-icon"><i class="ti ti-chart-dots-3"></i></span> 품질 핵심지표
+        <span class="nav-caret"><i class="ti ti-chevron-down"></i></span>
       </button>
-      <button class="nav-item" id="nav-erp" onclick="showTab('analysis',this);setAnalysisSrc('erp')">
-        <span class="nav-icon"><i class="ti ti-alert-triangle"></i></span> 외주 품질사고
-      </button>
-      <button class="nav-item" id="nav-analysis" onclick="showTab('analysis',this);setAnalysisSrc('claim')">
-        <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 부적합사고 분석
-      </button>
-      <button class="nav-item" id="nav-worker" onclick="showTab('worker',this)">
-        <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
-      </button>
-      <button class="nav-item" id="nav-monthly" onclick="showTab('monthly',this)">
-        <span class="nav-icon"><i class="ti ti-calendar"></i></span> 월간 리포트
-      </button>
+      <div id="core-sub" class="core-sub collapsed">
+        <button class="nav-item nav-sub" id="nav-kpi" onclick="showTab('kpi',this)">
+          <span class="nav-icon"><i class="ti ti-target"></i></span> 품질 KPI
+        </button>
+        <button class="nav-item nav-sub" id="nav-erp" onclick="showTab('analysis',this);setAnalysisSrc('erp')">
+          <span class="nav-icon"><i class="ti ti-alert-triangle"></i></span> 외주 품질사고
+        </button>
+        <button class="nav-item nav-sub" id="nav-analysis" onclick="showTab('analysis',this);setAnalysisSrc('claim')">
+          <span class="nav-icon"><i class="ti ti-chart-bar"></i></span> 부적합사고 분석
+        </button>
+        <button class="nav-item nav-sub" id="nav-worker" onclick="showTab('worker',this)">
+          <span class="nav-icon"><i class="ti ti-users"></i></span> 공정별 사고
+        </button>
+        <button class="nav-item nav-sub" id="nav-monthly" onclick="showTab('monthly',this)">
+          <span class="nav-icon"><i class="ti ti-calendar"></i></span> 월간 리포트
+        </button>
+      </div>
     </div>
 
     <div class="sidebar-section">
@@ -2461,6 +2474,26 @@ function closeTab(name) {
   else renderOpenTabs();
 }
 
+function toggleCoreMenu(btn) {
+  var sub = document.getElementById('core-sub');
+  if (!sub) return;
+  var willOpen = sub.classList.contains('collapsed');
+  sub.classList.toggle('collapsed');
+  if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+}
+function syncCoreMenu(name) {
+  var core = ['kpi', 'analysis', 'worker', 'monthly'];  // 품질 핵심지표 하위
+  var parent = document.getElementById('nav-core');
+  var sub = document.getElementById('core-sub');
+  if (!parent || !sub) return;
+  if (core.indexOf(name) >= 0) {
+    sub.classList.remove('collapsed');
+    parent.setAttribute('aria-expanded', 'true');
+    parent.classList.add('has-active');
+  } else {
+    parent.classList.remove('has-active');
+  }
+}
 function showTab(name, btn) {
   if (!openTabs.includes(name)) openTabs.push(name);
   try { fetch('/__pageview', { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ tab: (typeof TAB_TITLES!=='undefined' && TAB_TITLES[name]) ? TAB_TITLES[name] : name }), keepalive:true }); } catch(e){}
@@ -2489,6 +2522,7 @@ function showTab(name, btn) {
   if (name === 'wip') renderWip();
   if (name === 'monthly') renderMonthly();
   if (name === 'schedule') { renderSchedule(); loadSchedule(); }
+  syncCoreMenu(name);
 }
 
 // ========================
