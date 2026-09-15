@@ -267,6 +267,30 @@
   }
   .doc-btn-del:hover { background: #ffd6d3; }
 
+
+  /* Shared starting positions across the quality indicator pages. */
+  .core-page-header {
+    box-sizing: border-box; min-height: 220px; padding-bottom: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .core-page-header > :not([style*="display:none"]) { margin-top: 0 !important; margin-bottom: 0 !important; }
+  .core-page-header > .section-header, .core-page-header > div:first-child {
+    min-height: 32px; flex-wrap: wrap; gap: 8px;
+  }
+  .core-page-header > div { flex-shrink: 0; }
+  .core-page-header .section-title { white-space: normal; }
+  #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics, #kpi-summary {
+    grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 208px;
+    height: 164px; margin-bottom: 20px !important; align-items: stretch;
+    overflow-x: auto; overflow-y: hidden; padding-bottom: 8px;
+
+  }
+  @media (max-width: 1100px) { .core-page-header { min-height: 280px; } }
+  @media (max-width: 760px) {
+    .core-page-header { min-height: 340px; }
+    .core-page-header > div, .core-page-header span[style*="inline-flex"] { flex-wrap: wrap; }
+  }
+
   /* ── 테이블 ── */
   .tbl-wrap { overflow-x: auto; }
   #gajebon-table thead { position: relative; z-index: 5; }
@@ -1227,6 +1251,7 @@
 
     <!-- ============ 월간 리포트 ============ -->
     <div id="tab-monthly" class="tab">
+      <div class="core-page-header">
       <div class="section-header">
         <div class="section-title">월간 품질 리포트</div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -1255,6 +1280,7 @@
           <button class="claim-year-btn active" onclick="coreVisual(this)" style="padding:4px 9px">전체월</button>
         </span>
       </div>
+            </div>
       <div id="monthly-body"></div>
     </div>
 
@@ -1273,6 +1299,7 @@
 
     <!-- ============ 부적합 목표·성과 ============ -->
     <div id="tab-nccost" class="tab">
+      <div class="core-page-header">
       <div class="section-header">
         <div class="section-title">본부 품질 KPI</div>
         <div id="nccost-year-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
@@ -1294,8 +1321,10 @@
         </span>
       </div>
 
+            <div id="nccost-gap-note"></div>
+      </div>
       <div class="metrics" id="nccost-metrics"></div>
-      <div id="nccost-gap-note"></div>
+
 
       <div class="grid2">
         <div class="card">
@@ -1403,6 +1432,7 @@
 
       <!-- ERP 부적합 분석 -->
       <div id="an-erp">
+      <div class="core-page-header">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
           <div class="section-title">협력사 품질 현황</div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
@@ -1425,7 +1455,8 @@
           </span>
         </div>
         <div id="erp-recon"></div>
-        <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
+              </div>
+      <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
         <div class="card" style="padding:16px 18px;margin-bottom:16px">
           <div class="card-title">월별 부적합 추이 <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=금액(만원)</span></div>
           <div class="chart-wrap" style="height:230px"><canvas id="chartErpTrend"></canvas></div>
@@ -1494,6 +1525,7 @@
 
       <!-- 기존 클레임 DB 분석 -->
       <div id="an-claim" style="display:none">
+      <div class="core-page-header">
       <!-- 분석 필터 헤더 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
         <div class="section-title">부적합 원인 분석</div>
@@ -1527,6 +1559,7 @@
       </div>
 
       <!-- 요약 지표 -->
+            </div>
       <div class="metrics" id="analysis-metrics" style="margin-bottom:20px"></div>
 
       <!-- Row 1: 연도별 추이 + 월별 추이 -->
@@ -1569,6 +1602,7 @@
 
     <!-- ============ 작업자 사고 현황 ============ -->
     <div id="tab-worker" class="tab">
+      <div class="core-page-header">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
         <div class="section-title">공정별 심의판정결과</div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -1598,6 +1632,7 @@
 
 
       <!-- 등급 요약 카드 -->
+            </div>
       <div class="metrics" id="worker-metrics" style="margin-bottom:20px"></div>
 
       <div class="grid2">
@@ -1672,6 +1707,7 @@
 
     <!-- ============ KPI 현황 ============ -->
     <div id="tab-kpi" class="tab">
+      <div class="core-page-header">
       <div class="section-header">
         <div class="section-title">팀 KPI <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
         <span style="font-size:12px;color:#aaa" id="kpi-period">목표 대비 실적</span>
@@ -1699,6 +1735,7 @@
           <button class="claim-year-btn active" onclick="coreVisual(this)" style="padding:4px 9px">전체월</button>
         </span>
       </div>
+            </div>
       <div id="kpi-summary" class="metrics" style="margin-bottom:20px"></div>
 
       <!-- 월별 상세 보기 -->
