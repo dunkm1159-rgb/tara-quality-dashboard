@@ -483,6 +483,16 @@
     #tab-kpi #kpi-summary, #tab-kpi .team-month-grid { grid-template-columns:minmax(0,1fr) !important; }
   }
 
+
+  #worker-metrics { height: 122px; }
+  #worker-metrics .metric { padding:18px 20px !important; justify-content:flex-start; }
+  #worker-metrics .metric .label { line-height:18px; margin-bottom:0 !important; }
+  #worker-metrics .metric .value {
+    margin-top:12px !important; font-size:28px !important; line-height:34px;
+    display:flex; align-items:baseline; gap:4px; letter-spacing:-0.03em;
+  }
+  #worker-metrics .metric .value .worker-unit { font-size:13px !important; font-weight:500; letter-spacing:0; }
+
 </style>
 
 
@@ -2413,16 +2423,16 @@ function renderWorker(skipTabs) {
   const mcard = (lv, label, val, color) => {
     const on = (workerLevel === lv);
     return `<div class="metric" style="cursor:pointer;padding:10px 12px;${on ? 'outline:2.5px solid '+(color||'#17A2B8')+';outline-offset:-2px' : ''}" onclick="setWorkerLevel(${lv})">
-      <div class="label" style="font-size:11px;margin-bottom:2px">${label}${on ? ' ●' : ''}</div><div class="value" style="font-size:19px;color:${color||'#1d1d1f'}">${val}</div></div>`;
+      <div class="label" style="font-size:11px;margin-bottom:2px">${label}${on ? ' ●' : ''}</div><div class="value" style="font-size:19px;color:${color||'#1d1d1f'}">${val}<span class="worker-unit">건</span></div></div>`;
   };
   const mEl = document.getElementById('worker-metrics');
   if (mEl) mEl.innerHTML =
-    mcard(0, '총 사고', yearRows.length + '건') +
+    mcard(0, '총 사고', yearRows.length) +
     mcard(1, '면책 (Lv1)', lvCnt[1], LV_COLORS[1]) +
     mcard(2, '경고 (Lv2)', lvCnt[2], LV_COLORS[2]) +
     mcard(3, '중대경고 (Lv3)', lvCnt[3], LV_COLORS[3]) +
     mcard(4, '치명적위반 (Lv4)', lvCnt[4], LV_COLORS[4]) +
-    `<div class="metric" style="padding:10px 12px"><div class="label" style="font-size:11px;margin-bottom:2px">불량금액 합계</div><div class="value" style="font-size:19px;color:#c0392b">${Math.round(yearCost/10000).toLocaleString()}만원</div></div>`;
+    `<div class="metric" style="padding:10px 12px"><div class="label" style="font-size:11px;margin-bottom:2px">불량금액 합계</div><div class="value" style="font-size:19px;color:#c0392b">${Math.round(yearCost/10000).toLocaleString()}<span class="worker-unit">만원</span></div></div>`;
 
   // 필터 드롭다운 채우기 (설비/담당자 — 연도+월 기준), 등급 선택 동기화
   const _equips = [...new Set(yearRows.map(r => r[4]).filter(Boolean))].sort();
