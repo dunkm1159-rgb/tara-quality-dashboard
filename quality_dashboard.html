@@ -28,7 +28,7 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'IBM Plex Sans KR', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
-    background: #eaeff0; color: #16211f; font-size: 14px;
+    background: #fafbfc; color: #16211f; font-size: 14px;
     height: 100vh; overflow: hidden;
     -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
   }
@@ -137,7 +137,7 @@
     gap: 12px; margin-bottom: 20px;
   }
   .metric {
-    background: #fff; border: 1px solid #e6ecec;
+    background: #fff; border: 1px solid #cfdadd;
     border-left: 3px solid #17A2B8;
     border-radius: 12px; padding: 18px 20px;
     box-shadow: none;
@@ -219,7 +219,7 @@
 
   /* ── 카드 ── */
   .card {
-    background: #fff; border: 1px solid #e6ecec;
+    background: #fff; border: 1px solid #cfdadd;
     border-radius: 12px; padding: 20px;
     box-shadow: none;
     min-width: 0; overflow: hidden;
@@ -446,6 +446,17 @@
     .content { padding: 0; }
     .topbar { display: none; }
   }
+
+  /* Readable secondary text on the light page and white cards. */
+  .metric .label, .sub.neutral, .topbar-meta { color: #59676d; }
+  .core-page-header { color: #46545c; }
+  .core-page-header .claim-year-btn:not(.active) { color: #59676d; }
+  :is(.core-page-header, .card-title, .metric:not(.hero)) :is(
+    [style*="color:#aaa"], [style*="color: #aaa"],
+    [style*="color:#86868b"], [style*="color: #86868b"],
+    [style*="color:#888"], [style*="color: #888"]
+  ) { color: #59676d !important; }
+
 </style>
 
 
@@ -8186,7 +8197,7 @@ function applyChartTheme() {
     Chart.register(chartAxisFitPlugin);
     D.font.family = "'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
     D.font.size = 11;
-    D.color = '#6e6e73';
+    D.color = '#515d63';
     D.borderColor = 'rgba(0,0,0,0.06)';
     // 범례: 동그란 포인트 + 여유 간격
     D.plugins.legend.labels.usePointStyle = true;
