@@ -270,8 +270,8 @@
 
   /* Shared starting positions across the quality indicator pages. */
   .core-page-header {
-    box-sizing: border-box; min-height: 220px; padding-bottom: 20px;
-    display: flex; flex-direction: column; gap: 10px;
+    box-sizing: border-box; min-height: 156px; padding-bottom: 12px;
+    display: flex; flex-direction: column; gap: 8px;
   }
   .core-page-header > :not([style*="display:none"]) { margin-top: 0 !important; margin-bottom: 0 !important; }
   .core-page-header > .section-header, .core-page-header > div:first-child {
@@ -285,9 +285,9 @@
     overflow-x: auto; overflow-y: hidden; padding-bottom: 8px;
 
   }
-  @media (max-width: 1100px) { .core-page-header { min-height: 280px; } }
+  @media (max-width: 1100px) { .core-page-header { min-height: 185px; } }
   @media (max-width: 760px) {
-    .core-page-header { min-height: 340px; }
+    .core-page-header { min-height: 0; }
     .core-page-header > div, .core-page-header span[style*="inline-flex"] { flex-wrap: wrap; }
   }
 
