@@ -793,7 +793,10 @@
             <span class="dash-icon-chip"><i class="ti ti-file-text"></i></span>
             작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span>
           </div>
-          <button onclick="copyPrintTargets()" style="background:#14181d;color:#fff;border:none;border-radius:9px;padding:7px 15px;font-size:12.5px;font-weight:700;cursor:pointer;"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+            <button id="copy-selected-print-btn" onclick="copySelectedPrintTargets()" disabled style="background:#17A2B8;color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:default;opacity:.45;"><i class="ti ti-checks"></i> 선택 복사 (0)</button>
+            <button onclick="copyPrintTargets()" style="background:#14181d;color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;"><i class="ti ti-copy"></i> 전체 복사</button>
+          </div>
         </div>
         <div style="font-size:11.5px;color:#8a93a0;font-weight:600;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
         <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
@@ -3134,7 +3137,23 @@ function collectPrintTargets() {
   return { done: t.new_completed || [], prog };
 }
 let _showOlderPrint = false;
+const _selectedPrintTargets = new Set();
 function toggleOlderPrint() { _showOlderPrint = !_showOlderPrint; renderPrintTargets(); }
+function updateSelectedPrintButton() {
+  const btn = document.getElementById('copy-selected-print-btn');
+  if (!btn) return;
+  btn.disabled = _selectedPrintTargets.size === 0;
+  btn.style.opacity = btn.disabled ? '.45' : '1';
+  btn.style.cursor = btn.disabled ? 'default' : 'pointer';
+  btn.innerHTML = `<i class="ti ti-checks"></i> 선택 복사 (${_selectedPrintTargets.size})`;
+}
+function togglePrintTargetSelection(input) {
+  const order = String(input?.value || '').trim();
+  if (!order) return;
+  if (input.checked) _selectedPrintTargets.add(order);
+  else _selectedPrintTargets.delete(order);
+  updateSelectedPrintButton();
+}
 // '오늘 완료' 구간 = 직전 영업일 ~ 어제. (평일: 어제만 / 월요일: 금·토·일)
 // 예) 21일(목)엔 20일 완료분, 24일(월)엔 21·22·23일 완료분이 뜬다.
 function gajTodayDoneWindow() {
@@ -3160,10 +3179,13 @@ function renderPrintTargets() {
   const _isFreshDone = r => { const d = String(r['완료일'] || ''); return d >= _wStart && d <= _wEnd; };
   const todayDone = done.filter(r => _isFreshDone(r) && !isStickerDone(r));
   const olderDone = done.filter(r => !_isFreshDone(r) && !isStickerDone(r));
+  const validOrders = new Set([...done, ...prog].map(r => String(r['주문번호'] || '').trim()).filter(Boolean));
+  [..._selectedPrintTargets].forEach(order => { if (!validOrders.has(order)) _selectedPrintTargets.delete(order); });
   const cnt = document.getElementById('print-target-count');
   if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
-  const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const rowHtml = (r, color, showDate) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #f1f2f4;">
+     <input type="checkbox" value="${esc(r['주문번호'])}" aria-label="${esc(r['주문번호'])} 선택" onchange="togglePrintTargetSelection(this)" ${_selectedPrintTargets.has(String(r['주문번호'] || '').trim()) ? 'checked' : ''} style="width:16px;height:16px;accent-color:#17A2B8;cursor:pointer;flex-shrink:0;">
      <span style="width:40px;flex-shrink:0;color:#8a93a0;font-size:11px;font-weight:700;">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</span>
      <span style="flex-shrink:0;font-family:monospace;font-size:11.5px;font-weight:800;color:${color};background:${color}1a;border-radius:6px;padding:3px 8px;">${esc(r['주문번호'])}</span>
      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:#1d1d1f;" title="${esc(r['제품명'])}">${esc(r['제품명'])}</span>
@@ -3185,10 +3207,9 @@ function renderPrintTargets() {
   }
   if (prog.length) html += head('진행중', prog.length, '#c93400') + table(prog, '#c93400', false);
   el.innerHTML = html || '<span style="color:#ccc">최근 완료 대상 없음</span>';
+  updateSelectedPrintButton();
 }
-function copyPrintTargets() {
-  const { done, prog } = collectPrintTargets();
-  const nums = [...done, ...prog].map(r => r['주문번호']).filter(Boolean);
+function writePrintTargetNumbers(nums) {
   if (!nums.length) { alert('출력 대상이 없습니다.'); return; }
   const txt = nums.join('\n');
   const okMsg = () => alert(nums.length + '개 작업번호를 복사했어요. ERP 검색창에 붙여넣으세요.');
@@ -3199,6 +3220,17 @@ function copyPrintTargets() {
   } else {
     const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); okMsg();
   }
+}
+function copyPrintTargets() {
+  const { done, prog } = collectPrintTargets();
+  writePrintTargetNumbers([...new Set([...done, ...prog].map(r => String(r['주문번호'] || '').trim()).filter(Boolean))]);
+}
+function copySelectedPrintTargets() {
+  const { done, prog } = collectPrintTargets();
+  const visibleOrder = [...new Set([...done, ...prog].map(r => String(r['주문번호'] || '').trim()).filter(Boolean))];
+  const nums = visibleOrder.filter(order => _selectedPrintTargets.has(order));
+  if (!nums.length) { alert('복사할 작업번호를 선택해 주세요.'); return; }
+  writePrintTargetNumbers(nums);
 }
 
 // ── 데이터 신선도 배지: 자동수집이 멈추면 한눈에 보이게 ──
@@ -5590,12 +5622,18 @@ function renderMonthly() {
     const goalPct = mGoal ? Math.round(mCost / mGoal * 100) : 0;
     window.CORE_HEADLINES = window.CORE_HEADLINES || {};
     window.CORE_HEADLINES.monthly = { value: goalPct, unit: '%', label: '월 목표 대비', sub: curM + ' · ' + man(mCost) + '만/' + man(mGoal) + '만', warn: goalPct > 100 };
-    let ytd = 0; for (let i = 0; i < _moIdx; i++) ytd += (_ndY.months[_MOS[i]] || {}).cost || 0;
+    let ytd = 0, ytdSelf = 0;
+    for (let i = 0; i < _moIdx; i++) {
+      const month = monthlyLedgerPeriod(curM.slice(0, 4) + '-' + String(i + 1).padStart(2, '0'));
+      if (!month) continue;
+      ytd += month.cost || 0;
+      ytdSelf += month.selfCost || 0;
+    }
     const yTarget = _ndY.target || 0;
     const ytdPct = yTarget ? Math.round(ytd / yTarget * 100) : 0;
-    const selfM2 = mv2.selfCost || 0, outM2 = Math.max(0, mCost - selfM2);
-    const selfPct = mCost ? Math.round(selfM2 / mCost * 100) : 0;
-    window.CORE_HEADLINES.monthly.chart = { labels: ['사내','외주'], values: [Math.round(selfM2/10000), Math.round(outM2/10000)] };
+    const ytdOut = Math.max(0, ytd - ytdSelf);
+    const selfPct = ytd ? Math.round(ytdSelf / ytd * 100) : 0;
+    window.CORE_HEADLINES.monthly.chart = { labels: ['사내','외주'], values: [Math.round(ytdSelf/10000), Math.round(ytdOut/10000)] };
     const gc = goalPct > 100 ? '#C0392B' : '#248a3d';
     const yc = ytdPct > 100 ? '#C0392B' : '#248a3d';
     extraCards =
@@ -5603,9 +5641,9 @@ function renderMonthly() {
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, goalPct)}%;background:${gc};border-radius:99px"></div></div>`, gc) +
       bigCard('연간 누적 비용', man(ytd), '만원', `연 목표 ${man(yTarget)}만 대비 <b style="color:${yc}">${ytdPct}%</b>
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, ytdPct)}%;background:${yc};border-radius:99px"></div></div>`, '#1F5C99') +
-      bigCard('사내 : 외주', mCost ? selfPct + ':' + (100 - selfPct) : '—', '', `자사 ${man(selfM2)} · 외주 ${man(outM2)}만
+      bigCard('누적 사내 : 외주', ytd ? selfPct + ':' + (100 - selfPct) : '—', '', `1~${_moIdx}월 · 자사 ${man(ytdSelf)} · 외주 ${man(ytdOut)}만
         <div style="display:flex;height:6px;border-radius:99px;overflow:hidden;margin-top:6px">
-          <div style="width:${selfPct}%;background:#17A2B8"></div><div style="width:${mCost ? 100 - selfPct : 0}%;background:#E67E22"></div></div>`, '#7B4EA0');
+          <div style="width:${selfPct}%;background:#17A2B8"></div><div style="width:${ytd ? 100 - selfPct : 0}%;background:#E67E22"></div></div>`, '#7B4EA0');
   }
   body.innerHTML = `
     <div id="monthly-summary">
