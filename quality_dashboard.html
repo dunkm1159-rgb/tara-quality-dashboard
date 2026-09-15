@@ -216,8 +216,8 @@
   /* ── 2칸 그리드 ── */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
-  @media (max-width: 1100px) { #core-summary-grid { grid-template-columns: repeat(2,1fr) !important; } }
-  @media (max-width: 700px) { #core-summary-grid { grid-template-columns: 1fr !important; } }
+  @media (max-width: 1100px) { #core-summary-grid, #core-chart-grid, #home-chart-grid { grid-template-columns: repeat(2,1fr) !important; } }
+  @media (max-width: 700px) { #core-summary-grid, #core-chart-grid, #home-chart-grid { grid-template-columns: 1fr !important; } }
 
   /* ── 카드 ── */
   .card {
@@ -863,14 +863,30 @@
         <div class="card-title" style="margin:0;">품질 핵심지표</div>
         <button onclick="showTab('core',document.getElementById('nav-core-dash'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
       </div>
-      <div class="grid2">
+      <div id="home-chart-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
         <div class="card">
           <div class="card-title">월별 품질비용 추이 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="home-cost-year-label"></span></div>
           <div class="chart-wrap"><canvas id="home-chart-cost"></canvas></div>
         </div>
         <div class="card">
+          <div class="card-title">팀 KPI 달성률 비교</div>
+          <div class="chart-wrap"><canvas id="home-chart-kpi"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">외주처별 부적합 금액 TOP5</div>
+          <div class="chart-wrap"><canvas id="home-chart-erp"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">부적합 거래처 TOP5</div>
+          <div class="chart-wrap"><canvas id="home-chart-analysis"></canvas></div>
+        </div>
+        <div class="card">
           <div class="card-title">등급별 사고 분포 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="home-worker-year-label"></span></div>
           <div class="chart-wrap"><canvas id="home-chart-worker"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">이번달 사내:외주 비용 비중</div>
+          <div class="chart-wrap"><canvas id="home-chart-monthly"></canvas></div>
         </div>
       </div>
     </div>
@@ -885,14 +901,30 @@
         <div style="color:#aaa;font-size:13px;padding:20px;">데이터 로딩 중...</div>
       </div>
 
-      <div class="grid2">
+      <div id="core-chart-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
         <div class="card">
           <div class="card-title">월별 품질비용 추이 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="core-cost-year-label"></span></div>
           <div class="chart-wrap"><canvas id="core-chart-cost"></canvas></div>
         </div>
         <div class="card">
+          <div class="card-title">팀 KPI 달성률 비교</div>
+          <div class="chart-wrap"><canvas id="core-chart-kpi"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">외주처별 부적합 금액 TOP5</div>
+          <div class="chart-wrap"><canvas id="core-chart-erp"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">부적합 거래처 TOP5</div>
+          <div class="chart-wrap"><canvas id="core-chart-analysis"></canvas></div>
+        </div>
+        <div class="card">
           <div class="card-title">등급별 사고 분포 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="core-worker-year-label"></span></div>
           <div class="chart-wrap"><canvas id="core-chart-worker"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">이번달 사내:외주 비용 비중</div>
+          <div class="chart-wrap"><canvas id="core-chart-monthly"></canvas></div>
         </div>
       </div>
     </div>
@@ -2263,7 +2295,11 @@ function renderErp() {
   const tot = rows.reduce((s, r) => s + num(r), 0);
   const venCnt = new Set(rows.map(r => r['외주처'] || r['거래처'] || '').filter(Boolean)).size;
   window.CORE_HEADLINES = window.CORE_HEADLINES || {};
-  window.CORE_HEADLINES.erp = { value: rows.length, unit: '건', label: '외주 부적합 건수', sub: man(tot) + '만원 · ' + (erpYear || '전체 기간'), warn: rows.length > 0 };
+  const _vendMap = {};
+  rows.forEach(r => { const v = r['외주처'] || r['거래처'] || '미상'; _vendMap[v] = (_vendMap[v]||0) + num(r); });
+  const _vendTop = Object.entries(_vendMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  window.CORE_HEADLINES.erp = { value: rows.length, unit: '건', label: '외주 부적합 건수', sub: man(tot) + '만원 · ' + (erpYear || '전체 기간'), warn: rows.length > 0,
+    chart: { labels: _vendTop.map(x=>x[0]), values: _vendTop.map(x=>Math.round(x[1]/10000)) } };
   const mEl = document.getElementById('erp-metrics');
   const card = (l, v, u, sub, c) => `<div class="metric"><div class="label">${l}</div><div class="value" style="color:${c || '#1d1d1f'}">${v}<span style="font-size:13px;font-weight:400;color:#86868b">${u || ''}</span></div><div class="sub neutral">${sub || ''}</div></div>`;
   if (mEl) mEl.innerHTML =
@@ -2869,6 +2905,7 @@ function renderCoreSummary() {
   }).join('');
 
   renderCoreTrendCharts('core-chart-cost', 'core-chart-worker', 'core-cost-year-label', 'core-worker-year-label');
+  renderCoreExtraCharts('core');
 }
 // 품질 핵심지표 그래프 2종(월별 품질비용 추이 / 등급별 사고 분포) — 핵심지표 요약 화면과 대시보드 홈 화면에서 공용으로 사용
 function renderCoreTrendCharts(costCanvasId, workerCanvasId, costLabelId, workerLabelId) {
@@ -2892,6 +2929,71 @@ function renderCoreTrendCharts(costCanvasId, workerCanvasId, costLabelId, worker
     if (wLbl) wLbl.textContent = (H.worker && H.worker.year) ? H.worker.year + '년' : '전체';
     if (lv) renderPie(workerCanvasId, ['면책(Lv1)','경고(Lv2)','중대경고(Lv3)','치명적위반(Lv4)'], [lv[1]||0, lv[2]||0, lv[3]||0, lv[4]||0]);
   } catch (e) { console.warn('core worker chart error', e); }
+}
+// 단위(unit)를 지정할 수 있는 범용 막대그래프 — renderBar는 툴팁 단위가 '만원'으로 고정돼 있어 %·건 단위 데이터엔 못 씀
+function renderCoreBar(id, labels, values, colors, unit) {
+  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  try {
+    chartInstances[id] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: values, backgroundColor: colors || '#17A2B8', borderRadius: 5, maxBarThickness: 50 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${(c.parsed.y||0).toLocaleString()}${unit||''}` } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { ticks: { font: { size: 10.5 } }, grid: { display: false } }
+        }
+      }
+    });
+  } catch(e) { console.warn('renderCoreBar error', id, e); }
+}
+// 단위(unit)를 지정할 수 있는 범용 도넛그래프 — renderPie는 툴팁 단위가 '건'으로 고정돼 있어 금액 등엔 못 씀
+function renderCorePie(id, labels, values, unit) {
+  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  const colors = labels.map((_,i) => CHART_PALETTE[i % CHART_PALETTE.length]);
+  const u = unit || '';
+  try {
+    chartInstances[id] = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '58%',
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 13, padding: 10,
+            generateLabels: chart => chart.data.labels.map((l,i) => ({
+              text: `${l}  ${values[i]}${u} (${Math.round(values[i]/total*100)}%)`,
+              fillStyle: colors[i], strokeStyle: colors[i], lineWidth: 0, index: i, hidden: false
+            }))
+          }},
+          tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}${u} (${Math.round(c.parsed/total*100)}%)` } }
+        }
+      }
+    });
+  } catch(e) { console.warn('renderCorePie error', id, e); }
+}
+// 나머지 4개 화면(팀KPI·협력사현황·원인분석·월간리포트)의 대표 그래프 — core-summary/dashboard 공용
+function renderCoreExtraCharts(prefix) {
+  const H = window.CORE_HEADLINES || {};
+  const specs = [
+    { key: 'kpi',      id: prefix + '-chart-kpi',      type: 'bar',  unit: '%',   colors: ['#e8630b','#c2870a','#0f9d63'] },
+    { key: 'erp',      id: prefix + '-chart-erp',      type: 'bar',  unit: '만원', colors: '#c2870a' },
+    { key: 'analysis', id: prefix + '-chart-analysis', type: 'bar',  unit: '건',  colors: '#0f9d63' },
+    { key: 'monthly',  id: prefix + '-chart-monthly',  type: 'pie',  unit: '만원' },
+  ];
+  specs.forEach(s => {
+    const c = H[s.key] && H[s.key].chart;
+    if (!c || !c.labels || !c.labels.length) return;
+    try {
+      if (s.type === 'bar') renderCoreBar(s.id, c.labels, c.values, s.colors, s.unit);
+      else renderCorePie(s.id, c.labels, c.values, s.unit);
+    } catch (e) { console.warn('core extra chart error', s.key, e); }
+  });
 }
 function showTab(name, btn) {
   if (!openTabs.includes(name)) openTabs.push(name);
@@ -3204,10 +3306,15 @@ function refreshDash() {
   renderGajebonTodaySummary();
   if (typeof renderGajCal === 'function') renderGajCal();
 
-  // ─ 품질 핵심지표 그래프 (하단) ─
+  // ─ 품질 핵심지표 그래프 6종 (하단) — 각 메뉴 화면과 동일한 계산 함수를 그대로 호출해 값을 가져온다 ─
   try { renderNcCost(); } catch (e) {}
   try { renderWorker(true); } catch (e) {}
+  try { renderKpi(); } catch (e) {}
+  try { renderErp(); } catch (e) {}
+  try { renderCharts(); } catch (e) {}
+  try { renderMonthly(); } catch (e) {}
   renderCoreTrendCharts('home-chart-cost', 'home-chart-worker', 'home-cost-year-label', 'home-worker-year-label');
+  renderCoreExtraCharts('home');
 }
 
 function renderDashCharts(year) {
@@ -4140,7 +4247,11 @@ function renderCharts() {
   const withEquip = d.filter(r => (r[9]||'').trim()).length;
   const clientN = new Set(d.map(r => (r[2]||'').trim()).filter(Boolean)).size;
   window.CORE_HEADLINES = window.CORE_HEADLINES || {};
-  window.CORE_HEADLINES.analysis = { value: d.length, unit: '건', label: '부적합 건수', sub: (selYear || '전체') + (monLabel ? ' · ' + monLabel : ''), warn: false };
+  const _clMap = {};
+  d.forEach(r => { const c = (r[2]||'').trim() || '미상'; _clMap[c] = (_clMap[c]||0) + 1; });
+  const _clTop = Object.entries(_clMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  window.CORE_HEADLINES.analysis = { value: d.length, unit: '건', label: '부적합 건수', sub: (selYear || '전체') + (monLabel ? ' · ' + monLabel : ''), warn: false,
+    chart: { labels: _clTop.map(x=>x[0]), values: _clTop.map(x=>x[1]) } };
   const el = document.getElementById('analysis-metrics');
   if (el) el.innerHTML = `
     <div class="metric"><div class="label">부적합 건수</div><div class="value">${d.length.toLocaleString()}</div><div class="sub neutral">${(selYear || '전체') + (monLabel ? ' · ' + monLabel : '')}</div></div>
@@ -5484,6 +5595,7 @@ function renderMonthly() {
     const ytdPct = yTarget ? Math.round(ytd / yTarget * 100) : 0;
     const selfM2 = mv2.selfCost || 0, outM2 = Math.max(0, mCost - selfM2);
     const selfPct = mCost ? Math.round(selfM2 / mCost * 100) : 0;
+    window.CORE_HEADLINES.monthly.chart = { labels: ['사내','외주'], values: [Math.round(selfM2/10000), Math.round(outM2/10000)] };
     const gc = goalPct > 100 ? '#C0392B' : '#248a3d';
     const yc = ytdPct > 100 ? '#C0392B' : '#248a3d';
     extraCards =
@@ -7675,7 +7787,8 @@ function renderKpi() {
   const sopAvg    = sopVals.length ? Math.round(sopVals.reduce((a,b)=>a+b,0)/sopVals.length) : '-';
   const stdTotal  = D.std.monthly.reduce((s,r)=>s+(r.actual||0),0);
   window.CORE_HEADLINES = window.CORE_HEADLINES || {};
-  window.CORE_HEADLINES.kpi = { value: costRate, unit: '%', label: '품질비용 달성률', sub: Math.round(costTotal/10000).toLocaleString() + '만 / 목표 ' + Math.round(costTarget/10000).toLocaleString() + '만', warn: costRate >= 100 };
+  window.CORE_HEADLINES.kpi = { value: costRate, unit: '%', label: '품질비용 달성률', sub: Math.round(costTotal/10000).toLocaleString() + '만 / 목표 ' + Math.round(costTarget/10000).toLocaleString() + '만', warn: costRate >= 100,
+    chart: { labels: ['품질비용 달성률','반복불량 소진율','SOP 준수율'], values: [costRate, top3Rate, sopAvg==='-'?0:sopAvg] } };
 
   const _pill = (txt, k) => `<span class="kpi-pill ${k}">${txt}</span>`;
   const heroCard = (label, value, unit, pillTxt, pillK, sub, prog) =>
