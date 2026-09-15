@@ -506,9 +506,6 @@
 
     <div class="sidebar-section">
       <div class="sidebar-section-label">품질 기록</div>
-      <button class="nav-item" id="nav-nccost" onclick="showTab('nccost',this)">
-        <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 품질사고 관리대장
-      </button>
       <button class="nav-item" id="nav-claim" onclick="showTab('claim',this)">
         <span class="nav-icon"><i class="ti ti-folder"></i></span> 부적합사고 취합대장
       </button>
@@ -520,8 +517,11 @@
         <span class="nav-caret"><i class="ti ti-chevron-down"></i></span>
       </button>
       <div id="core-sub" class="core-sub collapsed">
+      <button class="nav-item nav-sub" id="nav-nccost" onclick="showTab('nccost',this)">
+        <span class="nav-icon"><i class="ti ti-target-arrow"></i></span> 본부 품질 KPI
+      </button>
         <button class="nav-item nav-sub" id="nav-kpi" onclick="showTab('kpi',this)">
-          <span class="nav-icon"><i class="ti ti-target"></i></span> 품질 KPI
+          <span class="nav-icon"><i class="ti ti-target"></i></span> 팀 KPI
         </button>
         <button class="nav-item nav-sub" id="nav-erp" onclick="showTab('analysis',this);setAnalysisSrc('erp')">
           <span class="nav-icon"><i class="ti ti-alert-triangle"></i></span> 외주 품질사고
@@ -1274,7 +1274,7 @@
     <!-- ============ 부적합 목표·성과 ============ -->
     <div id="tab-nccost" class="tab">
       <div class="section-header">
-        <div class="section-title">품질사고 관리대장</div>
+        <div class="section-title">본부 품질 KPI</div>
         <div id="nccost-year-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
       <p style="font-size:12px;color:#86868b;margin:-6px 0 10px;">연간 품질부적합 비용 목표 대비 발생 현황 (공정별: 제판·매엽·윤전·제본·외주·특재)</p>
@@ -1673,7 +1673,7 @@
     <!-- ============ KPI 현황 ============ -->
     <div id="tab-kpi" class="tab">
       <div class="section-header">
-        <div class="section-title">품질 KPI <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
+        <div class="section-title">팀 KPI <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
         <span style="font-size:12px;color:#aaa" id="kpi-period">목표 대비 실적</span>
       </div>
 
@@ -2525,8 +2525,8 @@ const TAB_TITLES = {
   dashboard: '대시보드',
   schedule: '품질개선팀 월간 일정',
   analysis: '부적합사고 분석',
-  kpi: '품질 KPI',
-  nccost: '품질사고 관리대장',
+  kpi: '팀 KPI',
+  nccost: '본부 품질 KPI',
   claim: '부적합사고 취합대장',
   worker: '공정별 심의판정결과',
   gajebon: '가제본 현황',
@@ -2578,7 +2578,7 @@ function toggleCoreMenu(btn) {
   if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 }
 function syncCoreMenu(name) {
-  var core = ['kpi', 'analysis', 'worker', 'monthly'];  // 품질 핵심지표 하위
+  var core = ['nccost', 'kpi', 'analysis', 'worker', 'monthly'];  // 품질 핵심지표 하위
   var parent = document.getElementById('nav-core');
   var sub = document.getElementById('core-sub');
   if (!parent || !sub) return;
