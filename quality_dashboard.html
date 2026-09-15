@@ -539,6 +539,42 @@
     white-space:normal; overflow:visible;
   }
 
+
+  /* Larger indicator text for comfortable reading. */
+  #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics,
+  #tab-kpi #kpi-summary, #monthly-summary, #tab-kpi .team-month-grid {
+    grid-template-columns:repeat(auto-fill,260px) !important;
+  }
+  #nccost-metrics > .metric, #erp-metrics > .metric, #analysis-metrics > .metric,
+  #worker-metrics > .metric, #tab-kpi #kpi-summary > .metric, #monthly-summary > .card {
+    height:190px; min-height:190px !important; padding:18px !important;
+  }
+  .metrics .metric .label,
+  #nccost-metrics .metric .label, #erp-metrics .metric .label,
+  #analysis-metrics .metric .label, #worker-metrics .metric .label,
+  #tab-kpi #kpi-summary .team-card-heading .label, #monthly-summary .label {
+    font-size:16px !important; font-weight:600; line-height:22px;
+  }
+  #nccost-metrics .label, #erp-metrics .label, #analysis-metrics .label,
+  #worker-metrics .label, #tab-kpi #kpi-summary .team-card-heading, #monthly-summary .label {
+    height:44px; min-height:44px;
+  }
+  #nccost-metrics .value, #erp-metrics .value, #analysis-metrics .value,
+  #worker-metrics .metric .value, #tab-kpi #kpi-summary .value, #monthly-summary .value {
+    font-size:30px !important; line-height:36px;
+  }
+  #nccost-metrics .sub, #erp-metrics .sub, #analysis-metrics .sub,
+  #tab-kpi #kpi-summary .sub, #monthly-summary .sub {
+    font-size:14px !important; line-height:20px;
+  }
+  #tab-kpi #kpi-summary .team-card-heading .kpi-pill { font-size:12px; padding:3px 6px; }
+  @media(max-width:600px) {
+    #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics,
+    #tab-kpi #kpi-summary, #monthly-summary, #tab-kpi .team-month-grid {
+      grid-template-columns:minmax(0,1fr) !important;
+    }
+  }
+
 </style>
 
 
