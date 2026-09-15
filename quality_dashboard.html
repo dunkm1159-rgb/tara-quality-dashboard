@@ -233,12 +233,22 @@
     white-space: nowrap; overflow: hidden; gap: 8px;
   }
 
-  /* ── 대시보드 홈: 정제된 클래식 카드 스타일 (부드러운 테두리/그림자 + 아이콘 칩, 기존 좌측 스트라이프 제거) ── */
-  #tab-dashboard .card { border-color: #e5ebec; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,32,39,.04); }
-  #tab-dashboard .card-title { border-left: none; padding-left: 0; }
-  #tab-dashboard .metrics .metric { border-color: #e5ebec; border-left: none; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,32,39,.04); }
-  #dash-metrics .metric:first-child { background: linear-gradient(135deg,#17A2B8,#0f7f90); border: none; }
-  #dash-metrics .metric:first-child .label, #dash-metrics .metric:first-child .value, #dash-metrics .metric:first-child .sub { color: #fff; }
+  /* ── 대시보드 홈: 데이터 포워드 스타일 (굵은 숫자 + 카드 상단 컬러바, 아이콘 칩은 숨김) ── */
+  #tab-dashboard .card { border-color: #e7e9ec; border-radius: 12px; box-shadow: none; }
+  #tab-dashboard .card-title { border-left: none; padding-left: 0; font-weight: 800; }
+  #tab-dashboard .dash-icon-chip { display: none; }
+  #tab-dashboard .metrics .metric {
+    border-color: #e7e9ec; border-left: none; border-radius: 12px; box-shadow: none;
+    border-top: 4px solid #17A2B8;
+  }
+  #tab-dashboard .metrics .metric:nth-child(2) { border-top-color: #eb6834; }
+  #tab-dashboard .metrics .metric:nth-child(3) { border-top-color: #1baf7a; }
+  #tab-dashboard .metrics .metric:nth-child(4) { border-top-color: #eda100; }
+  #tab-dashboard .metrics .metric .value { font-size: 32px; font-weight: 800; }
+  #tab-dashboard .metrics .metric .label { font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 11px; }
+  #tab-dashboard .section-title { font-weight: 800; }
+  #dash-refresh-btn { background: #14181d; color: #fff; border: none; border-radius: 9px; padding: 7px 15px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  #dash-refresh-btn:hover { background: #262b32; }
   .dash-icon-chip {
     width: 26px; height: 26px; border-radius: 8px; background: #e8f6f8;
     display: inline-flex; align-items: center; justify-content: center;
@@ -748,7 +758,7 @@
     <div id="tab-dashboard" class="tab active">
       <div class="section-header">
         <div class="section-title">대시보드 <span style="font-size:12px;color:#aaa;font-weight:400" id="dash-month"></span></div>
-        <button class="btn btn-secondary btn-sm" onclick="refreshDash()">새로고침</button>
+        <button id="dash-refresh-btn" onclick="refreshDash()">새로고침</button>
       </div>
 
       <div id="data-freshness" style="display:none"></div>
@@ -761,7 +771,7 @@
       <div class="card" style="border-color:#e5ebec;border-radius:14px;box-shadow:0 1px 2px rgba(16,32,39,.04);margin-bottom:16px;padding:18px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
           <div class="card-title" style="margin:0;border-left:none;padding-left:0;">
-            <span style="width:26px;height:26px;border-radius:8px;background:#e8f6f8;display:inline-flex;align-items:center;justify-content:center;color:#0a7a8a;flex-shrink:0;"><i class="ti ti-book" style="font-size:15px;"></i></span>
+            <span class="dash-icon-chip"><i class="ti ti-book"></i></span>
             오늘 가제본 현황 <span id="gajebon-today-date" style="font-size:11px;font-weight:400;color:#aaa;"></span>
           </div>
           <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
@@ -775,7 +785,7 @@
       <div class="card" style="border-color:#e5ebec;border-radius:14px;box-shadow:0 1px 2px rgba(16,32,39,.04);margin-bottom:16px;padding:18px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:12px;">
           <div class="card-title" style="margin:0;border-left:none;padding-left:0;">
-            <span style="width:26px;height:26px;border-radius:8px;background:#e8f6f8;display:inline-flex;align-items:center;justify-content:center;color:#0a7a8a;flex-shrink:0;"><i class="ti ti-file-text" style="font-size:15px;"></i></span>
+            <span class="dash-icon-chip"><i class="ti ti-file-text"></i></span>
             작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span>
           </div>
           <button onclick="copyPrintTargets()" class="btn btn-secondary btn-sm"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
@@ -6914,19 +6924,19 @@ function renderGajebonTodaySummary() {
     const progressSamples = _actProg.slice(0,3).map(r => r['거래처'] || '');
     el.innerHTML = `
       <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
-        <div style="background:#f0faf4;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #c8ecd4;">
-          <div style="font-size:24px;font-weight:700;color:#27ae60;">${done}</div>
-          <div style="font-size:12px;color:#555;margin-top:2px;">완료</div>
+        <div style="background:#f0faf4;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #27ae60;">
+          <div style="font-size:32px;font-weight:800;color:#27ae60;">${done}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">완료</div>
           ${doneSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${doneSamples.join(', ')}</div>` : ''}
         </div>
-        <div style="background:#fff8f0;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #fddcb5;">
-          <div style="font-size:24px;font-weight:700;color:#e67e22;">${progress}</div>
-          <div style="font-size:12px;color:#555;margin-top:2px;">진행중</div>
+        <div style="background:#fff8f0;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #e67e22;">
+          <div style="font-size:32px;font-weight:800;color:#e67e22;">${progress}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">진행중</div>
           ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
         </div>
-        <div style="background:#f5f7fa;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #e0e3e8;">
-          <div style="font-size:24px;font-weight:700;color:#17A2B8;">${total}</div>
-          <div style="font-size:12px;color:#555;margin-top:2px;">전체</div>
+        <div style="background:#f5f7fa;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #17A2B8;">
+          <div style="font-size:32px;font-weight:800;color:#17A2B8;">${total}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">전체</div>
         </div>
       </div>
     `;
