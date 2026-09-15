@@ -6965,19 +6965,19 @@ function renderGajebonTodaySummary() {
   }
   el.innerHTML = `
     <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
-      <div style="background:#f0faf4;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #c8ecd4;">
-        <div style="font-size:24px;font-weight:700;color:#27ae60;">${done}</div>
-        <div style="font-size:12px;color:#555;margin-top:2px;">완료</div>
+      <div style="background:#f0faf4;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #27ae60;">
+        <div style="font-size:32px;font-weight:800;color:#27ae60;">${done}</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">완료</div>
         ${doneSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${doneSamples.join(', ')}</div>` : ''}
       </div>
-      <div style="background:#fff8f0;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #fddcb5;">
-        <div style="font-size:24px;font-weight:700;color:#e67e22;">${progress}</div>
-        <div style="font-size:12px;color:#555;margin-top:2px;">진행중</div>
+      <div style="background:#fff8f0;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #e67e22;">
+        <div style="font-size:32px;font-weight:800;color:#e67e22;">${progress}</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">진행중</div>
         ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
       </div>
-      <div style="background:#f5f7fa;border-radius:8px;padding:12px 20px;min-width:120px;text-align:center;border:1px solid #e0e3e8;">
-        <div style="font-size:24px;font-weight:700;color:#17A2B8;">${total}</div>
-        <div style="font-size:12px;color:#555;margin-top:2px;">전체</div>
+      <div style="background:#f5f7fa;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #17A2B8;">
+        <div style="font-size:32px;font-weight:800;color:#17A2B8;">${total}</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">전체</div>
       </div>
     </div>
   `;
