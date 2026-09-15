@@ -233,6 +233,18 @@
     white-space: nowrap; overflow: hidden; gap: 8px;
   }
 
+  /* ── 대시보드 홈: 정제된 클래식 카드 스타일 (부드러운 테두리/그림자 + 아이콘 칩, 기존 좌측 스트라이프 제거) ── */
+  #tab-dashboard .card { border-color: #e5ebec; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,32,39,.04); }
+  #tab-dashboard .card-title { border-left: none; padding-left: 0; }
+  #tab-dashboard .metrics .metric { border-color: #e5ebec; border-left: none; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,32,39,.04); }
+  #dash-metrics .metric:first-child { background: linear-gradient(135deg,#17A2B8,#0f7f90); border: none; }
+  #dash-metrics .metric:first-child .label, #dash-metrics .metric:first-child .value, #dash-metrics .metric:first-child .sub { color: #fff; }
+  .dash-icon-chip {
+    width: 26px; height: 26px; border-radius: 8px; background: #e8f6f8;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #0a7a8a; flex-shrink: 0; font-size: 15px;
+  }
+
   /* ── 문서 관리 ── */
   .doc-filter {
     padding: 6px 15px; border: 1px solid #d2d2d7; border-radius: 980px;
@@ -773,18 +785,18 @@
       </div>
 
       <!-- 지금 인쇄 중 -->
-      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #eef3f4;">
-          <div class="card-title" style="margin:0;"><i class="ti ti-printer"></i> 지금 인쇄 중 <span id="home-wip-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
+      <div class="card" style="margin-bottom:16px;padding:18px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
+          <div class="card-title" style="margin:0;"><span class="dash-icon-chip"><i class="ti ti-printer"></i></span> 지금 인쇄 중 <span id="home-wip-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
           <button onclick="showTab('wip',document.getElementById('nav-wip'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
         </div>
         <div id="home-wip-list"></div>
       </div>
 
       <!-- 가제본 완료 달력 -->
-      <div class="card" style="margin-bottom:16px;padding:16px 20px;">
+      <div class="card" style="margin-bottom:16px;padding:18px 20px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-          <div class="card-title" style="margin:0;"><i class="ti ti-bookmark"></i> 가제본 완료 달력</div>
+          <div class="card-title" style="margin:0;"><span class="dash-icon-chip"><i class="ti ti-bookmark"></i></span> 가제본 완료 달력</div>
           <button class="claim-year-btn" onclick="gajCalMove(-1)" style="padding:3px 9px">◀</button>
           <span id="gajcal-label" style="font-size:14px;font-weight:600;min-width:120px;text-align:center"></span>
           <button class="claim-year-btn" onclick="gajCalMove(1)" style="padding:3px 9px">▶</button>
@@ -795,22 +807,22 @@
 
       <div class="grid2" style="margin-bottom:16px;">
         <div class="card">
-          <div class="card-title">최근 부적합 <span style="font-size:11px;font-weight:400;color:#aaa">취합대장 최신 5건</span></div>
+          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-alert-triangle"></i></span> 최근 부적합 <span style="font-size:11px;font-weight:400;color:#aaa">취합대장 최신 5건</span></div>
           <div id="dash-claim-list"></div>
         </div>
         <div class="card">
-          <div class="card-title">불량 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa" id="dash-year-label"></span></div>
+          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-chart-pie"></i></span> 불량 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa" id="dash-year-label"></span></div>
           <div class="chart-wrap"><canvas id="dash-chartType"></canvas></div>
         </div>
       </div>
 
       <div class="grid2" style="margin-bottom:16px;">
         <div class="card">
-          <div class="card-title">월별 부적합 추이</div>
+          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-trending-up"></i></span> 월별 부적합 추이</div>
           <div class="chart-wrap"><canvas id="dash-chartTrend"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title">부적합 상위 거래처</div>
+          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-building-store"></i></span> 부적합 상위 거래처</div>
           <div class="chart-wrap"><canvas id="dash-chartClient"></canvas></div>
         </div>
       </div>
@@ -819,7 +831,7 @@
       <div class="card" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div class="card-title" style="margin:0;cursor:pointer;user-select:none" onclick="(function(){var t=document.getElementById('dash-equip-table');var c=document.getElementById('equip-caret');var on=t.style.display==='none';t.style.display=on?'block':'none';c.textContent=on?'▼':'▶';})()">
-            <span id="equip-caret" style="color:#17A2B8">▼</span> 설비별 부적합 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 제목 클릭해 펼치기</span>
+            <span id="equip-caret" style="color:#17A2B8">▼</span> <span class="dash-icon-chip"><i class="ti ti-building-factory-2"></i></span> 설비별 부적합 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 제목 클릭해 펼치기</span>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <select id="dash-equip-year" onchange="renderEquipDefect()" style="font-size:12px;padding:3px 8px;border:1px solid #ddd;border-radius:5px;color:#555">
