@@ -189,30 +189,6 @@
     color: #ffffff !important;
   }
 
-  /* ── 핵심지표 5화면 요약 카드 규격 통일 (폭·높이·숫자크기) ── */
-  #kpi-summary, #erp-metrics, #analysis-metrics, #worker-metrics {
-    grid-template-columns: repeat(auto-fill, minmax(184px, 208px)) !important;
-    gap: 12px !important;
-  }
-  #kpi-summary .metric, #erp-metrics .metric,
-  #analysis-metrics .metric, #worker-metrics .metric {
-    min-height: 108px !important;
-    padding: 15px 17px !important;
-    display: flex !important; flex-direction: column !important;
-  }
-  #kpi-summary .metric .value, #erp-metrics .metric .value,
-  #analysis-metrics .metric .value, #worker-metrics .metric .value {
-    font-size: 25px !important; font-weight: 700 !important; margin-top: auto;
-  }
-  #kpi-summary .metric .value span, #erp-metrics .metric .value span,
-  #analysis-metrics .metric .value span, #worker-metrics .metric .value span {
-    font-size: 13px !important;
-  }
-  #kpi-summary .metric .label, #erp-metrics .metric .label,
-  #analysis-metrics .metric .label, #worker-metrics .metric .label {
-    font-size: 11.5px !important; margin-bottom: 4px;
-  }
-
   /* ── 2칸 그리드 ── */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
   @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
@@ -279,12 +255,6 @@
   }
   .core-page-header > div { flex-shrink: 0; }
   .core-page-header .section-title { white-space: normal; }
-  #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics, #kpi-summary {
-    grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 208px;
-    height: 164px; margin-bottom: 20px !important; align-items: stretch;
-    overflow-x: auto; overflow-y: hidden; padding-bottom: 8px;
-
-  }
   @media (max-width: 760px) {
     .core-page-header { min-height: 0; }
     .core-page-header > div, .core-page-header span[style*="inline-flex"] { flex-wrap: wrap; }
@@ -457,124 +427,49 @@
   ) { color: #59676d !important; }
 
 
-  #tab-kpi #kpi-summary, #tab-kpi .team-month-grid {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    grid-auto-flow: row; grid-auto-columns: auto; gap: 16px !important;
-    height: auto; min-height: 164px; overflow: visible; padding-bottom: 0; align-items: stretch;
+  /* One shared card and row geometry for all six indicator menus. */
+  :root { --indicator-card-width:260px; --indicator-card-height:190px; --indicator-gap:12px; }
+  .indicator-summary, #tab-kpi .team-month-grid {
+    display:flex; flex-wrap:nowrap; gap:var(--indicator-gap);
+    overflow-x:auto; overflow-y:hidden; align-items:stretch; margin-bottom:20px;
   }
-  #tab-kpi #kpi-summary .metric { padding: 18px 20px !important; }
-  #tab-kpi .team-card-heading { display:flex; align-items:start; justify-content:space-between; gap:8px; min-height:36px; }
-  #tab-kpi .team-card-heading .label { white-space:normal; margin:0; line-height:1.5; }
-  #tab-kpi .team-card-heading .kpi-pill { flex-shrink:0; margin:0; padding:3px 7px; font-size:10px; }
-  #tab-kpi #kpi-summary .value { margin-top:10px !important; margin-bottom:8px; }
-  #tab-kpi #kpi-summary .sub { white-space:normal; line-height:1.5; overflow:visible; }
-  #tab-kpi .team-month-card { min-height:188px; margin-bottom:0; }
+  .indicator-summary { height:210px; padding-bottom:20px; box-sizing:border-box; }
+  .indicator-summary > :is(.metric,.card), #tab-kpi .team-month-card {
+    flex:0 0 var(--indicator-card-width); width:var(--indicator-card-width);
+    min-width:0; box-sizing:border-box; margin:0;
+  }
+  .indicator-summary > :is(.metric,.card) {
+    height:var(--indicator-card-height); min-height:var(--indicator-card-height);
+    padding:18px !important; display:flex; flex-direction:column; justify-content:flex-start;
+    overflow:hidden;
+  }
+  .metrics .metric .label, .indicator-summary .label {
+    font-size:16px !important; font-weight:600; line-height:22px;
+    white-space:normal; overflow:visible;
+  }
+  .indicator-summary > :is(.metric,.card) > .label, .indicator-summary .team-card-heading {
+    height:44px; min-height:44px; margin:0 !important;
+  }
+  .indicator-summary .value {
+    font-size:30px !important; font-weight:700; line-height:36px;
+    margin:8px 0 0 !important; white-space:nowrap;
+  }
+  .indicator-summary .value span { font-size:14px !important; font-weight:500; margin-left:3px; }
+  .indicator-summary .sub {
+    margin-top:6px !important; font-size:14px !important; line-height:20px;
+    white-space:normal; overflow:visible;
+  }
+  .team-card-heading { display:flex; align-items:start; justify-content:space-between; gap:6px; }
+  .team-card-heading .label { margin:0; }
+  .team-card-heading .kpi-pill { flex-shrink:0; font-size:12px; padding:3px 6px; margin:0; }
+  #tab-kpi .team-month-card { min-height:190px; }
   #tab-kpi .team-month-card > div:first-child { min-height:36px; }
   #tab-kpi .team-card-details, #tab-kpi .team-no-details {
-    margin-top:auto; padding-top:12px; border-top:1px solid #e3e9ec; font-size:12px; color:#59676d;
+    margin-top:auto; padding-top:12px; border-top:1px solid #e3e9ec; font-size:14px; color:#59676d;
   }
   #tab-kpi .team-card-details summary { cursor:pointer; color:#166c7b; font-weight:600; }
   #tab-kpi .team-detail-list { max-height:240px; overflow:auto; padding-top:10px; }
   #tab-kpi .team-detail-list > div { padding:6px 0; line-height:1.6; color:#38464c; overflow-wrap:anywhere; }
-  @media (max-width:1100px) {
-    #tab-kpi #kpi-summary, #tab-kpi .team-month-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
-  }
-  @media (max-width:600px) {
-    #tab-kpi #kpi-summary, #tab-kpi .team-month-grid { grid-template-columns:minmax(0,1fr) !important; }
-  }
-
-
-  #worker-metrics { height: 122px; }
-  #worker-metrics .metric { padding:18px 20px !important; justify-content:flex-start; }
-  #worker-metrics .metric .label { line-height:18px; margin-bottom:0 !important; }
-  #worker-metrics .metric .value {
-    margin-top:12px !important; font-size:28px !important; line-height:34px;
-    display:flex; align-items:baseline; gap:4px; letter-spacing:-0.03em;
-  }
-  #worker-metrics .metric .value .worker-unit { font-size:13px !important; font-weight:500; letter-spacing:0; }
-
-
-  /* All six indicator menus share one summary-card size. */
-  #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics,
-  #tab-kpi #kpi-summary, #monthly-summary, #tab-kpi .team-month-grid {
-    display:grid; grid-template-columns:repeat(auto-fill,208px) !important;
-    grid-auto-flow:row; grid-auto-columns:auto; gap:12px !important;
-    height:auto; min-height:0; overflow:visible; padding:0; margin-bottom:20px !important;
-    align-items:stretch;
-  }
-  #nccost-metrics > .metric, #erp-metrics > .metric, #analysis-metrics > .metric,
-  #worker-metrics > .metric, #tab-kpi #kpi-summary > .metric, #monthly-summary > .card {
-    box-sizing:border-box; height:156px; min-height:156px !important;
-    padding:16px !important; margin:0; display:flex !important; flex-direction:column;
-    justify-content:flex-start; overflow:hidden;
-  }
-  #nccost-metrics .label, #erp-metrics .label, #analysis-metrics .label,
-  #worker-metrics .label, #tab-kpi #kpi-summary .team-card-heading, #monthly-summary .label {
-    height:30px; min-height:30px; margin:0 !important; line-height:15px;
-  }
-  #tab-kpi #kpi-summary .team-card-heading { gap:3px; }
-  #tab-kpi #kpi-summary .team-card-heading .label { font-size:11px !important; }
-  #tab-kpi #kpi-summary .team-card-heading .kpi-pill { font-size:9px; padding:3px 5px; }
-  #nccost-metrics .value, #erp-metrics .value, #analysis-metrics .value,
-  #worker-metrics .metric .value, #tab-kpi #kpi-summary .value, #monthly-summary .value {
-    font-size:26px !important; line-height:32px; margin:8px 0 0 !important;
-  }
-  #nccost-metrics .sub, #erp-metrics .sub, #analysis-metrics .sub,
-  #tab-kpi #kpi-summary .sub, #monthly-summary .sub {
-    margin-top:6px; font-size:11px; line-height:16px; white-space:normal;
-  }
-  @media(max-width:520px) {
-    #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics,
-    #tab-kpi #kpi-summary, #monthly-summary, #tab-kpi .team-month-grid {
-      grid-template-columns:minmax(0,1fr) !important;
-    }
-  }
-
-
-  .metrics .metric .label,
-  #nccost-metrics .metric .label, #erp-metrics .metric .label,
-  #analysis-metrics .metric .label, #worker-metrics .metric .label,
-  #tab-kpi #kpi-summary .team-card-heading .label, #monthly-summary .label {
-    font-size:13px !important; font-weight:600; line-height:18px;
-    white-space:normal; overflow:visible;
-  }
-
-
-  /* Larger indicator text for comfortable reading. */
-  #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics,
-  #tab-kpi #kpi-summary, #monthly-summary, #tab-kpi .team-month-grid {
-    grid-template-columns:repeat(auto-fill,260px) !important;
-  }
-  #nccost-metrics > .metric, #erp-metrics > .metric, #analysis-metrics > .metric,
-  #worker-metrics > .metric, #tab-kpi #kpi-summary > .metric, #monthly-summary > .card {
-    height:190px; min-height:190px !important; padding:18px !important;
-  }
-  .metrics .metric .label,
-  #nccost-metrics .metric .label, #erp-metrics .metric .label,
-  #analysis-metrics .metric .label, #worker-metrics .metric .label,
-  #tab-kpi #kpi-summary .team-card-heading .label, #monthly-summary .label {
-    font-size:16px !important; font-weight:600; line-height:22px;
-  }
-  #nccost-metrics .label, #erp-metrics .label, #analysis-metrics .label,
-  #worker-metrics .label, #tab-kpi #kpi-summary .team-card-heading, #monthly-summary .label {
-    height:44px; min-height:44px;
-  }
-  #nccost-metrics .value, #erp-metrics .value, #analysis-metrics .value,
-  #worker-metrics .metric .value, #tab-kpi #kpi-summary .value, #monthly-summary .value {
-    font-size:30px !important; line-height:36px;
-  }
-  #nccost-metrics .sub, #erp-metrics .sub, #analysis-metrics .sub,
-  #tab-kpi #kpi-summary .sub, #monthly-summary .sub {
-    font-size:14px !important; line-height:20px;
-  }
-  #tab-kpi #kpi-summary .team-card-heading .kpi-pill { font-size:12px; padding:3px 6px; }
-  @media(max-width:600px) {
-    #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics,
-    #tab-kpi #kpi-summary, #monthly-summary, #tab-kpi .team-month-grid {
-      grid-template-columns:minmax(0,1fr) !important;
-    }
-  }
-
 </style>
 
 
@@ -1452,7 +1347,7 @@
 
             <div id="nccost-gap-note"></div>
       </div>
-      <div class="metrics" id="nccost-metrics"></div>
+      <div class="metrics indicator-summary" id="nccost-metrics"></div>
 
 
       <div class="grid2">
@@ -1585,7 +1480,7 @@
         </div>
         <div id="erp-recon"></div>
               </div>
-      <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
+      <div class="metrics indicator-summary" id="erp-metrics"></div>
         <div class="card" style="padding:16px 18px;margin-bottom:16px">
           <div class="card-title">월별 부적합 추이 <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=금액(만원)</span></div>
           <div class="chart-wrap" style="height:230px"><canvas id="chartErpTrend"></canvas></div>
@@ -1689,7 +1584,7 @@
 
       <!-- 요약 지표 -->
             </div>
-      <div class="metrics" id="analysis-metrics" style="margin-bottom:20px"></div>
+      <div class="metrics indicator-summary" id="analysis-metrics"></div>
 
       <!-- Row 1: 연도별 추이 + 월별 추이 -->
       <div class="grid2">
@@ -1762,7 +1657,7 @@
 
       <!-- 등급 요약 카드 -->
             </div>
-      <div class="metrics" id="worker-metrics" style="margin-bottom:20px"></div>
+      <div class="metrics indicator-summary" id="worker-metrics"></div>
 
       <div class="grid2">
         <div class="card">
@@ -1865,7 +1760,7 @@
         </span>
       </div>
             </div>
-      <div id="kpi-summary" class="metrics" style="margin-bottom:20px"></div>
+      <div id="kpi-summary" class="metrics indicator-summary"></div>
 
       <!-- 월별 상세 보기 -->
       <div class="section-header" style="margin:6px 0 6px">
@@ -5415,7 +5310,7 @@ function renderMonthly() {
           <div style="width:${selfPct}%;background:#17A2B8"></div><div style="width:${100 - selfPct}%;background:#E67E22"></div></div>`, '#7B4EA0');
   }
   body.innerHTML = `
-    <div id="monthly-summary">
+    <div id="monthly-summary" class="indicator-summary">
       ${bigCard('부적합 건수' + (isErpM(curM) ? ' (잠정)' : ''), curRows.length, '건', '전월 대비 ' + delta(curRows.length, prevRows.length), null, true)}
       ${bigCard('품질비용' + (isErpM(curM) ? ' (잠정)' : ''), man(curCost), '만원', isErpM(curM) ? 'ERP 공정중발견 포함 · 미확정' : '전월 대비 ' + delta(curCost, prevCost), '#C0392B')}
       ${bigCard('건당 평균비용', man(avgCost), '만원', curRows.length + '건 기준')}
