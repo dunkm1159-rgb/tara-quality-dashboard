@@ -788,9 +788,9 @@
             <span class="dash-icon-chip"><i class="ti ti-file-text"></i></span>
             작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span>
           </div>
-          <button onclick="copyPrintTargets()" class="btn btn-secondary btn-sm"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
+          <button onclick="copyPrintTargets()" style="background:#14181d;color:#fff;border:none;border-radius:9px;padding:7px 15px;font-size:12.5px;font-weight:700;cursor:pointer;"><i class="ti ti-copy"></i> 작업번호 전체 복사</button>
         </div>
-        <div style="font-size:11.5px;color:#aaa;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
+        <div style="font-size:11.5px;color:#8a93a0;font-weight:600;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
         <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
       </div>
 
@@ -2951,21 +2951,27 @@ function renderPrintTargets() {
   const cnt = document.getElementById('print-target-count');
   if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  const rowHtml = (r, color, showDate) => `<tr>
-     <td style="width:48px;white-space:nowrap;color:#888;padding:2px 8px 2px 0">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</td>
-     <td style="width:150px;white-space:nowrap;font-family:monospace;color:${color};padding:2px 8px 2px 0">${esc(r['주문번호'])}</td>
-     <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 8px 2px 0" title="${esc(r['제품명'])}">${esc(r['제품명'])}</td>
-     <td style="width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#888;text-align:right">${esc(r['거래처'])}</td></tr>`;
-  const table = (arr, color, showDate) => `<table style="width:100%;table-layout:fixed;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>`;
-  const head = (title, color, extra) => `<div style="font-weight:600;margin:8px 0 4px;color:${color}${extra || ''}">${title}</div>`;
+  const rowHtml = (r, color, showDate) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #f1f2f4;">
+     <span style="width:40px;flex-shrink:0;color:#8a93a0;font-size:11px;font-weight:700;">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</span>
+     <span style="flex-shrink:0;font-family:monospace;font-size:11.5px;font-weight:800;color:${color};background:${color}1a;border-radius:6px;padding:3px 8px;">${esc(r['주문번호'])}</span>
+     <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:#1d1d1f;" title="${esc(r['제품명'])}">${esc(r['제품명'])}</span>
+     <span style="flex-shrink:0;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;font-weight:700;color:#5a6270;background:#f2f3f5;border-radius:6px;padding:3px 9px;">${esc(r['거래처'])}</span>
+   </div>`;
+  const table = (arr, color, showDate) => `<div>${arr.map(r => rowHtml(r, color, showDate)).join('')}</div>`;
+  const head = (title, count, color) => `<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;">
+    <span style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:${color};">${title}</span>
+    <span style="background:${color};color:#fff;border-radius:980px;padding:1px 9px;font-size:11px;font-weight:800;">${count}</span>
+  </div>`;
   let html = '';
-  if (todayDone.length) html += head(`오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
+  if (todayDone.length) html += head('오늘 완료', todayDone.length, '#248a3d') + table(todayDone, '#248a3d', true);
   if (olderDone.length) {
-    html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;font-weight:600;margin:8px 0 4px;color:#248a3d">`
-      + `${_showOlderPrint ? '▾' : '▸'} 이전 완료 (${olderDone.length}) ${_showOlderPrint ? '접기' : '펼치기'}</div>`;
+    html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;margin:14px 0 8px;">`
+      + `<span style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#248a3d;">${_showOlderPrint ? '▾' : '▸'} 이전 완료</span>`
+      + `<span style="background:#248a3d;color:#fff;border-radius:980px;padding:1px 9px;font-size:11px;font-weight:800;">${olderDone.length}</span>`
+      + `<span style="font-size:11px;color:#8a93a0;font-weight:700;">${_showOlderPrint ? '접기' : '펼치기'}</span></div>`;
     if (_showOlderPrint) html += table(olderDone, '#248a3d', true);
   }
-  if (prog.length) html += head(`진행중 (${prog.length})`, '#c93400') + table(prog, '#c93400', false);
+  if (prog.length) html += head('진행중', prog.length, '#c93400') + table(prog, '#c93400', false);
   el.innerHTML = html || '<span style="color:#ccc">최근 완료 대상 없음</span>';
 }
 function copyPrintTargets() {
