@@ -269,6 +269,9 @@
 
   /* ── 테이블 ── */
   .tbl-wrap { overflow-x: auto; }
+  #gajebon-table thead { position: relative; z-index: 5; }
+  #gajebon-table thead th { box-shadow: inset 0 -1px #dce4e7; }
+
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th {
     text-align: left; padding: 10px 12px;
@@ -580,7 +583,7 @@
     <div id="tab-dashboard" class="tab active">
       <div class="section-header">
         <div class="section-title">대시보드 <span style="font-size:12px;color:#aaa;font-weight:400" id="dash-month"></span></div>
-        <button class="btn btn-secondary btn-sm" onclick="refreshDash()">↻ 새로고침</button>
+        <button class="btn btn-secondary btn-sm" onclick="refreshDash()">새로고침</button>
       </div>
 
       <div id="data-freshness" style="display:none"></div>
@@ -592,7 +595,7 @@
       <!-- 오늘 가제본 현황 -->
       <div class="card" style="margin-bottom:16px;padding:16px 20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #eef3f4;">
-          <div class="card-title" style="margin:0;">📋 오늘 가제본 현황 <span id="gajebon-today-date" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
+          <div class="card-title" style="margin:0;">오늘 가제본 현황 <span id="gajebon-today-date" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
           <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
         </div>
         <div id="gajebon-today-summary" style="display:flex;gap:16px;flex-wrap:wrap;">
@@ -682,7 +685,7 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div id="kpi-excel-status" style="font-size:12px;color:#888;">엑셀 미연결</div>
-      <button onclick="connectKpiExcel()" style="background:#17A2B8;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">📂 KPI 엑셀 연결</button>
+      <button onclick="connectKpiExcel()" style="background:#17A2B8;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">KPI 엑셀 연결</button>
     </div>
   </div>
 
@@ -895,7 +898,7 @@
   <!-- ERP 행 붙여넣기 → 자동 등록 -->
   <div style="background:#f5fbfc;border:1px solid #cfeaef;border-radius:10px;padding:16px 18px;margin-bottom:16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-      <div style="font-size:13.5px;font-weight:700;color:#0f6e7e">⚡ ERP 행 붙여넣기로 바로 등록</div>
+      <div style="font-size:13.5px;font-weight:700;color:#0f6e7e">ERP 행 붙여넣기로 바로 등록</div>
       <div style="font-size:11px;color:#888">ERP에서 행을 복사해 붙여넣으세요 · 여러 줄(여러 건) 한 번에 가능</div>
     </div>
     <textarea id="reg-paste" rows="3" placeholder="접수일  작업번호  거래처  담당자  제품명  수량  부적합내용  접수유형  부적합유형  설비  작업일  주야  작업자  조치사항  조치일  (탭으로 구분된 ERP 행 그대로 붙여넣기)"
@@ -1006,7 +1009,7 @@
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;align-items:center;">
       <div id="reg-msg" style="font-size:13px;color:#666;"></div>
       <button type="button" onclick="resetClaimRegForm()" style="background:#f5f5f7;color:#555;border:none;border-radius:6px;padding:9px 18px;font-size:13px;cursor:pointer;">초기화</button>
-      <button type="submit" style="background:#17A2B8;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">✅ 등록</button>
+      <button type="submit" style="background:#17A2B8;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">등록</button>
     </div>
   </form>
 
@@ -1023,7 +1026,7 @@
         <div class="section-title">부적합사고 취합대장</div>
         <div style="display:flex;align-items:center;gap:10px">
           <span id="claim-updated" style="font-size:12px;color:var(--color-text-secondary,#aaa)"></span>
-          <button onclick="exportClaims()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap">⬇ 엑셀 내려받기</button>
+          <button onclick="exportClaims()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap">엑셀 내려받기</button>
         </div>
       </div>
 
@@ -1055,7 +1058,7 @@
         <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee;display:flex;justify-content:space-between;align-items:center;gap:10px">
           <span id="claim-count"></span>
           <button id="claim-trash-btn" onclick="toggleTrash()" title="삭제한 클레임 선택 복원 / 완전삭제"
-            style="border:1px solid #e5e5e5;background:#fff;border-radius:6px;padding:3px 10px;font-size:12px;color:#666;cursor:pointer">🗑 휴지통 0</button>
+            style="border:1px solid #e5e5e5;background:#fff;border-radius:6px;padding:3px 10px;font-size:12px;color:#666;cursor:pointer">휴지통 0</button>
         </div>
         <div id="claim-trash-panel" style="display:none;padding:8px 16px;background:#fafafa;border-bottom:1px solid #f0f0ee"></div>
         <div class="tbl-wrap">
@@ -1079,7 +1082,7 @@
       <!-- 분석 탭 바로가기 -->
       <div style="margin-top:28px;padding-top:16px;border-top:1px solid #e5e5e0;text-align:center">
         <button class="btn btn-secondary" onclick="showTab('analysis', document.getElementById('nav-analysis'))" style="font-size:13px">
-          📊 상세 분석 보기 →
+          상세 분석 보기 →
         </button>
       </div>
     </div>
@@ -1097,7 +1100,7 @@
       </div>
 
       <div id="gajebon-empty" style="text-align:center;padding:60px;color:#aaa">
-        <div style="font-size:40px;margin-bottom:12px">📋</div>
+        <div style="font-size:40px;margin-bottom:12px"></div>
         <div id="gajebon-empty-msg" style="font-size:14px;margin-bottom:6px">가제본현황_누적.xlsx 파일을 불러오세요</div>
         <div style="font-size:12px;color:#ccc">C:\Users\user\Claude\Scheduled\tara-erp-gajebon-daily\가제본현황_누적.xlsx</div>
       </div>
@@ -1135,13 +1138,13 @@
           <input type="date" id="gajebon-date-from" title="시작일" onchange="renderGajebonTable()">
           <span style="line-height:32px;color:#aaa;font-size:12px">~</span>
           <input type="date" id="gajebon-date-to" title="종료일" onchange="renderGajebonTable()">
-          <button class="icon-btn primary" onclick="renderGajebonTable()" title="조회">🔍</button>
-          <button class="icon-btn ghost" onclick="clearGajebonDate()" title="초기화">↺</button>
-          <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">📑 가제본만</button>
-          <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">✅ 완료만 보이기</button>
-          <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">⏳ 진행중만</button>
-          <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">🆕 오늘 신규완료</button>
-          <button type="button" onclick="exportGajebon()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap">⬇ 엑셀 내려받기</button>
+          <button class="icon-btn primary" onclick="renderGajebonTable()" title="조회"></button>
+          <button class="icon-btn ghost" onclick="clearGajebonDate()" title="초기화"></button>
+          <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">가제본만</button>
+          <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">완료만 보이기</button>
+          <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">진행중만</button>
+          <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">오늘 신규완료</button>
+          <button type="button" onclick="exportGajebon()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap">엑셀 내려받기</button>
         </div>
 
         <div class="card" style="padding:0">
@@ -1180,7 +1183,7 @@
     <!-- ============ 품질개선팀 월간 일정 ============ -->
     <div id="tab-schedule" class="tab">
       <div class="section-header">
-        <div class="section-title">📅 품질개선팀 월간 일정</div>
+        <div class="section-title">품질개선팀 월간 일정</div>
         <button id="sched-add-btn" onclick="schedAdd()" style="border:1px solid #17A2B8;background:#17A2B8;color:#fff;border-radius:8px;padding:7px 15px;font-size:13px;cursor:pointer;font-weight:600">+ 일정 추가</button>
       </div>
       <div style="display:inline-flex;border:1px solid #d2d2d7;border-radius:8px;overflow:hidden;margin:6px 0 10px">
@@ -1225,11 +1228,32 @@
     <!-- ============ 월간 리포트 ============ -->
     <div id="tab-monthly" class="tab">
       <div class="section-header">
-        <div class="section-title">📅 월간 품질 리포트</div>
+        <div class="section-title">월간 품질 리포트</div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
           <button class="btn btn-primary btn-sm" onclick="generateGiahnDoc()"><i class="ti ti-file-text"></i> 기안 문서 생성</button>
         </div>
+      </div>
+      <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0">
+        <button class="claim-year-btn" onclick="coreVisual(this)">전체</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2022</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2023</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2024</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2025</button>
+        <button class="claim-year-btn active" onclick="coreVisual(this)">2026</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+        <span style="font-weight:600">기간(월)</span>
+        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <span>~</span>
+        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <span style="display:inline-flex;gap:4px;margin-left:4px">
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">1분기</button>
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">2분기</button>
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">3분기</button>
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">4분기</button>
+          <button class="claim-year-btn active" onclick="coreVisual(this)" style="padding:4px 9px">전체월</button>
+        </span>
       </div>
       <div id="monthly-body"></div>
     </div>
@@ -1237,10 +1261,10 @@
     <!-- ============ 작업 진행중 ============ -->
     <div id="tab-wip" class="tab">
       <div class="section-header">
-        <div class="section-title">🏭 설비별 작업현황</div>
+        <div class="section-title">설비별 작업현황</div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="wip-updated" style="font-size:12px;color:#86868b"></span>
-          <button class="icon-btn primary" onclick="reloadGajebonData()" title="지금 새로고침">🔄</button>
+          <button class="icon-btn primary" onclick="reloadGajebonData()" title="지금 새로고침"></button>
         </div>
       </div>
       <div id="wip-summary" style="margin-bottom:14px;color:#86868b;font-size:13px"></div>
@@ -1373,8 +1397,8 @@
     <div id="tab-analysis" class="tab">
       <!-- 분석 소스 서브탭 (메뉴로 대체 — 숨김) -->
       <div style="display:none;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px">
-        <button class="claim-year-btn active" id="ansrc-erp" onclick="setAnalysisSrc('erp')">🏭 외주 품질사고 <span style="font-size:10px;color:#aaa">2025~</span></button>
-        <button class="claim-year-btn" id="ansrc-claim" onclick="setAnalysisSrc('claim')">📁 클레임 DB <span style="font-size:10px;color:#aaa">전체기간</span></button>
+        <button class="claim-year-btn active" id="ansrc-erp" onclick="setAnalysisSrc('erp')">외주 품질사고 <span style="font-size:10px;color:#aaa">2025~</span></button>
+        <button class="claim-year-btn" id="ansrc-claim" onclick="setAnalysisSrc('claim')">클레임 DB <span style="font-size:10px;color:#aaa">전체기간</span></button>
       </div>
 
       <!-- ERP 부적합 분석 -->
@@ -1473,7 +1497,7 @@
       <!-- 분석 필터 헤더 -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
         <div class="section-title">부적합사고 분석</div>
-        <button class="btn btn-secondary btn-sm" onclick="renderCharts()">↻ 새로고침</button>
+        <button class="btn btn-secondary btn-sm" onclick="renderCharts()">새로고침</button>
       </div>
 
       <!-- 연도 탭 버튼 -->
@@ -1548,7 +1572,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
         <div class="section-title">공정별 심의판정결과</div>
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="gj-toggle" id="worker-anon-btn" onclick="toggleWorkerAnon()" title="시연/공유 시 이름을 가립니다">🕶 익명 모드</button>
+          <button class="gj-toggle" id="worker-anon-btn" onclick="toggleWorkerAnon()" title="시연/공유 시 이름을 가립니다">익명 모드</button>
           <div style="font-size:12px;color:#888" id="worker-updated"></div>
         </div>
       </div>
@@ -1589,11 +1613,11 @@
 
       <div class="grid2" style="margin-top:18px">
         <div class="card">
-          <div class="card-title">💰 작업자별 불량금액 (상위, 만원)</div>
+          <div class="card-title">작업자별 불량금액 (상위, 만원)</div>
           <div class="chart-wrap" style="height:240px"><canvas id="chartWorkerCost"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-title">💰 설비별 불량금액 (상위, 만원)</div>
+          <div class="card-title">설비별 불량금액 (상위, 만원)</div>
           <div class="chart-wrap" style="height:240px"><canvas id="chartEqCost"></canvas></div>
         </div>
       </div>
@@ -1654,18 +1678,39 @@
       </div>
 
       <!-- KPI 요약 카드 -->
+      <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0">
+        <button class="claim-year-btn" onclick="coreVisual(this)">전체</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2022</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2023</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2024</button>
+        <button class="claim-year-btn" onclick="coreVisual(this)">2025</button>
+        <button class="claim-year-btn active" onclick="coreVisual(this)">2026</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+        <span style="font-weight:600">기간(월)</span>
+        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <span>~</span>
+        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <span style="display:inline-flex;gap:4px;margin-left:4px">
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">1분기</button>
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">2분기</button>
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">3분기</button>
+          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">4분기</button>
+          <button class="claim-year-btn active" onclick="coreVisual(this)" style="padding:4px 9px">전체월</button>
+        </span>
+      </div>
       <div id="kpi-summary" class="metrics" style="margin-bottom:20px"></div>
 
       <!-- 월별 상세 보기 -->
       <div class="section-header" style="margin:6px 0 6px">
-        <div class="section-title" style="font-size:15px">📅 월별 KPI 현황</div>
+        <div class="section-title" style="font-size:15px">월별 KPI 현황</div>
         <div id="kpi-month-tabs" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
       <p style="font-size:12px;color:#86868b;margin:-2px 0 14px;">월을 선택하면 4개 지표의 실적과 상세 내역이 표시됩니다.</p>
       <div id="kpi-month-body" style="margin-bottom:24px"></div>
 
       <!-- 반복불량 TOP3 -->
-      <div class="section-title" style="margin-bottom:12px">① 반복불량 TOP3 재발율 <span style="font-size:12px;color:#888;font-weight:400">목표: 전년 대비 50% 감소 (연 24건 이하)</span></div>
+      <div class="section-title" style="margin-bottom:12px">반복불량 TOP3 재발율 <span style="font-size:12px;color:#888;font-weight:400">목표: 전년 대비 50% 감소 (연 24건 이하)</span></div>
       <div class="grid2">
         <div class="card">
           <div class="card-title">월별 반복불량 건수 (제판/인쇄/코팅)</div>
@@ -1678,7 +1723,7 @@
       </div>
 
       <!-- 품질비용 -->
-      <div class="section-title" style="margin:24px 0 12px">② 품질비용 전년대비 감소율 <span style="font-size:12px;color:#888;font-weight:400">자사귀책(외주 제외) 기준 · 목표: 전년(5,099만) 대비 50% 감소 (2,550만 이하)</span></div>
+      <div class="section-title" style="margin:24px 0 12px">품질비용 전년대비 감소율 <span style="font-size:12px;color:#888;font-weight:400">자사귀책(외주 제외) 기준 · 목표: 전년(5,099만) 대비 50% 감소 (2,550만 이하)</span></div>
       <div class="grid2">
         <div class="card">
           <div class="card-title">월별 품질비용 (원)</div>
@@ -1691,14 +1736,14 @@
       </div>
 
       <!-- SOP 준수율 -->
-      <div class="section-title" style="margin:24px 0 12px">③ SOP 현장 준수율 <span style="font-size:12px;color:#888;font-weight:400">목표: 월 95점 이상</span></div>
+      <div class="section-title" style="margin:24px 0 12px">SOP 현장 준수율 <span style="font-size:12px;color:#888;font-weight:400">목표: 월 95점 이상</span></div>
       <div class="card">
         <div class="card-title">월별 SOP 준수율 (공정별: 매엽·윤전·중철·코팅 + 평균)</div>
         <div class="chart-wrap" style="height:220px"><canvas id="chartSOP"></canvas></div>
       </div>
 
       <!-- 표준 미준수 사고 -->
-      <div class="section-title" style="margin:24px 0 12px">④ 표준 미준수 기인 사고건수 <span style="font-size:12px;color:#888;font-weight:400">목표: 0건</span></div>
+      <div class="section-title" style="margin:24px 0 12px">표준 미준수 기인 사고건수 <span style="font-size:12px;color:#888;font-weight:400">목표: 0건</span></div>
       <div class="grid2">
         <div class="card">
           <div class="card-title">월별 사고 건수</div>
@@ -1715,7 +1760,7 @@
 
       <!-- G7 프루프 색관리 -->
       <div class="section-header" style="margin:24px 0 6px">
-        <div class="section-title" style="font-size:15px">🎨 G7 프루프 색관리 <span style="font-size:12px;color:#888;font-weight:400">교정지 ΔE 측정 · 기준 ΔE &lt; 2.0</span></div>
+        <div class="section-title" style="font-size:15px">G7 프루프 색관리 <span style="font-size:12px;color:#888;font-weight:400">교정지 ΔE 측정 · 기준 ΔE &lt; 2.0</span></div>
         <div id="proof-dev-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
       </div>
       <div class="metrics" id="proof-metrics" style="margin-bottom:16px"></div>
@@ -1731,7 +1776,7 @@
       </div>
 
       <!-- 컬러 클레임 -->
-      <div class="section-title" style="margin:24px 0 12px">⑤ 컬러 클레임 관리 대장</div>
+      <div class="section-title" style="margin:24px 0 12px">컬러 클레임 관리 대장</div>
       <div class="card" style="padding:0">
         <div class="tbl-wrap">
           <table style="table-layout:fixed">
@@ -1750,7 +1795,7 @@
         <div class="section-title">변경 이력 <span style="font-size:12px;color:#aaa;font-weight:400">감사추적 (등록·삭제·복원)</span></div>
         <div style="display:flex;gap:8px;align-items:center">
           <input id="log-search" oninput="renderChangeLog()" placeholder="검색 (작업번호·작성자·내용)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:220px">
-          <button onclick="loadLogFromSheet()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer" title="시트에서 최신 기록 다시 불러오기">🔄 새로고침</button>
+          <button onclick="loadLogFromSheet()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer" title="시트에서 최신 기록 다시 불러오기">새로고침</button>
         </div>
       </div>
       <div style="font-size:11.5px;color:#86868b;margin-bottom:12px">모든 PC의 등록·삭제·복원 기록이 공용으로 표시됩니다. (탭 열 때 자동 동기화)</div>
@@ -1773,10 +1818,10 @@
 
     <div id="tab-access" class="tab">
       <div class="section-header" style="margin-bottom:10px">
-        <div class="section-title">🔒 접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 · 페이지 열람 이력</span></div>
+        <div class="section-title">접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 · 페이지 열람 이력</span></div>
         <div style="display:flex;gap:8px;align-items:center">
           <input id="access-search" oninput="renderAccessLog()" placeholder="검색 (이름·아이디·IP)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:200px">
-          <button onclick="loadAccessLog()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer">🔄 새로고침</button>
+          <button onclick="loadAccessLog()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer">새로고침</button>
         </div>
       </div>
       <div style="font-size:11.5px;color:#86868b;margin-bottom:12px">로그인 성공 시 자동 기록됩니다 — 누가·언제·어디서(IP) 접속했는지. (관리자만 볼 수 있어요)</div>
@@ -1806,8 +1851,8 @@
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
         <div style="display:flex;gap:8px;">
           <button id="dft-all"        class="doc-filter active" onclick="filterDocs('all',this)">전체</button>
-          <button id="dft-standard"   class="doc-filter" onclick="filterDocs('standard',this)">📋 작업표준서</button>
-          <button id="dft-instruction"class="doc-filter" onclick="filterDocs('instruction',this)">📄 작업지침서</button>
+          <button id="dft-standard"   class="doc-filter" onclick="filterDocs('standard',this)">작업표준서</button>
+          <button id="dft-instruction"class="doc-filter" onclick="filterDocs('instruction',this)">작업지침서</button>
         </div>
         <div style="display:flex;gap:8px;">
           <button class="btn-blue" onclick="addDocFile('standard')">+ 작업표준서 추가</button>
@@ -2446,7 +2491,7 @@ function renderWorker(skipTabs) {
       plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, ticks:{ precision:0 } } } }
   });
 
-  // 💰 작업자별 불량금액 상위
+  // 작업자별 불량금액 상위
   const empCostTop = Object.entries(emp).map(([k,v])=>[k, v.cost||0]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10);
   if (window._wCharts.cost) window._wCharts.cost.destroy();
   const c3 = document.getElementById('chartWorkerCost');
@@ -2458,7 +2503,7 @@ function renderWorker(skipTabs) {
       scales:{ x:{ beginAtZero:true, ticks:{ callback:v=>v.toLocaleString() } } } }
   });
 
-  // 💰 설비별 불량금액 상위
+  // 설비별 불량금액 상위
   const eqCost = {};
   rows.forEach(r => { if (r[4]) eqCost[r[4]] = (eqCost[r[4]]||0) + (r[8]||0); });
   const eqCostTop = Object.entries(eqCost).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -2520,6 +2565,11 @@ function closeTab(name) {
   else renderOpenTabs();
 }
 
+function coreVisual(b) {
+  var g = b.parentNode;
+  g.querySelectorAll('.claim-year-btn').forEach(function (x) { x.classList.remove('active'); });
+  b.classList.add('active');
+}
 function toggleCoreMenu(btn) {
   var sub = document.getElementById('core-sub');
   if (!sub) return;
@@ -2715,13 +2765,13 @@ function renderPrintTargets() {
   const table = (arr, color, showDate) => `<table style="width:100%;table-layout:fixed;font-size:12.5px"><tbody>${arr.map(r => rowHtml(r, color, showDate)).join('')}</tbody></table>`;
   const head = (title, color, extra) => `<div style="font-weight:600;margin:8px 0 4px;color:${color}${extra || ''}">${title}</div>`;
   let html = '';
-  if (todayDone.length) html += head(`✅ 오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
+  if (todayDone.length) html += head(`오늘 완료 (${todayDone.length})`, '#248a3d') + table(todayDone, '#248a3d', true);
   if (olderDone.length) {
     html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;font-weight:600;margin:8px 0 4px;color:#248a3d">`
       + `${_showOlderPrint ? '▾' : '▸'} 이전 완료 (${olderDone.length}) ${_showOlderPrint ? '접기' : '펼치기'}</div>`;
     if (_showOlderPrint) html += table(olderDone, '#248a3d', true);
   }
-  if (prog.length) html += head(`🖨 진행중 (${prog.length})`, '#c93400') + table(prog, '#c93400', false);
+  if (prog.length) html += head(`진행중 (${prog.length})`, '#c93400') + table(prog, '#c93400', false);
   el.innerHTML = html || '<span style="color:#ccc">최근 완료 대상 없음</span>';
 }
 function copyPrintTargets() {
@@ -2761,13 +2811,13 @@ function renderFreshness() {
   if (days <= 1) {
     // 정상: 작고 은은하게 (한 줄 회색 텍스트)
     el.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:10px;font-size:11px;color:#9aa0a6';
-    el.innerHTML = `<span style="font-size:11px">✅</span>데이터 최신 · ${stamp}`;
+    el.innerHTML = `<span style="font-size:11px"></span>데이터 최신 · ${stamp}`;
     return;
   }
   // 경고: 눈에 띄게
   let bg, bd, fg, icon, msg;
-  if (days <= 3) { bg='#fff9e9'; bd='#f0e0a8'; fg='#a6812a'; icon='⏳'; msg=`${days}일째 갱신 없음 — 확인 권장`; }
-  else { bg='#fdeeee'; bd='#f2c4c4'; fg='#c0392b'; icon='⚠️'; msg=`${days}일째 자동수집 멈춤 — 확인 필요`; }
+  if (days <= 3) { bg='#fff9e9'; bd='#f0e0a8'; fg='#a6812a'; icon=''; msg=`${days}일째 갱신 없음 — 확인 권장`; }
+  else { bg='#fdeeee'; bd='#f2c4c4'; fg='#c0392b'; icon=''; msg=`${days}일째 자동수집 멈춤 — 확인 필요`; }
   el.style.cssText = `margin-bottom:14px;padding:9px 14px;border-radius:9px;background:${bg};border:1px solid ${bd};color:${fg};font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap`;
   el.innerHTML = `<span style="font-size:14px">${icon}</span><b>${msg}</b>`
     + `<span style="color:#888;font-weight:400">· 마지막 자동실행 ${stamp} (${latestLabel})</span>`
@@ -3160,7 +3210,7 @@ function renderEquipDefect() {
       <tr id="equip-detail-${idx}" style="display:none;background:#fafaf8">
         <td colspan="${4+topTypes.length}" style="padding:0">
           <div style="padding:10px 16px 14px">
-            <div style="font-size:11px;color:#888;margin-bottom:8px">📋 <b>${equip}</b> 전체 내역 ${info.total}건</div>
+            <div style="font-size:11px;color:#888;margin-bottom:8px"><b>${equip}</b> 전체 내역 ${info.total}건</div>
             <table style="width:100%;font-size:11px;border-collapse:collapse">
               <thead><tr style="background:#f0f0ee">
                 <th style="padding:5px 8px;text-align:left;color:#666">접수일</th>
@@ -3424,7 +3474,7 @@ function renderInspTable() {
         <td>${rate}%</td>
         <td><span class="badge badge-${i.result}">${i.result==='pass'?'합격':'불합격'}</span></td>
         <td>
-          <button class="btn btn-secondary btn-sm" onclick="printInspById('${i.id}')">🖨</button>
+          <button class="btn btn-secondary btn-sm" onclick="printInspById('${i.id}')"></button>
           <button class="btn btn-danger btn-sm" onclick="deleteInsp('${i.id}')">삭제</button>
         </td>
       </tr>
@@ -3513,7 +3563,7 @@ function renderCapaTable() {
       <div class="metric"><div class="label">전체 CAPA</div><div class="value">${total}</div><div class="sub neutral">건</div></div>
       <div class="metric"><div class="label">진행 중</div><div class="value">${inProg}</div><div class="sub ${inProg>0?'up':'neutral'}">건</div></div>
       <div class="metric"><div class="label">완료</div><div class="value">${done}</div><div class="sub neutral">건</div></div>
-      <div class="metric"><div class="label">기한 초과</div><div class="value">${overdue}</div><div class="sub ${overdue>0?'up':'neutral'}">${overdue>0?'⚠️ 확인 필요':'-'}</div></div>
+      <div class="metric"><div class="label">기한 초과</div><div class="value">${overdue}</div><div class="sub ${overdue>0?'up':'neutral'}">${overdue>0?'확인 필요':'-'}</div></div>
     `;
   }
   const tbody = document.getElementById('capa-tbody');
@@ -4121,7 +4171,7 @@ function editClaim(key) {
   _editKey = key; _editOrig = { order: String(r[1] || '').trim(), def: String(r[6] || '').trim() };
   if (typeof showTab === 'function') showTab('register', document.getElementById('nav-register'));
   const msg = document.getElementById('reg-msg');
-  if (msg) { msg.textContent = '✏️ 수정 모드 — 내용 고치고 아래 "✅ 등록"을 누르면 기존 건이 교체됩니다.'; msg.style.color = '#1F5C99'; }
+  if (msg) { msg.textContent = '수정 모드 — 내용 고치고 아래 "등록"을 누르면 기존 건이 교체됩니다.'; msg.style.color = '#1F5C99'; }
   try { window.scrollTo(0, 0); } catch (e) {}
 }
 
@@ -4178,8 +4228,8 @@ async function loadAccessLog(){
   const tb=document.getElementById('access-tbody');
   const build=rows=>{ _accessRows=(rows||[]).filter(row=>{const k=String(row[1]||'');return k==='ACCESS'||k==='PAGEVIEW';})
       .map(row=>{const k=String(row[1]||'');return k==='PAGEVIEW'
-        ? {t:row[2]||'',user:row[3]||'',act:'📄 '+(row[4]||''),ip:row[5]||''}
-        : {t:row[2]||'',user:row[3]||'',act:'🔑 로그인',ip:row[4]||''};}); renderAccessLog(); };
+        ? {t:row[2]||'',user:row[3]||'',act:''+(row[4]||''),ip:row[5]||''}
+        : {t:row[2]||'',user:row[3]||'',act:'로그인',ip:row[4]||''};}); renderAccessLog(); };
   if(_sheetAllCache && _sheetAllCache.rows){ build(_sheetAllCache.rows); }          // 캐시로 즉시 표시
   else if(tb){ tb.innerHTML='<tr><td colspan="4" style="padding:16px;color:#aaa">불러오는 중…</td></tr>'; }
   try{ const rows=await fetchSheetAll(); build(rows); }                             // 백그라운드 최신화
@@ -4250,7 +4300,7 @@ function renderTrashPanel() {
   const btn = document.getElementById('claim-trash-btn');
   const panel = document.getElementById('claim-trash-panel');
   const t = allTrash();
-  if (btn) btn.textContent = '🗑 휴지통 ' + t.length;
+  if (btn) btn.textContent = '휴지통 ' + t.length;
   if (!panel) return;
   if (!_trashOpen) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
@@ -5149,7 +5199,7 @@ function renderMonthly() {
     const won = v => (v || 0).toLocaleString();
     gianHtml = `
     <div class="card" style="padding:16px 18px;margin-bottom:16px;border:1.5px solid rgba(23,162,184,0.35)">
-      <div style="font-weight:700;font-size:13px;margin-bottom:12px">📄 기안용 요약 <span style="font-size:11px;font-weight:400;color:#aaa">품질사고 관리대장 기준 · 그대로 기안에 옮겨 쓰세요</span></div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px">기안용 요약 <span style="font-size:11px;font-weight:400;color:#aaa">품질사고 관리대장 기준 · 그대로 기안에 옮겨 쓰세요</span></div>
       <div style="font-weight:600;font-size:12.5px;margin:4px 0 8px">1. ${Number(curM.slice(5, 7))}월 품질 사고 금액</div>
       <table style="width:100%;font-size:12.5px;margin-bottom:18px">
         <thead><tr><th>구분</th><th style="text-align:right">발생 비용</th></tr></thead>
@@ -5206,14 +5256,14 @@ function renderMonthly() {
       ${extraCards}
     </div>
     <div style="display:flex;gap:4px;border-bottom:2px solid #e5e5e0;margin-bottom:16px">
-      <button class="claim-year-btn ${monthlySub === 'summary' ? 'active' : ''}" onclick="setMonthlySub('summary')">📊 요약</button>
-      <button class="claim-year-btn ${monthlySub === 'giahn' ? 'active' : ''}" onclick="setMonthlySub('giahn')">📄 기안용</button>
-      <button class="claim-year-btn ${monthlySub === 'detail' ? 'active' : ''}" onclick="setMonthlySub('detail')">📋 상세내역 ${detailRows.length}</button>
+      <button class="claim-year-btn ${monthlySub === 'summary' ? 'active' : ''}" onclick="setMonthlySub('summary')">요약</button>
+      <button class="claim-year-btn ${monthlySub === 'giahn' ? 'active' : ''}" onclick="setMonthlySub('giahn')">기안용</button>
+      <button class="claim-year-btn ${monthlySub === 'detail' ? 'active' : ''}" onclick="setMonthlySub('detail')">상세내역 ${detailRows.length}</button>
     </div>
 
     <div style="display:${monthlySub === 'summary' ? 'block' : 'none'}">
       <div class="card" style="padding:16px 18px;margin-bottom:16px">
-        <div style="font-weight:700;font-size:13px;margin-bottom:10px">📈 월별 추이 (최근 12개월) <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=비용(만원)</span></div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px">월별 추이 (최근 12개월) <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=비용(만원)</span></div>
         <div style="height:240px"><canvas id="monthly-trend"></canvas></div>
       </div>
       <div class="grid2" style="margin-bottom:16px">
@@ -5244,7 +5294,7 @@ function renderMonthly() {
     </div>
 
     <div class="card" style="padding:16px 18px;margin-bottom:14px;display:${monthlySub === 'detail' ? 'block' : 'none'}">
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📋 ${curM.split('-')[1]}월 부적합 상세 <span style="font-size:11px;font-weight:400;color:#aaa">금액 큰 순 · ${detailRows.length}건</span></div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">${curM.split('-')[1]}월 부적합 상세 <span style="font-size:11px;font-weight:400;color:#aaa">금액 큰 순 · ${detailRows.length}건</span></div>
       <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
         <table style="width:100%;font-size:12.5px">
           <thead><tr>
@@ -5303,7 +5353,30 @@ function setupGajebonInfiniteScroll() {
   _gjScrollBound = true;
 }
 
+// Keep the original interactive header aligned with horizontal scrolling.
+// CSS sticky alone attaches to .tbl-wrap rather than the page's .content scroller.
+function updateGajebonStickyHeader() {
+  const table = document.getElementById('gajebon-table');
+  const scroller = table?.closest('.content');
+  if (!scroller || !table.offsetHeight) return;
+  const head = table.tHead;
+  const offset = Math.min(Math.max(0, scroller.getBoundingClientRect().top - table.getBoundingClientRect().top),
+    Math.max(0, table.offsetHeight - head.offsetHeight));
+  head.style.transform = `translateY(${offset}px)`;
+}
+let gajebonHeaderFrame = 0;
+function scheduleGajebonStickyHeader() {
+  if (gajebonHeaderFrame) return;
+  gajebonHeaderFrame = requestAnimationFrame(() => {
+    gajebonHeaderFrame = 0;
+    updateGajebonStickyHeader();
+  });
+}
+document.addEventListener('scroll', scheduleGajebonStickyHeader, {capture:true, passive:true});
+window.addEventListener('resize', scheduleGajebonStickyHeader);
+
 function renderGajebonTable() {
+  scheduleGajebonStickyHeader();
   applyGajebonSavedStatus();
   showGajebonSaveStatus();
   syncOvsCols();     // 해외영업본부 탭에서만 F&G/발송견본 등 컬럼 노출
@@ -6313,7 +6386,7 @@ async function connectRegExcel() {
 function setRegStatus(name, ok) {
   const el = document.getElementById('reg-excel-status');
   if (!el) return;
-  el.textContent = ok ? `✅ ${name}` : '엑셀 미연결';
+  el.textContent = ok ? `${name}` : '엑셀 미연결';
   el.style.color  = ok ? '#27ae60' : '#888';
 }
 
@@ -6472,7 +6545,7 @@ function parsePasteRegister() {
   if (typeof renderCharts === 'function') renderCharts();
   const ta = document.getElementById('reg-paste'); if (ta) ta.value = '';
   const pv = document.getElementById('reg-paste-preview'); if (pv) pv.innerHTML = '';
-  if (msg) { msg.textContent = `✅ ${n}건 등록 완료${dup ? ' (중복 ' + dup + '건 제외)' : ''}`; msg.style.color = '#248a3d'; }
+  if (msg) { msg.textContent = `${n}건 등록 완료${dup ? ' (중복 ' + dup + '건 제외)' : ''}`; msg.style.color = '#248a3d'; }
 }
 
 /* ── 폼 제출 ── */
@@ -6609,7 +6682,7 @@ async function submitClaimReg(e) {
   regSessionLog.unshift({ date:dateVal, client:clientVal, product:productVal, qual:qualVal, def:defVal, saved });
   updateRegLog();
 
-  msgEl.textContent = '✅ 등록 완료 (클라우드 저장됨)';
+  msgEl.textContent = '등록 완료 (클라우드 저장됨)';
   msgEl.style.color = '#248a3d';
   setTimeout(() => resetClaimRegForm(), 2000);
 }
@@ -6627,7 +6700,7 @@ function updateRegLog() {
       <span style="color:#555; flex:1;">${r.product.slice(0,30)}${r.product.length>30?'…':''}</span>
       <span style="background:#e8f0fb; color:#17A2B8; border-radius:4px; padding:2px 7px; font-size:11px;">${r.qual}</span>
       <span style="background:#fdf0e8; color:#c0392b; border-radius:4px; padding:2px 7px; font-size:11px;">${r.def}</span>
-      <span style="font-size:11px; color:${r.saved?'#27ae60':'#e67e22'};">${r.saved?'💾 엑셀저장':'📋 메모리만'}</span>
+      <span style="font-size:11px; color:${r.saved?'#27ae60':'#e67e22'};">${r.saved?'엑셀저장':'메모리만'}</span>
     </div>`
   ).join('');
 }
@@ -6810,7 +6883,7 @@ async function connectKpiExcel() {
       types: [{ description:'Excel', accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']} }]
     });
     kpiExcelHandle = h;
-    document.getElementById('kpi-excel-status').textContent = '✅ ' + h.name;
+    document.getElementById('kpi-excel-status').textContent = '' + h.name;
     document.getElementById('kpi-excel-status').style.color = '#27ae60';
   } catch(e) { if (e.name !== 'AbortError') console.error(e); }
 }
@@ -6872,7 +6945,7 @@ async function saveKpiTop3() {
     {r:row, c:6, v:sogyae, t:'n'},
     {r:row, c:7, v:note,   t:'s'},
   ]);
-  kMsg('top3-msg', saved ? `✅ ${m} 엑셀 저장됨` : `✅ ${m} 저장됨 (엑셀 미연결)`, true);
+  kMsg('top3-msg', saved ? `${m} 엑셀 저장됨` : `${m} 저장됨 (엑셀 미연결)`, true);
   renderKpiLog('top3', ov.top3, r => `${r.m} | 제판:${r.제판} 인쇄:${r.인쇄} 코팅:${r.코팅} 소계:${r.total}`);
 }
 
@@ -6908,7 +6981,7 @@ async function saveKpiCost() {
     {r:row, c:8, v:etc,       t:'n'},
     {r:row, c:9, v:sogyae,    t:'n'},
   ]);
-  kMsg('cost-msg', saved ? `✅ ${m} 엑셀 저장됨` : `✅ ${m} 저장됨 (엑셀 미연결)`, true);
+  kMsg('cost-msg', saved ? `${m} 엑셀 저장됨` : `${m} 저장됨 (엑셀 미연결)`, true);
   renderKpiLog('cost', ov.cost, r => `${r.m} | ${(r.소계||0).toLocaleString()}원`);
 }
 
@@ -6940,7 +7013,7 @@ async function saveKpiSop() {
     {r:row, c:3, v:actual, t:'n'},   // 평균(실적)
     {r:row, c:5, v:note,   t:'s'},
   ]);
-  kMsg('sop-msg', saved ? `✅ ${m} 저장 (평균 ${actual ?? '-'}점)` : `✅ ${m} 저장됨 (엑셀 미연결)`, true);
+  kMsg('sop-msg', saved ? `${m} 저장 (평균 ${actual ?? '-'}점)` : `${m} 저장됨 (엑셀 미연결)`, true);
   renderKpiLog('sop', ov.sop, r => `${r.m} | 매엽${r.매엽 ?? '-'} 윤전${r.윤전 ?? '-'} 중철${r.중철 ?? '-'} 코팅${r.코팅 ?? '-'} (평균 ${r.actual ?? '-'})`);
 }
 
@@ -6969,7 +7042,7 @@ async function saveKpiStd() {
     {r:row, c:3, v:actual, t:'n'},
     {r:row, c:5, v:note,   t:'s'},
   ]);
-  kMsg('std-msg', saved ? `✅ ${m} 엑셀 저장됨` : `✅ ${m} 저장됨 (엑셀 미연결)`, true);
+  kMsg('std-msg', saved ? `${m} 엑셀 저장됨` : `${m} 저장됨 (엑셀 미연결)`, true);
   renderKpiLog('std', ov.std, r => `${r.m} | ${r.actual}건 ${r.note||''}`);
 }
 
@@ -6979,7 +7052,7 @@ async function saveKpiStd() {
 async function saveKpiColor() {
   const date = kv('color-date'), client = kv('color-client');
   const product = kv('color-product'), detail = kv('color-detail'), cause = kv('color-cause');
-  if (!date || !client) { kMsg('color-msg', '❌ 날짜·고객사 필수', false); return; }
+  if (!date || !client) { kMsg('color-msg', '날짜·고객사 필수', false); return; }
 
   const ov = loadKpiOverrides();
   if (!ov.colorClaim) ov.colorClaim = [];
@@ -7020,7 +7093,7 @@ async function saveKpiColor() {
       }
     } catch(e) { console.error(e); }
   }
-  kMsg('color-msg', saved ? '✅ 엑셀 저장됨' : '✅ 저장됨 (엑셀 미연결)', true);
+  kMsg('color-msg', saved ? '엑셀 저장됨' : '저장됨 (엑셀 미연결)', true);
   renderKpiLog('color', ov.colorClaim, r => `${r.date} | ${r.client} | ${r.product}`);
 }
 
@@ -7534,7 +7607,7 @@ function renderKpi() {
 
   const mLabels = D.top3.monthly.map(r=>r.m);
 
-  // ① 반복불량 월별 스택바
+  // 반복불량 월별 스택바
   try {
     if(chartInstances.chartTop3Monthly){chartInstances.chartTop3Monthly.destroy();}
     const ctx = document.getElementById('chartTop3Monthly');
@@ -7554,7 +7627,7 @@ function renderKpi() {
     });
   } catch(e){}
 
-  // ① 공정별 누적 도넛
+  // 공정별 누적 도넛
   try {
     if(chartInstances.chartTop3Process){chartInstances.chartTop3Process.destroy();}
     const ctx = document.getElementById('chartTop3Process');
@@ -7570,7 +7643,7 @@ function renderKpi() {
     });
   } catch(e){}
 
-  // ② 품질비용 월별 막대
+  // 품질비용 월별 막대
   try {
     if(chartInstances.chartCostMonthly){chartInstances.chartCostMonthly.destroy();}
     const ctx = document.getElementById('chartCostMonthly');
@@ -7592,7 +7665,7 @@ function renderKpi() {
     });
   } catch(e){}
 
-  // ② 공정별 비용 도넛
+  // 공정별 비용 도넛
   try {
     if(chartInstances.chartCostProcess){chartInstances.chartCostProcess.destroy();}
     const ctx = document.getElementById('chartCostProcess');
@@ -7611,7 +7684,7 @@ function renderKpi() {
     });
   } catch(e){}
 
-  // ③ SOP 준수율 꺾은선
+  // SOP 준수율 꺾은선
   try {
     if(chartInstances.chartSOP){chartInstances.chartSOP.destroy();}
     const ctx = document.getElementById('chartSOP');
@@ -7634,7 +7707,7 @@ function renderKpi() {
     });
   } catch(e){}
 
-  // ④ 표준미준수 막대
+  // 표준미준수 막대
   try {
     if(chartInstances.chartStd){chartInstances.chartStd.destroy();}
     const ctx = document.getElementById('chartStd');
@@ -7653,7 +7726,7 @@ function renderKpi() {
     });
   } catch(e){}
 
-  // ④ 표준미준수 테이블
+  // 표준미준수 테이블
   const stdTbody = document.getElementById('kpi-std-tbody');
   if(stdTbody) {
     const rows = D.std.monthly.filter(r=>r.actual>0||r.note);
@@ -7662,7 +7735,7 @@ function renderKpi() {
     ).join('') : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:12px;">사고 없음</td></tr>';
   }
 
-  // ⑤ 컬러 클레임 테이블
+  // 컬러 클레임 테이블
   const colorTbody = document.getElementById('kpi-color-tbody');
   if(colorTbody) {
     const ce = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -7893,8 +7966,8 @@ function renderDocsList() {
     return;
   }
   grid.innerHTML = filtered.map(function(doc) {
-    const icon = doc.fileType === 'excel' ? '📊' : '📑';
-    const cat = doc.category === 'standard' ? '📋 작업표준서' : '📄 작업지침서';
+    const icon = doc.fileType === 'excel' ? '' : '';
+    const cat = doc.category === 'standard' ? '작업표준서' : '작업지침서';
     const size = doc.size ? (doc.size > 1048576 ? (doc.size/1048576).toFixed(1)+'MB' : (doc.size/1024).toFixed(0)+'KB') : '';
     const date = doc.addedAt ? doc.addedAt.slice(0,10) : '';
     const cardId = 'doc-card-' + doc.id;
