@@ -857,6 +857,22 @@
         </div>
         <div id="dash-equip-table" style="display:block"></div>
       </div>
+
+      <!-- 품질 핵심지표 그래프 (임원 한눈에 파악용) -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">품질 핵심지표</div>
+        <button onclick="showTab('core',document.getElementById('nav-core-dash'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">월별 품질비용 추이 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="home-cost-year-label"></span></div>
+          <div class="chart-wrap"><canvas id="home-chart-cost"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">등급별 사고 분포 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="home-worker-year-label"></span></div>
+          <div class="chart-wrap"><canvas id="home-chart-worker"></canvas></div>
+        </div>
+      </div>
     </div>
 
     <!-- ============ 품질 핵심지표 요약 ============ -->
@@ -2852,24 +2868,29 @@ function renderCoreSummary() {
     </div>`;
   }).join('');
 
+  renderCoreTrendCharts('core-chart-cost', 'core-chart-worker', 'core-cost-year-label', 'core-worker-year-label');
+}
+// 품질 핵심지표 그래프 2종(월별 품질비용 추이 / 등급별 사고 분포) — 핵심지표 요약 화면과 대시보드 홈 화면에서 공용으로 사용
+function renderCoreTrendCharts(costCanvasId, workerCanvasId, costLabelId, workerLabelId) {
+  const H = window.CORE_HEADLINES || {};
   // 월별 품질비용 추이 (본부 품질 KPI와 동일 데이터원)
   try {
     const ND = window.NCCOST_DATA || {};
     const yd = ND[nccostYear];
-    const yLbl = document.getElementById('core-cost-year-label');
+    const yLbl = costLabelId && document.getElementById(costLabelId);
     if (yLbl) yLbl.textContent = nccostYear ? nccostYear + '년' : '';
     if (yd && yd.months) {
       const costVals = NC_MONTHS.map(m => Math.round((yd.months[m]?.cost || 0) / 10000));
-      renderBar('core-chart-cost', NC_MONTHS, costVals, '#17A2B8');
+      renderBar(costCanvasId, NC_MONTHS, costVals, '#17A2B8');
     }
   } catch (e) { console.warn('core cost chart error', e); }
 
   // 등급별 사고 분포 (공정별 심의판정결과와 동일 데이터원)
   try {
-    const wLbl = document.getElementById('core-worker-year-label');
+    const wLbl = workerLabelId && document.getElementById(workerLabelId);
     const lv = H.worker && H.worker.lvCnt;
     if (wLbl) wLbl.textContent = (H.worker && H.worker.year) ? H.worker.year + '년' : '전체';
-    if (lv) renderPie('core-chart-worker', ['면책(Lv1)','경고(Lv2)','중대경고(Lv3)','치명적위반(Lv4)'], [lv[1]||0, lv[2]||0, lv[3]||0, lv[4]||0]);
+    if (lv) renderPie(workerCanvasId, ['면책(Lv1)','경고(Lv2)','중대경고(Lv3)','치명적위반(Lv4)'], [lv[1]||0, lv[2]||0, lv[3]||0, lv[4]||0]);
   } catch (e) { console.warn('core worker chart error', e); }
 }
 function showTab(name, btn) {
@@ -3182,6 +3203,11 @@ function refreshDash() {
   renderEquipDefect();
   renderGajebonTodaySummary();
   if (typeof renderGajCal === 'function') renderGajCal();
+
+  // ─ 품질 핵심지표 그래프 (하단) ─
+  try { renderNcCost(); } catch (e) {}
+  try { renderWorker(true); } catch (e) {}
+  renderCoreTrendCharts('home-chart-cost', 'home-chart-worker', 'home-cost-year-label', 'home-worker-year-label');
 }
 
 function renderDashCharts(year) {
