@@ -6789,14 +6789,14 @@ function updateRegLog() {
 function gajTodayCards(done, progress, total, doneSamples, progressSamples) {
   const escape = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const cards = [
-    { kind:'done', label:'??', icon:'?', count:done, note:doneSamples.filter(Boolean).join(', ') || '?? ?? ??' },
-    { kind:'progress', label:'???', icon:'?', count:progress, note:progressSamples.filter(Boolean).join(', ') || '?? ?? ??' },
-    { kind:'total', label:'??', icon:'?', count:total, note:'?? + ???' }
+    { kind:'done', label:'완료', icon:'&#10003;', count:done, note:doneSamples.filter(Boolean).join(', ') || '완료 내역 없음' },
+    { kind:'progress', label:'진행중', icon:'&#9687;', count:progress, note:progressSamples.filter(Boolean).join(', ') || '진행 내역 없음' },
+    { kind:'total', label:'전체', icon:'&#8801;', count:total, note:'완료 + 진행중' }
   ];
   return '<div class="gaj-today-grid">' + cards.map(card =>
     '<div class="gaj-today-stat is-' + card.kind + '">' +
       '<div class="gaj-today-label">' + card.label + '<span class="gaj-today-icon" aria-hidden="true">' + card.icon + '</span></div>' +
-      '<div class="gaj-today-value">' + card.count.toLocaleString('ko-KR') + '<span>?</span></div>' +
+      '<div class="gaj-today-value">' + card.count.toLocaleString('ko-KR') + '<span>건</span></div>' +
       '<div class="gaj-today-note" title="' + escape(card.note) + '">' + escape(card.note) + '</div>' +
     '</div>'
   ).join('') + '</div>';
