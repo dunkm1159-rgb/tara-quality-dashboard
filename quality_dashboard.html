@@ -2187,8 +2187,8 @@ function renderVendor() {
   mkChart('chartVendorRank', 'vRank', {
     type: 'bar',
     data: { labels: rk.map(v => v.name), datasets: [
-      { label: '금액(만)', data: rk.map(v => Math.round(v.cost / 10000)), backgroundColor: '#E67E22', xAxisID: 'x' },
-      { type: 'line', label: '건수', data: rk.map(v => v.cnt), borderColor: '#1F5C99', backgroundColor: '#1F5C99', xAxisID: 'x1' }
+      { label: '금액(만)', data: rk.map(v => Math.round(v.cost / 10000)), backgroundColor: '#E67E22', xAxisID: 'x', order: 1 },
+      { type: 'line', label: '건수', data: rk.map(v => v.cnt), showLine: false, pointRadius: 5, pointHoverRadius: 7, pointBorderColor: '#fff', pointBorderWidth: 1.5, borderColor: '#1F5C99', backgroundColor: '#1F5C99', xAxisID: 'x1', order: 0 }
     ] },
     options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, scales: {
       x: { type:'linear', beginAtZero:true, position:'bottom', title:{display:true,text:'금액(만원)'} },
