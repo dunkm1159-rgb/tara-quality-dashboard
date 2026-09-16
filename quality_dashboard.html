@@ -745,7 +745,7 @@
       </button>
     </div>
     <div style="margin-left:auto;padding:0 6px 0 14px;font-size:10.5px;color:rgba(255,255,255,0.6);white-space:nowrap;flex-shrink:0" title="이 화면이 만들어진 시각 — 최신인지 확인용">
-      <span id="build-stamp">9/16 · v1.1.1</span>
+      <span id="build-stamp">9/17 · v1.1.1</span>
     </div>
   </aside>
 
@@ -8431,7 +8431,7 @@ async function loadSheetClaims(){
     // 관리대장(파일본)은 시트보다 시간상 앞 → VOIDKEY 있으면 교체 대상으로 제거
     if(voidKeyIdx.size){ claimData = claimData.filter(r => !voidKeyIdx.has(rowKey(r))); }
     const haveOrders = new Set(claimData.map(r => String(r[1]||'').trim()));  // 이미 있는 작업번호
-    const isMarker = v => { v=String(v); return v.startsWith('TEST')||v.startsWith('VOID:')||v.startsWith('VOIDKEY:')||v.startsWith('TRASH:')||v.startsWith('UNTRASH:')||v==='LOG'||v==='ACCESS'; };
+    const isMarker = v => { v=String(v); return v.startsWith('TEST')||v.startsWith('VOID:')||v.startsWith('VOIDKEY:')||v.startsWith('TRASH:')||v.startsWith('UNTRASH:')||v==='LOG'||v==='ACCESS'||v==='PAGEVIEW'; };
     const add = j.rows
       .map((row, idx) => ({ row, idx }))
       .filter(o => o.row && o.row[1] && !isMarker(o.row[1]))
@@ -8452,19 +8452,26 @@ async function loadSheetClaims(){
       if (_seen.has(k)) return false; _seen.add(k); return true;
     });
     if(addDedup.length) claimData = claimData.concat(addDedup);
-    // 시트 보강: 파일본은 품질유형이 공란(→'기타')이라, 시트에 값이 있으면 채워넣는다.
-    // (작업번호+부적합유형으로 매칭. 조치사항도 비어있으면 시트값으로 채움)
-    const sheetInfo = {};
+    // 시트 보강: 파일본은 품질유형이 공란(→'기타')이고 부적합유형 칸엔 부적합내용이 복사돼 있어,
+    // 시트(웹 등록)에 값이 있으면 채워넣는다. 작업번호+부적합내용으로 매칭하고,
+    // 그 작업번호의 시트 건이 하나뿐이면 작업번호만으로도 매칭. 조치사항도 비어있으면 시트값으로 채움.
+    const sheetInfo = {}, byOrder = {};
+    const fillInfo = (o, qual, def, act) => {
+      if (qual && !o.qual) o.qual = qual; if (def && !o.def) o.def = def; if (act && !o.act) o.act = act; return o;
+    };
     j.rows.filter(row => row && row[1] && !isMarker(row[1])).forEach(row => {
-      const key = String(row[1]).trim() + '|' + String(row[8]||'').trim();
-      const qual = String(row[7]||'').trim(), act = String(row[10]||'').trim();
-      if (!sheetInfo[key]) sheetInfo[key] = { qual, act };
-      else { if(qual && !sheetInfo[key].qual) sheetInfo[key].qual = qual; if(act && !sheetInfo[key].act) sheetInfo[key].act = act; }
+      const ord = String(row[1]).trim(), key = rowKey(row);
+      const qual = String(row[7]||'').trim(), def = String(row[8]||'').trim(), act = String(row[10]||'').trim();
+      sheetInfo[key] = fillInfo(sheetInfo[key] || {}, qual, def, act);
+      const b = byOrder[ord] = byOrder[ord] || { keys: new Set(), info: {} };
+      b.keys.add(key); fillInfo(b.info, qual, def, act);
     });
     claimData.forEach(r => {
-      const s = sheetInfo[String(r[1]||'').trim() + '|' + String(r[8]||'').trim()];
+      let s = sheetInfo[rowKey(r)];
+      if (!s) { const b = byOrder[String(r[1]||'').trim()]; if (b && b.keys.size === 1) s = b.info; }
       if (!s) return;
       if (s.qual && (!r[7] || r[7] === '기타')) r[7] = s.qual;
+      if (s.def && (!r[8] || r[8] === r[6])) r[8] = s.def;
       if (s.act && !r[10]) r[10] = s.act;
     });
     // 공용 휴지통: trashed 작업번호를 claimData 에서 빼서 _sheetTrash 로
