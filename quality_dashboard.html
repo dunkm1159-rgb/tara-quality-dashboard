@@ -1737,7 +1737,7 @@
           <div style="overflow-x:auto"><canvas id="chartVendorRank" height="150"></canvas></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
-          <div class="card"><div class="section-title" style="font-size:14px;margin-bottom:10px">공정별(외주처)</div><canvas id="chartVendorProc" height="170"></canvas></div>
+          <div class="card"><div class="section-title" style="font-size:14px;margin-bottom:10px">공정별(외주처)</div><div style="position:relative;height:220px;min-width:0"><canvas id="chartVendorProc"></canvas></div></div>
           <div class="card"><div class="section-title" style="font-size:14px;margin-bottom:10px">부적합 유형 TOP(외주처)</div><canvas id="chartVendorType" height="170"></canvas></div>
         </div>
         <div class="card" style="margin-top:14px;padding:0">
@@ -2366,10 +2366,10 @@ function renderErp() {
   const tb = document.getElementById('erp-detail-tbody');
   const ledSet = ledgerOrderSet(erpYear);
   const ledBadge = r => ledSet.has(String(r['주문번호'] || '').trim())
-    ? '<span style="background:#fdeaea;color:#c0392b;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700">등재</span>'
+    ? '<span style="background:#fdeaea;color:#c0392b;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700;display:inline-block;white-space:nowrap">등재</span>'
     : '<span style="color:#c8c8c8;font-size:10px">-</span>';
   if (tb) tb.innerHTML = rows.slice().sort((a, b) => String(b['접수일']).localeCompare(String(a['접수일']))).map(r => `<tr>
-      <td style="text-align:center">${ledBadge(r)}</td>
+      <td style="text-align:center;white-space:nowrap">${ledBadge(r)}</td>
       <td style="white-space:nowrap;color:#666">${esc(r['접수일'])}</td>
       <td style="white-space:nowrap;font-family:monospace">${esc(r['부적합번호'])}</td>
       <td style="white-space:nowrap">${esc(r['접수유형'])}</td>
@@ -2439,7 +2439,7 @@ function renderVendor() {
   const agg = (field) => { const o = {}; rows.forEach(r => { const k = (r[field] || '기타').trim(); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 8); };
   const pr = agg('발생공정'), ty = agg('부적합내역');
   const PAL = ['#17A2B8', '#1F5C99', '#7B4EA0', '#E67E22', '#27AE60', '#C0392B', '#F1C40F', '#98A2B3'];
-  mkChart('chartVendorProc', 'vProc', { type: 'doughnut', data: { labels: pr.map(x => x[0]), datasets: [{ data: pr.map(x => x[1]), backgroundColor: PAL }] }, options: { plugins: { legend: { position: 'right' } } } });
+  mkChart('chartVendorProc', 'vProc', { type: 'doughnut', data: { labels: pr.map(x => x[0]), datasets: [{ data: pr.map(x => x[1]), backgroundColor: PAL }] }, options: { responsive:true, maintainAspectRatio:false, plugins: { legend: { position: 'right' } } } });
   mkChart('chartVendorType', 'vType', { type: 'bar', data: { labels: ty.map(x => x[0]), datasets: [{ label: '건수', data: ty.map(x => x[1]), backgroundColor: '#7B4EA0' }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } } } });
 
   // 테이블
