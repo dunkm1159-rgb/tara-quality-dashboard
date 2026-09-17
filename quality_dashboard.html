@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789618887">
+<meta name="data-version" content="1789625037">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -859,7 +859,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     </div>
 
     <!-- 열린 탭 바 (브라우저 탭 방식) -->
-    <div id="open-tabbar" style="display:flex;align-items:center;gap:6px;padding:10px 20px 0;flex-wrap:wrap;background:#fbfbfd;border-bottom:1px solid rgba(0,0,0,0.06)"></div>
+    <div id="open-tabbar" style="display:flex;align-items:flex-end;gap:6px;padding:10px 20px 0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;height:43px;box-sizing:border-box;scrollbar-width:thin;background:#fbfbfd;border-bottom:1px solid rgba(0,0,0,0.06)"></div>
 
     <!-- 콘텐츠 -->
     <main class="content">
@@ -1603,25 +1603,25 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         </div>
       </div>
       <div class="cph-desc">품질사고 관리대장 기준 · 관리월별 <b>비용 발생 건</b> 집계 · 사내/외주는 비용 부담 기준</div>
-      <div class="cph-years">
-        <button class="claim-year-btn" onclick="coreVisual(this)">전체</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2022</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2023</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2024</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2025</button>
-        <button class="claim-year-btn active" onclick="coreVisual(this)">2026</button>
+      <div class="cph-years" id="monthly-year-tabs">
+        <button class="claim-year-btn" onclick="setMonthlyYear('',this)">전체</button>
+        <button class="claim-year-btn" onclick="setMonthlyYear('2022',this)">2022</button>
+        <button class="claim-year-btn" onclick="setMonthlyYear('2023',this)">2023</button>
+        <button class="claim-year-btn" onclick="setMonthlyYear('2024',this)">2024</button>
+        <button class="claim-year-btn" onclick="setMonthlyYear('2025',this)">2025</button>
+        <button class="claim-year-btn active" onclick="setMonthlyYear('2026',this)">2026</button>
       </div>
       <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
-        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <select id="monthly-mon-from" onchange="setMonthlyMonths()"></select>
         <span>~</span>
-        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <select id="monthly-mon-to" onchange="setMonthlyMonths()"></select>
         <span style="display:inline-flex;gap:4px;margin-left:4px">
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">1분기</button>
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">2분기</button>
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">3분기</button>
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">4분기</button>
-          <button class="claim-year-btn active" onclick="coreVisual(this)" style="padding:4px 9px">전체월</button>
+          <button class="claim-year-btn" onclick="setMonthlyQuarter(1,3,this)" style="padding:4px 9px">1분기</button>
+          <button class="claim-year-btn" onclick="setMonthlyQuarter(4,6,this)" style="padding:4px 9px">2분기</button>
+          <button class="claim-year-btn" onclick="setMonthlyQuarter(7,9,this)" style="padding:4px 9px">3분기</button>
+          <button class="claim-year-btn" onclick="setMonthlyQuarter(10,12,this)" style="padding:4px 9px">4분기</button>
+          <button class="claim-year-btn active" onclick="setMonthlyQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
         </span>
       </div>
             </div>
@@ -2930,7 +2930,7 @@ function renderOpenTabs() {
   bar.innerHTML = openTabs.map(n => {
     const on = (n === activeName);
     const closable = (n !== 'dashboard');
-    return `<div onclick="showTab('${n}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;
+    return `<div onclick="showTab('${n}')" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;white-space:nowrap;
         font-size:12.5px;padding:6px 10px;border-radius:8px 8px 0 0;user-select:none;
         ${on ? 'background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-bottom:2px solid #17A2B8;font-weight:600;color:#1d1d1f'
              : 'background:rgba(0,0,0,0.04);color:#6e6e73'}">
@@ -2938,6 +2938,7 @@ function renderOpenTabs() {
       ${closable ? `<span onclick="event.stopPropagation();closeTab('${n}')" title="닫기" style="color:#aaa;font-size:14px;line-height:1;padding:0 2px">×</span>` : ''}
     </div>`;
   }).join('');
+  const act = [...bar.children][openTabs.indexOf(activeName)]; if (act && act.scrollIntoView) { try { act.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {} }
 }
 
 function closeTab(name) {
@@ -5514,6 +5515,10 @@ function generateGiahnDoc() {
   const gEsc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const gbar = (title, entries, color) => { const mx = Math.max(1, ...entries.map(e => e[1].c)); return `<div class="gcol"><div class="gtitle">${title}</div>${entries.length ? entries.map(([k, v]) => `<div class="gbar-row"><div class="gbar-lbl"><span class="gnm" title="${gEsc(k)}">${gEsc(k)}</span><span class="gvl">${v.c}건·${gwon(v.cost)}만</span></div><div class="gbar-track"><div class="gbar-fill" style="width:${Math.round(v.c / mx * 100)}%;background:${color}"></div></div></div>`).join('') : '<div style="color:#bbb;font-size:10px">없음</div>'}</div>`; };
   let tg = {}; try { tg = JSON.parse(localStorage.getItem(giahnTgKey(curM)) || '{}'); } catch (e) {}
+  // 월 목표금액을 직접 입력하지 않았으면 「부적합 목표 성과」 월별 목표 사용: 내부=제판~제본+특재외, 외주=외주
+  const _mg = ncMonthGoal(yr, moN) || {};
+  let tgAuto = false;
+  if (!tg.inner && !tg.outer) { tg = { inner: ncSum(_mg, [...NC_SELF, '특재외']), outer: _mg['외주'] || 0 }; tgAuto = true; }
   const won = v => (v || 0).toLocaleString();
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
   const rate = (a, b) => b ? (a / b * 100).toFixed(2) + '%' : '-';
@@ -5565,7 +5570,7 @@ function generateGiahnDoc() {
   <table class="d">
     <thead><tr><th style="width:22%">구분</th><th>내부(자사)</th><th>외주(협력업체)</th><th>합계</th></tr></thead>
     <tbody>
-      <tr><td class="c">월간 목표금액</td>
+      <tr><td class="c">월간 목표금액${tgAuto ? ' <span style="font-size:10px;color:#777">(목표 성과 기준)</span>' : ''}</td>
         <td class="r">${tg.inner ? won(tg.inner) : '-'}</td>
         <td class="r">${tg.outer ? won(tg.outer) : '-'}</td>
         <td class="r">${(tg.inner || tg.outer) ? won((tg.inner || 0) + (tg.outer || 0)) : '-'}</td></tr>
@@ -5591,21 +5596,24 @@ function generateGiahnDoc() {
     </tbody>
   </table>
 
-  <h3>3. 연간 누적 TOP 분석 (${yr}년, 1~${moN}월)</h3>
+  <h3>3. ${moN}월 공정별 목표 대비 현황</h3>
+  ${ncDocMonthTable(yr, moN, 'd')}
+
+  <h3>4. 연간 누적 TOP 분석 (${yr}년, 1~${moN}월)</h3>
   <div class="graphic">
     ${gbar('공정별', procTop, '#17A2B8')}
     ${detailsReady ? gbar('부적합 내용', defTop, '#E67E22') : '<div class="gcol">관리대장 상세내역 준비 중</div>'}
-    ${detailsReady ? gbar('거래처', cliTop, '#7B4EA0') : ''}
+    ${detailsReady && cliTop.some(x => x[0] !== '(미상)') ? gbar('거래처', cliTop.filter(x => x[0] !== '(미상)'), '#7B4EA0') : ''}
   </div>
 
-  <h3>4. ${moN}월 품질사고 내역 (첨부파일 참조)</h3>
+  <h3>5. ${moN}월 품질사고 내역 (첨부파일 참조)</h3>
   <div style="padding-left:14px">
     - 협력업체 부담비용 : ${won(outM)} 원<br>
     - 자사부담 품질비용 : ${won(selfM)} 원<br>
     - 발생 건수 : ${mv.cnt || 0} 건
   </div>
 
-  <h3>5. 첨부</h3>
+  <h3>6. 첨부</h3>
   <div style="padding-left:14px">- ${yr}년 ${moN}월 품질사고 관리대장</div>
 
   <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 통합품질관리시스템에서 자동 생성되었습니다. (생성일 ${today})</div>
@@ -5621,6 +5629,100 @@ function generateGiahnPdf() { generateGiahnDoc(); }
 let monthlySub = 'summary';   // 월간 리포트 서브탭: summary | giahn | detail
 function setMonthlySub(s) { monthlySub = s; renderMonthly(); }
 
+// ── 월별·공정별 목표 (2026년 부적합 목표 성과 문서 기준). 데이터의 months[m].procGoal 을 쓰고, 없으면 연간목표/12 ──
+const NC_PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
+const NC_SELF = ['제판', '매엽', '윤전', '코팅', '제본'];           // 생산운영팀(자사 공정) 합계
+function ncMonthGoal(yr, moN) {
+  const Y = (window.NCCOST_DATA || {})[yr]; if (!Y) return null;
+  const mv = Y.months && Y.months[moN + '월'];
+  if (mv && mv.procGoal) return { ...mv.procGoal };
+  const PT = Y.procTargets || {}; const g = {}; NC_PRC.forEach(p => g[p] = Math.round((PT[p] || 0) / 12)); return g;
+}
+function ncCumGoal(yr, moN) {
+  const g = {}; NC_PRC.forEach(p => g[p] = 0);
+  for (let i = 1; i <= moN; i++) { const m = ncMonthGoal(yr, i); if (m) NC_PRC.forEach(p => g[p] += m[p] || 0); }
+  return g;
+}
+const ncSum = (o, keys) => keys.reduce((s, k) => s + (o[k] || 0), 0);
+// 문서의 월별 블록 표 (목표/목표누적/발생비용/누적발생/건수/실적 · 열: 제판..제본 | 합계 | 외주 | 특재외 | 총합) + 성적
+function ncDocMonthTable(yr, moN, cls) {
+  const Y = (window.NCCOST_DATA || {})[yr]; if (!Y || !Y.months) return '';
+  const mv = Y.months[moN + '월'] || {}; const g = ncMonthGoal(yr, moN) || {}; const cg = ncCumGoal(yr, moN);
+  const cum = {}, cumN = {}; NC_PRC.forEach(p => { cum[p] = 0; cumN[p] = 0; });
+  for (let i = 1; i <= moN; i++) { const m = Y.months[i + '월']; if (!m) continue; NC_PRC.forEach(p => { cum[p] += (m.proc && m.proc[p]) || 0; cumN[p] += (m.procCnt && m.procCnt[p]) || 0; }); }
+  const cur = p => (mv.proc && mv.proc[p]) || 0, curN = p => (mv.procCnt && mv.procCnt[p]) || 0;
+  const won = v => (v || 0).toLocaleString();
+  const pct = (a, b) => b ? (a / b * 100).toFixed(1) + '%' : '-';
+  const cols = [...NC_SELF, '__self', '외주', '특재외', '__all'];
+  const head = cols.map(c => `<th${c === '__self' || c === '__all' ? ' style="background:#eef6f7"' : ''}>${c === '__self' ? '합 계' : c === '__all' ? '총합' : c}</th>`).join('');
+  const val = (fn, agg) => cols.map(c => { const v = c === '__self' ? agg(NC_SELF) : c === '__all' ? agg(NC_PRC) : fn(c); const b = (c === '__self' || c === '__all'); return `<td style="text-align:right${b ? ';font-weight:700;background:#f7fbfb' : ''}">${v}</td>`; }).join('');
+  const row = (label, fn, agg) => `<tr><td style="white-space:nowrap">${label}</td>${val(fn, agg)}</tr>`;
+  const rateCell = (a, b) => { const r = b ? a / b * 100 : 0; return `<span style="font-weight:600;color:${r > 100 ? '#C0392B' : '#248a3d'}">${b ? r.toFixed(1) + '%' : '-'}</span>`; };
+  const selfCost = ncSum(cum, NC_SELF), selfGoal = ncSum(cg, NC_SELF), selfCurCost = ncSum({ ...Object.fromEntries(NC_PRC.map(p => [p, cur(p)])) }, NC_SELF), selfCurGoal = ncSum(g, NC_SELF);
+  const allCost = ncSum(cum, NC_PRC), allGoal = ncSum(cg, NC_PRC), allCurCost = ncSum(Object.fromEntries(NC_PRC.map(p => [p, cur(p)])), NC_PRC), allCurGoal = ncSum(g, NC_PRC);
+  const score = (cost, goal) => goal ? Math.max(0, 2 - cost / goal) : 0;
+  return `
+    <div style="overflow-x:auto">
+      <table class="${cls || ''}" style="width:100%;font-size:11.5px;white-space:nowrap">
+        <thead><tr><th>${moN}월</th>${head}</tr></thead>
+        <tbody>
+          <tr><td>목표</td>${val(p => won(g[p]), ks => won(ncSum(g, ks)))}</tr>
+          <tr><td>목표 누적</td>${val(p => won(cg[p]), ks => won(ncSum(cg, ks)))}</tr>
+          <tr><td style="font-weight:600">발생비용</td>${val(p => `<span style="color:#C0392B;font-weight:600">${won(cur(p))}</span>`, ks => won(ks.reduce((s, k) => s + cur(k), 0)))}</tr>
+          <tr><td>누적 발생비용</td>${val(p => won(cum[p]), ks => won(ncSum(cum, ks)))}</tr>
+          <tr><td>발생건수</td>${val(p => curN(p), ks => ks.reduce((s, k) => s + curN(k), 0))}</tr>
+          <tr><td>누적 실적(누적 발생/누적 목표)</td>${val(p => rateCell(cum[p], cg[p]), ks => rateCell(ncSum(cum, ks), ncSum(cg, ks)))}</tr>
+        </tbody>
+      </table>
+    </div>
+    <table class="${cls || ''}" style="width:auto;min-width:60%;font-size:11.5px;margin-top:10px;white-space:nowrap">
+      <thead><tr><th>성적</th><th>금월 (200% 기준)</th><th>누계 (200% 기준)</th><th>금월 (100% 기준)</th><th>누계 (100% 기준)</th></tr></thead>
+      <tbody>
+        <tr><td>생산운영팀 (제판~제본)</td><td style="text-align:right">${(score(selfCurCost, selfCurGoal) * 100).toFixed(1)}%</td><td style="text-align:right">${(score(selfCost, selfGoal) * 100).toFixed(1)}%</td><td style="text-align:right">${pct(selfCurCost, selfCurGoal)}</td><td style="text-align:right">${pct(selfCost, selfGoal)}</td></tr>
+        <tr><td>회사 전체</td><td style="text-align:right">${(score(allCurCost, allCurGoal) * 100).toFixed(1)}%</td><td style="text-align:right">${(score(allCost, allGoal) * 100).toFixed(1)}%</td><td style="text-align:right">${pct(allCurCost, allCurGoal)}</td><td style="text-align:right">${pct(allCost, allGoal)}</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:#86868b;margin-top:6px">※ 목표는 「2026년 부적합 목표 성과」 월별·공정별 목표 · 성적(200% 기준) = 200% − 발생/목표 · 합계 = 생산운영팀(제판~제본), 총합 = 합계+외주+특재외</div>`;
+}
+
+// ── 월간 리포트: 연도 탭 / 기간(월) / 분기 (헤더 컨트롤) ──
+let monthlyYear = '', monthlyMonFrom = 0, monthlyMonTo = 0;
+function setMonthlyYear(y, btn) {
+  monthlyYear = y || '';
+  monthlyMonFrom = 0; monthlyMonTo = 0;
+  const sel = document.getElementById('monthly-sel'); if (sel) sel.value = '';   // 해당 연도의 최근 집계월로 재선택
+  document.querySelectorAll('#monthly-year-tabs .claim-year-btn').forEach(b => b.classList.toggle('active', b === btn));
+  const qs = document.querySelectorAll('#monthly-mon-to') .length ? document.getElementById('monthly-mon-to').parentNode.querySelectorAll('.claim-year-btn') : [];
+  qs.forEach(x => x.classList.toggle('active', x.textContent.trim() === '전체월'));
+  renderMonthly();
+}
+function setMonthlyMonths() {
+  monthlyMonFrom = Number(document.getElementById('monthly-mon-from')?.value || 0);
+  monthlyMonTo   = Number(document.getElementById('monthly-mon-to')?.value || 0);
+  if (monthlyMonFrom && monthlyMonTo && monthlyMonFrom > monthlyMonTo) [monthlyMonFrom, monthlyMonTo] = [monthlyMonTo, monthlyMonFrom];
+  renderMonthly();
+}
+function setMonthlyQuarter(a, b, btn) {
+  monthlyMonFrom = a; monthlyMonTo = b;
+  if (btn) btn.parentNode.querySelectorAll('.claim-year-btn').forEach(x => x.classList.toggle('active', x === btn));
+  renderMonthly();
+}
+// 선택 구간의 관리대장 월 데이터를 하나로 합친다 (cost/cnt/proc/procCnt/selfCost/selfCnt/goal/rows)
+function monthlyAggregate(periods) {
+  const parts = periods.map(p => monthlyLedgerPeriod(p)).filter(Boolean);
+  if (!parts.length) return null;
+  const out = { cost: 0, cnt: 0, goal: 0, selfCost: 0, selfCnt: 0, proc: {}, procCnt: {}, selfProc: {}, rows: [], months: parts.length };
+  parts.forEach(m => {
+    out.cost += m.cost || 0; out.cnt += m.cnt || 0; out.goal += m.goal || 0; out.selfCost += m.selfCost || 0; out.selfCnt += m.selfCnt || 0;
+    for (const k in (m.proc || {})) out.proc[k] = (out.proc[k] || 0) + (m.proc[k] || 0);
+    for (const k in (m.procCnt || {})) out.procCnt[k] = (out.procCnt[k] || 0) + (m.procCnt[k] || 0);
+    for (const k in (m.selfProc || {})) out.selfProc[k] = (out.selfProc[k] || 0) + (m.selfProc[k] || 0);
+    if (Array.isArray(m.rows)) out.rows = out.rows.concat(m.rows);
+  });
+  return out;
+}
+function monthlyPeriodLabel(y, a, b) { return a === b ? `${Number(b)}월` : `${Number(a)}~${Number(b)}월`; }
+
 function renderMonthly() {
   const sel = document.getElementById('monthly-sel');
   const body = document.getElementById('monthly-body');
@@ -5632,21 +5734,39 @@ function renderMonthly() {
   if (!sourceMonths.length) { body.innerHTML = '<div style="padding:20px;color:#64748b">품질사고 관리대장 미집계</div>'; return; }
   const today = new Date().toLocaleDateString('sv-SE', {timeZone:'Asia/Seoul'});
   const current = today.slice(0, 7);
-  const months = [...new Set([...sourceMonths, current])].sort().reverse();
+  const monthsAll = [...new Set([...sourceMonths, current])].sort().reverse();
+  const months = monthlyYear ? monthsAll.filter(m => m.startsWith(monthlyYear)) : monthsAll;
+  if (!months.length) { body.innerHTML = '<div class="card" style="padding:24px;color:#64748b">' + monthlyYear + '년 품질사고 관리대장 미집계</div>'; return; }
   const selected = sel.value;
   const [nowY, nowM] = current.split('-').map(Number);
   const prevCal = new Date(nowY, nowM - 2, 1);
   const defaultMonth = prevCal.getFullYear() + '-' + String(prevCal.getMonth() + 1).padStart(2, '0');
   sel.innerHTML = months.map(m => `<option value="${m}">${m.slice(0,4)}년 ${Number(m.slice(5))}월${monthlyLedgerPeriod(m) ? '' : ' (미집계)'}</option>`).join('');
-  const curM = months.includes(selected) ? selected : sourceMonths.includes(defaultMonth) ? defaultMonth : sourceMonths[sourceMonths.length - 1];
-  sel.value = curM;
-  const currentData = monthlyLedgerPeriod(curM);
-  if (!currentData) { body.innerHTML = '<div class="card" style="padding:24px;color:#64748b">해당 월 품질사고 관리대장 미집계</div>'; return; }
+  const yearMonths = months.filter(m => sourceMonths.includes(m));
+  const curM0 = months.includes(selected) ? selected : (yearMonths.includes(defaultMonth) ? defaultMonth : (yearMonths[0] || months[0]));
+  // 기간(월)/분기 구간이 잡혀 있으면 그 연도의 구간으로 (끝 월 = 구간 끝 이하 마지막 집계월)
+  const rangeOn = !!(monthlyMonFrom || monthlyMonTo);
+  const rY = curM0.slice(0, 4);
+  const rFrom = rangeOn ? (monthlyMonFrom || 1) : Number(curM0.slice(5, 7));
+  const rTo0  = rangeOn ? (monthlyMonTo || 12) : Number(curM0.slice(5, 7));
+  const rangePeriods0 = Array.from({length: rTo0 - rFrom + 1}, (_, i) => rY + '-' + String(rFrom + i).padStart(2, '0'));
+  const rangePeriods = rangePeriods0.filter(p => sourceMonths.includes(p));
+  const curM = rangeOn ? (rangePeriods[rangePeriods.length - 1] || curM0) : curM0;
+  sel.value = curM; sel.style.opacity = rangeOn ? '.55' : '';
+  // 기간(월) 드롭다운 채우기
+  [['monthly-mon-from', monthlyMonFrom], ['monthly-mon-to', monthlyMonTo]].forEach(([id, v]) => { const el = document.getElementById(id); if (!el) return;
+    if (!el.options.length) el.innerHTML = '<option value="0">전체</option>' + Array.from({length:12}, (_, i) => `<option value="${i+1}">${i+1}월</option>`).join('');
+    el.value = String(v || 0); });
+  const currentData = rangeOn ? monthlyAggregate(rangePeriods) : monthlyLedgerPeriod(curM);
+  if (!currentData) { body.innerHTML = '<div class="card" style="padding:24px;color:#64748b">' + (rangeOn ? rY + '년 ' + monthlyPeriodLabel(rY, rFrom, rTo0) + ' 품질사고 관리대장 미집계' : '해당 월 품질사고 관리대장 미집계') + '</div>'; return; }
   const [py, pm] = curM.split('-').map(Number);
-  const pd = new Date(py, pm - 2, 1);
-  const prevM = pd.getFullYear() + '-' + String(pd.getMonth() + 1).padStart(2, '0');
-  const previousData = monthlyLedgerPeriod(prevM);
-  const curRows = monthlyLedgerRows(curM);
+  const spanN = rangeOn ? rangePeriods0.length : 1;
+  const prevPeriods = Array.from({length: spanN}, (_, i) => { const d = new Date(py, (rangeOn ? rFrom : pm) - 1 - spanN + i, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); });
+  const prevM = prevPeriods[prevPeriods.length - 1];
+  const previousData = rangeOn ? monthlyAggregate(prevPeriods) : monthlyLedgerPeriod(prevM);
+  const curRows = rangeOn ? (currentData.rows || []) : monthlyLedgerRows(curM);
+  const periodLabel = rangeOn ? monthlyPeriodLabel(rY, rFrom, rTo0) : pm + '월';
+  const vsLabel = rangeOn ? '직전 ' + spanN + '개월 대비' : '전월 대비';
   const hasDetails = Array.isArray(currentData.rows) && currentData.rows.length === currentData.cnt;
   const curCost = currentData.cost || 0;
   const prevCost = previousData?.cost || 0;
@@ -5694,7 +5814,7 @@ function renderMonthly() {
   const ND = (window.NCCOST_DATA || {})[_yr];
   let gianHtml = '';
   if (ND && ND.months && ND.months[_moK]) {
-    const mv = ND.months[_moK];
+    const mv = rangeOn ? currentData : ND.months[_moK];
     const selfM = mv.selfCost || 0, outM = (mv.cost || 0) - selfM;
     const PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
     const PT = ND.procTargets || {};
@@ -5710,7 +5830,7 @@ function renderMonthly() {
     gianHtml = `
     <div class="card" style="padding:16px 18px;margin-bottom:16px;border:1.5px solid rgba(23,162,184,0.35)">
       <div style="font-weight:700;font-size:13px;margin-bottom:12px">기안용 요약 <span style="font-size:11px;font-weight:400;color:#aaa">품질사고 관리대장 기준 · 그대로 기안에 옮겨 쓰세요</span></div>
-      <div style="font-weight:600;font-size:12.5px;margin:4px 0 8px">1. ${Number(curM.slice(5, 7))}월 품질 사고 금액</div>
+      <div style="font-weight:600;font-size:12.5px;margin:4px 0 8px">1. ${periodLabel} 품질 사고 금액</div>
       <table style="width:100%;font-size:12.5px;margin-bottom:18px">
         <thead><tr><th>구분</th><th style="text-align:right">발생 비용</th></tr></thead>
         <tbody>
@@ -5731,6 +5851,8 @@ function renderMonthly() {
           </tbody>
         </table>
       </div>
+      <div style="font-weight:600;font-size:12.5px;margin:18px 0 8px">3. ${Number(curM.slice(5, 7))}월 공정별 목표 대비 현황 <span style="font-size:11px;font-weight:400;color:#aaa">「부적합 목표 성과」 월별 표 형식</span></div>
+      ${ncDocMonthTable(_yr, Number(curM.slice(5, 7)))}
     </div>`;
   }
   // ── 추가 지표 (품질사고 관리대장 NCCOST 확정치 기준) ──
@@ -5739,11 +5861,11 @@ function renderMonthly() {
   const _moIdx = Number(curM.slice(5, 7));
   let extraCards = '';
   if (_ndY && _ndY.months && _ndY.months[_moK]) {
-    const mv2 = _ndY.months[_moK];
+    const mv2 = rangeOn ? currentData : _ndY.months[_moK];
     const mGoal = mv2.goal || 0, mCost = mv2.cost || 0;
     const goalPct = mGoal ? Math.round(mCost / mGoal * 100) : 0;
     window.CORE_HEADLINES = window.CORE_HEADLINES || {};
-    window.CORE_HEADLINES.monthly = { value: goalPct, unit: '%', label: '월 목표 대비', sub: curM + ' · ' + man(mCost) + '만/' + man(mGoal) + '만', warn: goalPct > 100 };
+    if (!rangeOn) window.CORE_HEADLINES.monthly = { value: goalPct, unit: '%', label: '월 목표 대비', sub: curM + ' · ' + man(mCost) + '만/' + man(mGoal) + '만', warn: goalPct > 100 };
     let ytd = 0, ytdSelf = 0;
     for (let i = 0; i < _moIdx; i++) {
       const month = monthlyLedgerPeriod(curM.slice(0, 4) + '-' + String(i + 1).padStart(2, '0'));
@@ -5752,16 +5874,18 @@ function renderMonthly() {
       ytdSelf += month.selfCost || 0;
     }
     const yTarget = _ndY.target || 0;
-    const ytdPct = yTarget ? Math.round(ytd / yTarget * 100) : 0;
+    const cumGoal = ncSum(ncCumGoal(curM.slice(0, 4), _moIdx), NC_PRC);      // 문서 기준 1~N월 누적 목표
+    const ytdPct = cumGoal ? Math.round(ytd / cumGoal * 100) : (yTarget ? Math.round(ytd / yTarget * 100) : 0);
+    const yearPct = yTarget ? Math.round(ytd / yTarget * 100) : 0;
     const ytdOut = Math.max(0, ytd - ytdSelf);
     const selfPct = ytd ? Math.round(ytdSelf / ytd * 100) : 0;
     window.CORE_HEADLINES.monthly.chart = { labels: ['사내','외주'], values: [Math.round(ytdSelf/10000), Math.round(ytdOut/10000)] };
     const gc = goalPct > 100 ? '#C0392B' : '#248a3d';
     const yc = ytdPct > 100 ? '#C0392B' : '#248a3d';
     extraCards =
-      bigCard('월 목표 대비', goalPct, '%', `이번달 ${man(mCost)} / 목표 ${man(mGoal)}만
+      bigCard(rangeOn ? '기간 목표 대비' : '월 목표 대비', goalPct, '%', `${rangeOn ? periodLabel : '이번달'} ${man(mCost)} / 목표 ${man(mGoal)}만
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, goalPct)}%;background:${gc};border-radius:99px"></div></div>`, gc) +
-      bigCard('연간 누적 비용', man(ytd), '만원', `연 목표 ${man(yTarget)}만 대비 <b style="color:${yc}">${ytdPct}%</b>
+      bigCard('연간 누적 비용', man(ytd), '만원', `1~${_moIdx}월 누적 목표 ${man(cumGoal)}만 대비 <b style="color:${yc}">${ytdPct}%</b> · 연 ${man(yTarget)}만의 ${yearPct}%
         <div style="height:5px;background:#f0f0f3;border-radius:99px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${Math.min(100, ytdPct)}%;background:${yc};border-radius:99px"></div></div>`, '#1F5C99') +
       bigCard('누적 사내 : 외주', ytd ? selfPct + ':' + (100 - selfPct) : '—', '', `1~${_moIdx}월 · 자사 ${man(ytdSelf)} · 외주 ${man(ytdOut)}만
         <div style="display:flex;height:6px;border-radius:99px;overflow:hidden;margin-top:6px">
@@ -5769,8 +5893,8 @@ function renderMonthly() {
   }
   body.innerHTML = `
     <div id="monthly-summary">
-      ${bigCard('품질사고 건수', currentData.cnt, '건', previousData ? '전월 대비 ' + delta(currentData.cnt, previousData.cnt) : '전월 미집계', null, true)}
-      ${bigCard('품질비용', man(curCost), '만원', previousData ? '전월 대비 ' + delta(curCost, prevCost) : '전월 미집계', '#C0392B')}
+      ${bigCard('품질사고 건수', currentData.cnt, '건', (rangeOn ? py + '년 ' + periodLabel + ' · ' : '') + (previousData ? vsLabel + ' ' + delta(currentData.cnt, previousData.cnt) : (rangeOn ? '직전 구간 미집계' : '전월 미집계')), null, true)}
+      ${bigCard('품질비용', man(curCost), '만원', previousData ? vsLabel + ' ' + delta(curCost, prevCost) : (rangeOn ? '직전 구간 미집계' : '전월 미집계'), '#C0392B')}
       ${bigCard('건당 평균비용', man(avgCost), '만원', currentData.cnt + '건 기준')}
       ${extraCards}
     </div>
@@ -5790,7 +5914,7 @@ function renderMonthly() {
         ${hasDetails ? barTbl('부적합 내용 TOP', top(curRows, r => r[8], 6), '#E67E22') : '<div class="card" style="color:#64748b">관리대장 상세내역이 아직 준비되지 않았습니다.</div>'}
       </div>
       <div style="margin-bottom:16px">
-        ${hasDetails ? barTbl('거래처 TOP', top(curRows, r => r[2], 8), '#7B4EA0') : ''}
+        ${hasDetails && top(curRows, r => r[2], 8).some(x => x[0] !== '(미상)') ? barTbl('거래처 TOP', top(curRows, r => r[2], 8).filter(x => x[0] !== '(미상)'), '#7B4EA0') : ''}
       </div>
     </div>
 
@@ -5813,7 +5937,7 @@ function renderMonthly() {
     </div>
 
     <div class="card" style="padding:16px 18px;margin-bottom:14px;display:${monthlySub === 'detail' ? 'block' : 'none'}">
-      <div style="font-weight:700;font-size:13px;margin-bottom:10px">${curM.split('-')[1]}월 부적합 상세 <span style="font-size:11px;font-weight:400;color:#aaa">금액 큰 순 · ${hasDetails ? detailRows.length + '건' : '상세내역 준비 중'}</span></div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">${periodLabel} 부적합 상세 <span style="font-size:11px;font-weight:400;color:#aaa">금액 큰 순 · ${hasDetails ? detailRows.length + '건' : '상세내역 준비 중'}</span></div>
       <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
         <table style="width:100%;font-size:12.5px">
           <thead><tr>
@@ -5832,7 +5956,7 @@ function renderMonthly() {
         </table>
       </div>
     </div>
-    <div style="font-size:11px;color:#64748b">※ 품질사고 관리대장 기준 · 관리월별 비용 발생 건 집계 · 사내/외주는 비용 부담 기준 · 누적은 선택 월까지</div>
+    <div style="font-size:11px;color:#64748b">※ 품질사고 관리대장 기준 · 관리월별 비용 발생 건 집계 · 사내/외주는 비용 부담 기준 · 누적은 선택 월까지${rangeOn ? ' · 현재 ' + py + '년 ' + periodLabel + ' 구간 합산 (기안 문서는 구간 끝 월 기준)' : ''}</div>
   `;
   if (monthlySub === 'summary') monthlyTrendChart('monthly-trend', tLabels, tCounts, tCosts);
   if (monthlySub === 'giahn') loadGiahnTargets();
