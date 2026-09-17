@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789610001">
+<meta name="data-version" content="1789614176">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -338,14 +338,25 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
   /* Shared starting positions across the quality indicator pages. */
   .core-page-header {
-    box-sizing: border-box; min-height: 0; padding-bottom: 12px;
-    display: flex; flex-direction: column; gap: 8px;
+    /* 핵심지표 하위 화면 공통 헤더: 제목행 32 / 설명행 20 / 연도행 30 / 기간행 34 — 모든 화면에서 카드 시작 위치가 같아진다 */
+    box-sizing: border-box; padding-bottom: 12px;
+    display: grid; grid-template-rows: 32px 20px 30px 34px; row-gap: 8px; align-content: start;
+    min-height: 152px;
   }
+  .core-page-header.cph-2rows { grid-template-rows: 32px 20px; min-height: 0; padding-bottom: 8px; }
+  .core-page-header > .cph-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+  .core-page-header > .cph-title .section-title { font-size: 17px; font-weight: 700; line-height: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .core-page-header > .cph-title .cph-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .core-page-header > .cph-desc { font-size: 12px; color: #86868b; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .core-page-header > .cph-desc b { color: #59676d; font-weight: 600; }
+  .core-page-header > .cph-years { display: flex; gap: 4px; align-items: flex-end; border-bottom: 2px solid #e5e5e0; height: 30px; }
+  .core-page-header > .cph-years .claim-year-btn { padding: 4px 11px; }
+  .core-page-header > .cph-period { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; font-size: 12.5px; color: #555; overflow-x: auto; }
+  .core-page-header > .cph-period select { border: 1px solid #d2d2d7; border-radius: 7px; padding: 5px 8px; font-size: 12.5px; }
+  .core-page-header > .cph-period > span[style*="inline-flex"] { flex-shrink: 0; }
+  .cph-note { font-size: 12px; color: #86868b; margin: -8px 0 14px; }
+  .cph-note:empty { display: none; }
   .core-page-header > :not([style*="display:none"]) { margin-top: 0 !important; margin-bottom: 0 !important; }
-  .core-page-header > .section-header, .core-page-header > div:first-child {
-    min-height: 32px; flex-wrap: wrap; gap: 8px;
-  }
-  .core-page-header > div { flex-shrink: 0; }
   .core-page-header .section-title { white-space: normal; }
   #nccost-metrics, #erp-metrics, #analysis-metrics, #worker-metrics, #kpi-summary {
     grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 208px;
@@ -354,8 +365,9 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
   }
   @media (max-width: 760px) {
-    .core-page-header { min-height: 0; }
-    .core-page-header > div, .core-page-header span[style*="inline-flex"] { flex-wrap: wrap; }
+    .core-page-header { grid-template-rows: auto; min-height: 0; }
+    .core-page-header > .cph-title, .core-page-header > .cph-period { flex-wrap: wrap; }
+    .core-page-header > .cph-desc { white-space: normal; }
   }
 
   /* ── 테이블 ── */
@@ -990,10 +1002,12 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
     <!-- ============ 품질 핵심지표 요약 ============ -->
     <div id="tab-core" class="tab">
-      <div class="section-header">
+      <div class="core-page-header cph-2rows">
+      <div class="cph-title">
         <div class="section-title">품질 핵심지표</div>
       </div>
-      <div style="font-size:12.5px;color:#8a93a0;font-weight:600;margin-bottom:16px;">아래 6개 화면의 핵심 숫자를 한 줄씩 모았어요 · 카드를 눌러 해당 화면으로 이동</div>
+      <div class="cph-desc">아래 6개 화면의 핵심 숫자를 한 줄씩 모았어요 · 카드를 눌러 해당 화면으로 이동</div>
+      </div>
       <div id="core-summary-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">
         <div style="color:#aaa;font-size:13px;padding:20px;">데이터 로딩 중...</div>
       </div>
@@ -1581,14 +1595,15 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     <!-- ============ 월간 리포트 ============ -->
     <div id="tab-monthly" class="tab">
       <div class="core-page-header">
-      <div class="section-header">
+      <div class="cph-title">
         <div class="section-title">월간 품질 리포트</div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div class="cph-actions">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
           <button class="btn btn-primary btn-sm" onclick="generateGiahnDoc()"><i class="ti ti-file-text"></i> 기안 문서 생성</button>
         </div>
       </div>
-      <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0">
+      <div class="cph-desc">품질사고 관리대장 기준 · 관리월별 <b>비용 발생 건</b> 집계 · 사내/외주는 비용 부담 기준</div>
+      <div class="cph-years">
         <button class="claim-year-btn" onclick="coreVisual(this)">전체</button>
         <button class="claim-year-btn" onclick="coreVisual(this)">2022</button>
         <button class="claim-year-btn" onclick="coreVisual(this)">2023</button>
@@ -1596,7 +1611,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <button class="claim-year-btn" onclick="coreVisual(this)">2025</button>
         <button class="claim-year-btn active" onclick="coreVisual(this)">2026</button>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+      <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
         <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
         <span>~</span>
@@ -1629,14 +1644,14 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     <!-- ============ 부적합 목표·성과 ============ -->
     <div id="tab-nccost" class="tab">
       <div class="core-page-header">
-      <div class="section-header">
+      <div class="cph-title">
         <div class="section-title">본부 품질 KPI</div>
-        <div id="nccost-year-btns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+        <div class="cph-actions"></div>
       </div>
-      <p style="font-size:12px;color:#86868b;margin:-6px 0 10px;">연간 품질부적합 비용 목표 대비 발생 현황 (공정별: 제판·매엽·윤전·제본·외주·특재)</p>
-
+      <div class="cph-desc">연간 품질부적합 비용 목표 대비 발생 현황 (공정별: 제판·매엽·윤전·제본·외주·특재) <span id="nccost-gap-note" style="margin-left:6px"></span></div>
+      <div class="cph-years" id="nccost-year-btns"></div>
       <!-- 월 범위 필터 -->
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:#555">
+      <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
         <select id="nccost-mon-from" onchange="setNcMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
         <span>~</span>
@@ -1649,8 +1664,6 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
           <button class="claim-year-btn" onclick="setNcQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
         </span>
       </div>
-
-            <div id="nccost-gap-note"></div>
       </div>
       <div class="metrics" id="nccost-metrics"></div>
 
@@ -1762,15 +1775,15 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       <!-- ERP 부적합 분석 -->
       <div id="an-erp">
       <div class="core-page-header">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+        <div class="cph-title">
           <div class="section-title">협력사 품질 현황</div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="cph-actions">
             <div id="erp-inout-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-            <div id="erp-year-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           </div>
         </div>
-        <div style="font-size:11.5px;color:#86868b;margin-bottom:10px">ERP 부적합내역 중 <b>외주 귀책분만</b> 집계 (사내분은 품질사고 관리대장과 동일하여 제외) <span id="erp-updated" style="color:#ccc"></span></div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:#555">
+        <div class="cph-desc">ERP 부적합내역 중 <b>외주 귀책분만</b> 집계 (사내분은 품질사고 관리대장과 동일하여 제외) <span id="erp-updated" style="color:#ccc"></span></div>
+        <div class="cph-years" id="erp-year-btns"></div>
+        <div class="cph-period">
           <span style="font-weight:600">기간(월)</span>
           <select id="erp-mon-from" onchange="setErpMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
           <span>~</span>
@@ -1783,9 +1796,9 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
             <button class="claim-year-btn" onclick="setErpQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
           </span>
         </div>
-        <div id="erp-recon"></div>
               </div>
       <div class="metrics" id="erp-metrics" style="margin-bottom:18px"></div>
+      <div id="erp-recon" class="cph-note"></div>
         <div class="card" style="padding:16px 18px;margin-bottom:16px">
           <div class="card-title">월별 부적합 추이 <span style="font-size:11px;font-weight:400;color:#aaa">막대=건수 · 선=금액(만원)</span></div>
           <div class="chart-wrap" style="height:230px"><canvas id="chartErpTrend"></canvas></div>
@@ -1856,13 +1869,13 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       <div id="an-claim" style="display:none">
       <div class="core-page-header">
       <!-- 분석 필터 헤더 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+      <div class="cph-title">
         <div class="section-title">부적합 원인 분석</div>
-        <button class="btn btn-secondary btn-sm" onclick="renderCharts()">새로고침</button>
+        <div class="cph-actions"><button class="btn btn-secondary btn-sm" onclick="renderCharts()">새로고침</button></div>
       </div>
-
+      <div class="cph-desc">부적합사고 취합대장(2025~) + 접수·조치 이력(2023~24) 기준 · 비용 없는 건 포함 <b>부적합 전체 건수</b> (관리대장 비용 건수와 다름)</div>
       <!-- 연도 탭 버튼 -->
-      <div style="display:flex;gap:4px;margin:12px 0 18px;border-bottom:2px solid #e5e5e0;padding-bottom:0">
+      <div class="cph-years">
         <button class="claim-year-btn" id="analysis-yr-btn-all" onclick="switchAnalysisYear('',this)">전체</button>
         <button class="claim-year-btn" id="analysis-yr-btn-2023" onclick="switchAnalysisYear('2023',this)">2023</button>
         <button class="claim-year-btn" id="analysis-yr-btn-2024" onclick="switchAnalysisYear('2024',this)">2024</button>
@@ -1870,10 +1883,8 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <button class="claim-year-btn active" id="analysis-yr-btn-2026" onclick="switchAnalysisYear('2026',this)">2026</button>
       </div>
       <!-- hidden select for renderCharts() compatibility -->
-      <select id="analysis-year" style="display:none"></select>
-
       <!-- 월 범위 필터 -->
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+      <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
         <select id="analysis-mon-from" onchange="setAnalysisMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
         <span>~</span>
@@ -1887,8 +1898,10 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         </span>
       </div>
 
+      </div>
+      <!-- hidden select for renderCharts() compatibility -->
+      <select id="analysis-year" style="display:none"></select>
       <!-- 요약 지표 -->
-            </div>
       <div class="metrics" id="analysis-metrics" style="margin-bottom:20px"></div>
 
       <!-- Row 1: 연도별 추이 + 월별 추이 -->
@@ -1932,20 +1945,18 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     <!-- ============ 작업자 사고 현황 ============ -->
     <div id="tab-worker" class="tab">
       <div class="core-page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+      <div class="cph-title">
         <div class="section-title">공정별 심의판정결과</div>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div class="cph-actions">
           <button class="gj-toggle" id="worker-anon-btn" onclick="toggleWorkerAnon()" title="시연/공유 시 이름을 가립니다">익명 모드</button>
           <div style="font-size:12px;color:#888" id="worker-updated"></div>
         </div>
       </div>
-      <div style="font-size:12.5px;color:#666;margin-bottom:14px">월별 품질사고 관리대장 확정등급 기준 · 월/분기는 관리대장의 해당 월로 집계 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
-
+      <div class="cph-desc">월별 품질사고 관리대장 확정등급 기준 · 월/분기는 관리대장의 해당 월로 집계 · 판정등급: <b>면책</b>(Lv1) · <b>경고</b>(Lv2) · <b>중대경고</b>(Lv3) · <b>치명적위반</b>(Lv4) · <span style="color:#17A2B8">등급 카드를 클릭하면 해당 등급 받은 사람만 검색돼요</span></div>
       <!-- 연도 탭 -->
-      <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0" id="worker-year-tabs"></div>
-
+      <div class="cph-years" id="worker-year-tabs"></div>
       <!-- 월 범위 필터 -->
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+      <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
         <select id="worker-mon-from" onchange="setWorkerMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"></select>
         <span>~</span>
@@ -1958,10 +1969,8 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
           <button class="claim-year-btn" onclick="setWorkerQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
         </span>
       </div>
-
-
+      </div>
       <!-- 등급 요약 카드 -->
-            </div>
       <div class="metrics" id="worker-metrics" style="margin-bottom:20px"></div>
 
       <div class="grid2">
@@ -2037,13 +2046,13 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     <!-- ============ KPI 현황 ============ -->
     <div id="tab-kpi" class="tab">
       <div class="core-page-header">
-      <div class="section-header">
+      <div class="cph-title">
         <div class="section-title">팀 KPI <span style="font-size:12px;color:#aaa;font-weight:400">2026년 품질개선팀</span></div>
-        <span style="font-size:12px;color:#aaa" id="kpi-period">목표 대비 실적</span>
+        <div class="cph-actions"></div>
       </div>
-
-      <!-- KPI 요약 카드 -->
-      <div style="display:flex;gap:4px;margin:0 0 12px;border-bottom:2px solid #e5e5e0">
+      <div class="cph-desc" id="kpi-period">목표 대비 실적</div>
+      <!-- 연도 탭 -->
+      <div class="cph-years">
         <button class="claim-year-btn" onclick="coreVisual(this)">전체</button>
         <button class="claim-year-btn" onclick="coreVisual(this)">2022</button>
         <button class="claim-year-btn" onclick="coreVisual(this)">2023</button>
@@ -2051,7 +2060,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <button class="claim-year-btn" onclick="coreVisual(this)">2025</button>
         <button class="claim-year-btn active" onclick="coreVisual(this)">2026</button>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;font-size:12.5px;color:#555">
+      <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
         <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
         <span>~</span>
@@ -3523,7 +3532,7 @@ function renderNcCost(){
   if (!years.length) return;
   if (!D[nccostYear]) nccostYear = years[years.length-1];
   const bw = document.getElementById('nccost-year-btns');
-  if (bw) bw.innerHTML = years.map(y=>`<button class="claim-year-btn ${y===nccostYear?'active':''}" onclick="setNcCostYear('${y}')">${y}년</button>`).join('');
+  if (bw) bw.innerHTML = years.map(y=>`<button class="claim-year-btn ${y===nccostYear?'active':''}" onclick="setNcCostYear('${y}')">${y}</button>`).join('');
   const yd = D[nccostYear];
   const won = v => Math.round(v/10000).toLocaleString();
   fillNcMonthSelects();
