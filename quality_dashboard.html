@@ -6057,13 +6057,62 @@ function gajWithinGrace(g){
 function saveGajebonDate(order, date){
   if(!order) return;
   if(date){
-    const prod = (typeof productOfOrder==='function') ? productOfOrder(order) : '';
-    const ok = confirm('이 주문을 가제본 완료 처리할까요?\n\n주문번호: '+order+(prod?'\n제품: '+prod:'')+'\n가제본일: '+date+'\n\n확인하면 "완료만 보이기" 목록에서 사라집니다.');
+    const row = (typeof gajebonRowOfOrder==='function') ? gajebonRowOfOrder(order) : null;
+    const prod = row ? String(row['제품명']||'') : '';
+    const person = row ? String(row['담당자']||'').trim() : '';
+    const ok = confirm('이 주문을 가제본 완료 처리할까요?\n\n주문번호: '+order+(prod?'\n제품: '+prod:'')+'\n가제본일: '+date
+      +(person ? '\n\n· 담당자 '+person+'에게 완료 안내 메일을 보냅니다' : '')
+      +'\n\n확인하면 "완료만 보이기" 목록에서 사라집니다.');
     if(!ok){ renderGajebonTable(); return; }  // 취소 시 입력 되돌림
   }
   queueGajebonDate(order, date);
   renderGajebonTable();
   flushGajebonDates();
+  if(date && typeof notifyGajebonDone==='function') notifyGajebonDone(order, date);
+}
+
+// ── 가제본 완료 알림: 담당자 이메일 (주소는 구글시트 '연락처' 탭, 발송은 Apps Script MailApp) ──
+const GAJ_NOTIFY_KEY = 'gajebonNotified';
+function gajToast(msg, ok){
+  if(typeof document === 'undefined') return;
+  let el = document.getElementById('gaj-toast');
+  if(!el){
+    el = document.createElement('div'); el.id = 'gaj-toast';
+    el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:9999;max-width:min(560px,90vw);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg; el.style.background = ok ? '#1d1d1f' : '#c0392b'; el.style.opacity = '1';
+  clearTimeout(el._t); el._t = setTimeout(() => { el.style.opacity = '0'; }, ok ? 4500 : 7000);
+}
+function gajebonNotifyPayload(order, date){
+  const r = gajebonRowOfOrder(order) || {};
+  let by = '';
+  try { by = userName(_cookie('tara_user')) || localStorage.getItem('qmsUser') || ''; } catch(e) {}
+  return { key: CLAIM_SHEET_KEY, type: 'notify', kind: 'gajebon_done', order, date,
+           person: String(r['담당자']||'').trim(), dept: String(r['부서']||'').trim(),
+           client: String(r['거래처']||'').trim(), product: String(r['제품명']||'').trim(),
+           request: String(r['요청내용']||'').trim(),
+           sheet: (typeof gajebonCurrentSheet !== 'undefined' ? String(gajebonCurrentSheet||'') : ''), by };
+}
+async function notifyGajebonDone(order, date){
+  if(!order || !date || typeof CLAIM_SHEET_URL === 'undefined' || typeof fetch !== 'function') return;
+  let sent = {}; try { sent = JSON.parse(localStorage.getItem(GAJ_NOTIFY_KEY) || '{}'); } catch(e) {}
+  if(sent[order] === date) return;                       // 같은 주문·같은 완료일은 이 브라우저에서 한 번만 (서버도 별도로 중복 차단)
+  const p = gajebonNotifyPayload(order, date);
+  if(!p.person){ gajToast('담당자 이름이 없어 완료 메일을 보내지 않았어요 (' + order + ')', false); return; }
+  try{
+    const res = await fetch(CLAIM_SHEET_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) });
+    const j = await res.json();
+    if(j && j.ok){
+      sent[order] = date; try { localStorage.setItem(GAJ_NOTIFY_KEY, JSON.stringify(sent)); } catch(e) {}
+      gajToast(j.skipped ? '이미 완료 메일을 보낸 건입니다 (' + order + ')'
+                         : '완료 메일 발송: ' + p.person + (j.to ? ' <' + j.to + '>' : '') + (j.fallback ? ' (담당자 주소 없음 → 기본 주소)' : ''), true);
+    } else if (j && j.error === 'no_contact') {
+      gajToast('연락처 시트에 "' + p.person + '" 이메일이 없어 완료 메일을 못 보냈어요. 구글시트 연락처 탭에 추가해 주세요.', false);
+    } else {
+      gajToast('완료 메일 전송 실패: ' + ((j && j.error) || '서버 오류'), false);
+    }
+  }catch(e){ gajToast('완료 메일 전송 실패 (네트워크)', false); }
 }
 async function loadGajebonDates(){
   const generation = gajebonDateGeneration;
@@ -6499,7 +6548,7 @@ try { gajebonPartTemplates = JSON.parse(localStorage.getItem('gajebonPartTpl') |
 function savePartStore() { try { localStorage.setItem('gajebonParts', JSON.stringify(gajebonPartStore)); } catch(e) {} }
 function saveTemplates() { try { localStorage.setItem('gajebonPartTpl', JSON.stringify(gajebonPartTemplates)); } catch(e) {} }
 function getPart(order, part) { return (gajebonPartStore[order] || {})[part] || { st: '' }; }
-function productOfOrder(order) {
+function gajebonRowOfOrder(order) {
   order = String(order||'').trim();
   // 현재 시트 먼저, 없으면 전체 거래처 시트에서 검색 (완료건이 다른 시트에 있을 수 있음)
   const cur = gajebonSheets[gajebonCurrentSheet] || [];
@@ -6511,6 +6560,10 @@ function productOfOrder(order) {
       if (r) break;
     }
   }
+  return r || null;
+}
+function productOfOrder(order) {
+  const r = gajebonRowOfOrder(order);
   return r ? (r['제품명']||'') : '';
 }
 // 이름표가 채워진 파트만 '해당'으로 본다 (품목마다 다른 칸을 쓰므로)
