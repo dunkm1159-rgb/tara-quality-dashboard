@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789704881">
+<meta name="data-version" content="1789710517">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -855,17 +855,18 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   #dash-refresh-btn:hover { background: var(--gray-700); }
 
   /* 핵심지표 요약 타일 (renderCoreSummary) — 시안과 동일 구조 */
-  /* 카드 규격 = 본부 품질 KPI 요약 카드 실측과 동일 (260px 폭 · 190px 높이 · 패딩 18 · 라벨 15 · 숫자 30 · 보조 13, 형 요청 09-18) */
-  #core-summary-grid { grid-template-columns: repeat(auto-fill, 260px) !important; gap: 12px !important; margin-bottom: 20px !important; }
-  @media (max-width: 560px) { #core-summary-grid { grid-template-columns: minmax(0, 1fr) !important; } }
-  #core-chart-grid { gap: 12px !important; }
-  .core-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; height: 190px; min-height: 190px; box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 0; min-width: 0; cursor: pointer; transition: box-shadow .15s, transform .15s; outline: none; }
-  .core-tile .ct-head { font-size: 15px; font-weight: 600; color: var(--ink); height: 22px; line-height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; gap: 8px; }
+  /* 카드 규격 = 리디자인 이전처럼 한 줄 3장 전폭(≈350px) · 큰 숫자 36px (형 요청 09-18: "작아졌다 → 이전 크기로") */
+  #core-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 14px !important; margin-bottom: 20px !important; }
+  @media (max-width: 1100px) { #core-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+  @media (max-width: 700px) { #core-summary-grid { grid-template-columns: minmax(0, 1fr) !important; } }
+  #core-chart-grid { gap: 14px !important; }
+  .core-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px 22px 18px; min-height: 176px; box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 0; min-width: 0; cursor: pointer; transition: box-shadow .15s, transform .15s; outline: none; }
+  .core-tile .ct-head { font-size: 14px; font-weight: 600; color: var(--ink-2); height: 22px; line-height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; gap: 8px; }
   .core-tile .ct-head .ct-sw { width: 9px; height: 9px; }
-  .core-tile .ct-val { font-size: 30px; line-height: 36px; margin-top: 18px; }
-  .core-tile .ct-val small { font-size: 14px; }
+  .core-tile .ct-val { font-size: 36px; line-height: 40px; margin-top: 14px; }
+  .core-tile .ct-val small { font-size: 15px; }
   .core-tile .ct-sub { margin-top: 6px; min-height: 0; -webkit-line-clamp: 1; font-size: 13px; line-height: 18px; color: var(--ink-3); }
-  .core-tile .ct-foot { margin-top: auto; }
+  .core-tile .ct-foot { margin-top: 14px; }
   .core-tile .ct-foot .badge { height: 22px; font-size: 11.5px; padding: 0 9px; }
   .core-tile .ct-go { font-size: 12px; }
   .core-tile:hover, .core-tile:focus-visible { box-shadow: var(--shadow-2); transform: translateY(-1px); }
@@ -949,18 +950,19 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .dh-btn:disabled:hover { background: var(--surface); color: var(--ink-2); }
   /* 오늘 가제본 현황 */
   .dh-today { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(240px, 1.4fr); gap: 12px; margin-top: 14px; align-items: stretch; }
-  .dh-stat { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px 11px; background: var(--surface); display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: box-shadow .12s, border-color .12s; min-width: 0; }
+  /* 오늘 가제본 타일: 리디자인 전(숫자 32px) 이상으로 크게 — 형 요청 09-18 */
+  .dh-stat { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px 14px; min-height: 128px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: box-shadow .12s, border-color .12s; min-width: 0; }
   .dh-stat:hover { box-shadow: var(--shadow-2); }
   .dh-stat.on { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
-  .dh-stat-l { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
-  .dh-stat-l i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
-  .dh-stat-v { font-size: 28px; font-weight: 700; letter-spacing: var(--ls-tight); line-height: 1.05; color: var(--ink); }
-  .dh-stat-v small { font-size: 12px; font-weight: 600; color: var(--ink-3); margin-left: 3px; }
-  .dh-stat-s { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .dh-prog { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px 11px; background: var(--surface-2); display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 0; }
-  .dh-prog-t { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--ink-2); }
-  .dh-prog-t b { font-size: 18px; letter-spacing: var(--ls-tight); color: var(--ink); }
-  .dh-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; background: var(--surface); }
+  .dh-stat-l { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .dh-stat-l i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+  .dh-stat-v { font-size: 36px; font-weight: 700; letter-spacing: var(--ls-tight); line-height: 1.05; color: var(--ink); margin-top: 2px; }
+  .dh-stat-v small { font-size: 14px; font-weight: 600; color: var(--ink-3); margin-left: 4px; }
+  .dh-stat-s { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
+  .dh-prog { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px 14px; background: var(--surface-2); display: flex; flex-direction: column; justify-content: center; gap: 10px; min-width: 0; }
+  .dh-prog-t { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--ink-2); }
+  .dh-prog-t b { font-size: 24px; letter-spacing: var(--ls-tight); color: var(--ink); }
+  .dh-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px; background: var(--surface); }
   .dh-bar > i { display: block; height: 100%; }
   .dh-legend { display: flex; gap: 14px; font-size: 11px; color: var(--ink-3); }
   .dh-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
@@ -1019,7 +1021,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   @media (max-width: 1280px) { .dh-tbl .col-eq { display: none; } }
   @media (max-width: 1100px) { .dh-today { grid-template-columns: repeat(3, minmax(0, 1fr)); } .dh-prog { grid-column: 1 / -1; } .dh-tbl .col-req { display: none; } }
   @media (max-width: 720px) {
-    .dh-today { gap: 8px; } .dh-stat { padding: 10px 12px; } .dh-stat-v { font-size: 22px; } .dh-stat-s { display: none; }
+    .dh-today { gap: 8px; } .dh-stat { padding: 12px 12px 10px; min-height: 0; } .dh-stat-v { font-size: 26px; } .dh-stat-s { display: none; }
     .dh-tbl .col-who, .dh-tbl .col-date, .dh-tbl .col-client, .dh-tbl .col-req, .dh-tbl .col-eq, .dh-tbl .col-copy { display: none; }
     .dh-tbl { table-layout: auto; }
     .dh-tbl td { padding: 8px 6px; }
