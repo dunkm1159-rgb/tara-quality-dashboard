@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789737771">
+<meta name="data-version" content="1789739043">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -2471,7 +2471,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
           <input id="cdb-client" class="dh-select" list="cdb-client-list" placeholder="거래처 · 외주처" oninput="cdbDebounce()" autocomplete="off"><datalist id="cdb-client-list"></datalist>
           <button type="button" class="gj-toggle" id="cdb-rich" onclick="this.classList.toggle('gj-on');renderClaimDb()">조치 내용 있는 건만</button>
           <button type="button" class="dh-btn" onclick="cdbClear()"><i class="ti ti-x"></i> 초기화</button>
-          <span class="cdb-hint" id="cdb-hint">유사도는 글자 2자 조합의 겹침으로 계산 · 같은 뜻 말(요고레=더러움=묻음 등)은 함께 찾아요</span>
+          <span class="cdb-hint" id="cdb-hint">유사도 0~100: 70+ 매우 유사 · 40~69 유사 · 그 미만 참고 — 현상·유형·조치·제품명의 글자 겹침으로 계산, 같은 뜻 말(요고레=더러움=묻음)은 함께 찾아요</span>
         </div>
       </div>
 
@@ -6296,6 +6296,9 @@ function cdbScore(r, qb, qtoks) {
   return s + 0.05 * (qtoks.length ? hit / qtoks.length : 0) + (r.dtype && qtoks.some(t => cdbNorm(t) === cdbNorm(r.dtype)) ? 0.08 : 0);
 }
 function cdbDebounce() { clearTimeout(_cdbTimer); _cdbTimer = setTimeout(renderClaimDb, 180); }
+// 화면 표시용 유사도: 내부 점수(글자 조각 겹침·의미 점수 혼합, 보통 0.12~0.7)를 사람이 읽는 0~100 으로. 0.12(검색 하한)=0 · 0.60 이상(사실상 같은 사고)=100
+function cdbPct(s) { if (s == null) return null; return Math.max(0, Math.min(100, Math.round((s - 0.12) / 0.48 * 100))); }
+function cdbBand(p) { return p >= 70 ? '매우 유사' : p >= 40 ? '유사' : '참고'; }
 
 // ── 의미 검색(AI 임베딩) — claim_vec.js(문서 벡터, int8) + /api/embed(질문 벡터, Cloudflare Workers AI) ──
 // 둘 중 하나라도 없으면 글자(bigram) 검색만으로 동작. 상태: off(벡터 파일 없음) / wait(질문 벡터 요청 중) / on / nosvr(서버 바인딩 없음) / err
@@ -6347,7 +6350,7 @@ function cdbBlend(r, s, qv) {
 }
 function cdbSemanticHint(qv) {
   const h = document.getElementById('cdb-hint'); if (!h) return;
-  const base = '유사도는 글자 2자 조합의 겹침으로 계산 · 같은 뜻 말(요고레=더러움=묻음 등)은 함께 찾아요';
+  const base = '유사도 0~100: 70+ 매우 유사 · 40~69 유사 · 그 미만 참고 — 현상·유형·조치·제품명의 글자 겹침으로 계산, 같은 뜻 말(요고레=더러움=묻음)은 함께 찾아요';
   const idx = cdbVecIndex();
   if (!idx) { h.textContent = base; h.dataset.sem = 'off'; return; }
   const st = qv ? 'on' : _cvStatus;
@@ -6399,8 +6402,8 @@ function renderClaimDb() {
   if (!hits.length) { res.innerHTML = `<div class="cdb-empty">비슷한 사례를 못 찾았어요.<br>말을 바꿔보거나(예: "묻음" → "요고레"), 공정·연도 필터를 풀어보세요.</div>`; }
   else {
     res.innerHTML = hits.map(({ r, s }) => {
-      const pct = s == null ? null : Math.min(99, Math.round(s * 100 / 0.8));
-      const ring = pct == null ? '' : `<div class="cdb-score"><div class="cdb-ring ${pct >= 60 ? 'hi' : pct < 30 ? 'lo' : ''}" style="--p:${pct}"><span>${pct}%</span></div><small>유사도</small></div>`;
+      const pct = cdbPct(s);   // 0~100 표시 유사도 (등록 화면 유사사례와 같은 기준)
+      const ring = pct == null ? '' : `<div class="cdb-score"><div class="cdb-ring ${pct >= 70 ? 'hi' : pct < 40 ? 'lo' : ''}" style="--p:${pct}" title="유사도 ${pct} · ${cdbBand(pct)}"><span>${pct}</span></div><small>${cdbBand(pct)}</small></div>`;
       const cause = r.cause ? `<div class="cdb-act cause"><b>원인</b>${cdbHl(r.cause, qtoks)}</div>` : '';
       const act = r.aq === 2 ? `<div class="cdb-act"><b>조치</b>${cdbHl(r.action, qtoks)}${r.actiondate ? ` <span style="color:var(--ink-3)">· ${esc(r.actiondate)}</span>` : ''}</div>`
         : r.aq === 1 ? `<div class="cdb-act generic"><b>조치</b>${esc(r.action)} <span>· 형식적 기록</span></div>` : `<div class="cdb-act none">조치 기록 없음</div>`;
@@ -8896,7 +8899,7 @@ function renderRegSimilar() {
       const actTxt = r.action ? cdbHl(r.action, qtoks) : '조치 기록 없음';
       const tags = [r.dtype ? '<span class="dh-tag">' + esc(r.dtype) + '</span>' : '', r.equip ? '<span class="dh-tag alt">' + esc(r.equip) + '</span>' : '', r.inout ? '<span class="dh-tag alt">' + esc(r.inout) + '</span>' : ''].join('');
       return '<div class="rs-row" data-id="' + esc(r.id) + '">'
-        + '<div class="rs-ring" style="--p:' + pct(s) + '" title="유사도"><span>' + Math.round(s * 100) + '</span></div>'
+        + '<div class="rs-ring" style="--p:' + cdbPct(s) + '" title="유사도 ' + cdbPct(s) + ' · ' + cdbBand(cdbPct(s)) + '"><span>' + cdbPct(s) + '</span></div>'
         + '<div class="rs-body"><div class="rs-meta"><b>' + esc(r.date || '') + '</b>' + (r.client ? '<span>' + esc(r.client) + '</span>' : '') + (r.product ? '<span>· ' + esc(r.product.length > 28 ? r.product.slice(0, 28) + '…' : r.product) + '</span>' : '') + tags + '</div>'
         + '<div class="rs-sym">' + cdbHl(r.symptom || r.dtype || '', qtoks) + '</div>'
         + (r.cause ? '<div class="rs-act cause"><b>원인</b>' + cdbHl(r.cause, qtoks) + '</div>' : '')
