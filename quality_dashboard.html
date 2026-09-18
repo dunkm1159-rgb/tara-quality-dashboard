@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789715622">
+<meta name="data-version" content="1789716899">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1230,6 +1230,48 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .wl-detail::before { content: '· '; }
   .wl-who { font-weight: 600; color: var(--ink); }
   .wl-tbl mark { background: var(--warn-bg); color: inherit; border-radius: 3px; padding: 0 1px; }
+  /* ── 가제본 현황 (gj-*) ── */
+  .gj-meta { color: var(--ink-3); }
+  .gj-status-line { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; }
+  .gj-status-line:empty { display: none; }
+  .gj-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid var(--border-strong); overflow-x: auto; scrollbar-width: thin; }
+  .gj-tabs .gajebon-sheet-btn { flex-shrink: 0; }
+  .gj-filter { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .gj-filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .gj-search { flex: 1; min-width: 220px; height: 34px; }
+  .gj-filter .dh-select { height: 34px; }
+  .gj-dates { display: inline-flex; align-items: center; gap: 6px; } .gj-dates em { font-style: normal; color: var(--ink-3); }
+  .gj-dates input[type=date].dh-select { padding: 0 8px; font-weight: 500; }
+  .gj-quick-l { font-size: 11.5px; font-weight: 600; color: var(--ink-3); margin-right: 2px; }
+  .gj-filter .gj-toggle { height: 30px; padding: 0 12px; font-size: 12px; border-radius: 999px; }
+  .gj-legend { margin-left: auto; font-size: 11px; color: var(--ink-3); display: inline-flex; align-items: center; gap: 6px; }
+  .gj-sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--border); margin-left: 6px; }
+  .gj-sw.done { background: #FFF3C4; }
+  .gj-tablecard { padding: 0; overflow: hidden; }
+  .gj-count { padding: 9px 16px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--border); background: var(--surface); }
+  .gj-tbl th { padding: 9px 10px; }
+  .gj-tbl td { padding: 8px 10px; white-space: normal; overflow: visible; font-size: 12.5px; }
+  .gj-tbl tbody tr:hover td { background: var(--surface-2); }
+  .gj-tbl tr.gj-done-row td { background: #FFF8DC; }
+  .gj-tbl tr.gj-done-row:hover td { background: #FFF3C4; }
+  .gj-date-c { white-space: nowrap; color: var(--ink-2); }
+  .gj-order { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-2); letter-spacing: 0; white-space: nowrap; }
+  .gj-ell { overflow: hidden !important; text-overflow: ellipsis; white-space: nowrap !important; }
+  .gj-who { color: var(--ink-2); }
+  .gj-prod { font-weight: 600; color: var(--ink); }
+  .gj-dim { color: var(--ink-3); }
+  .gj-stcell { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .gj-st { width: 88px; height: 26px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-2); font: inherit; font-size: 12px; font-weight: 600; padding: 0 6px; cursor: pointer; }
+  .gj-st[data-st="done"] { color: var(--good); background: var(--good-bg); border-color: transparent; }
+  .gj-st[data-st="prog"] { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
+  .gj-st[data-st="wait"] { color: var(--danger); background: var(--danger-bg); border-color: transparent; }
+  .gj-gdate { width: 112px; height: 26px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); font: inherit; font-size: 11px; padding: 0 6px; color: var(--ink-2); cursor: pointer; }
+  .gj-gdate.has { border-color: #E3B341; background: #FFF3C4; color: #6B4F00; font-weight: 600; }
+  .gj-gdate:focus, .gj-st:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+  .gj-stamp { display: inline-block; font-size: 10px; font-weight: 700; color: #6B4F00; background: #FFE58A; border-radius: 4px; padding: 1px 7px; }
+  .gj-stamp.soft { background: #FFF0C2; }
+  @media (max-width: 720px) { .gj-legend { margin-left: 0; width: 100%; } .gj-search { min-width: 100%; } }
+
   @media (max-width: 720px) {
     .wl-tbl { table-layout: auto; } .wl-tbl col { width: auto !important; }
     .wl-tbl th:nth-child(2), .wl-tbl td:nth-child(2), .wl-tbl th:nth-child(4), .wl-tbl td:nth-child(4) { display: none; }
@@ -2006,31 +2048,33 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
     <!-- ============ 가제본 현황 ============ -->
     <div id="tab-gajebon" class="tab">
-      <div class="section-header">
-        <div class="section-title">가제본 현황</div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="exportGajebonRecords()">기록 백업</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('gajebon-record-import').click()">기록 복원</button>
+      <!-- 가제본 현황 (dh-* 디자인, 2026-09-18) — 로직·ID·핸들러는 그대로, 겉모습만 -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">가제본 현황</h1>
+          <div class="dh-sub">ERP 생산실적 자동수집 · 진행상태는 대수마감 기준 · 가제본 완료일(날짜 도장)은 구글시트에 저장되어 팀 공유 <span id="gajebon-file-info" class="gj-meta"></span></div>
+          <div id="gajebon-save-status" role="status" class="gj-status-line"></div>
+        </div>
+        <div class="dh-actions">
+          <button class="dh-btn" onclick="exportGajebonRecords()" title="이 브라우저의 진행상태·구성 편집 기록을 JSON 으로 저장"><i class="ti ti-download"></i> 기록 백업</button>
+          <button class="dh-btn" onclick="document.getElementById('gajebon-record-import').click()"><i class="ti ti-upload"></i> 기록 복원</button>
+          <button class="dh-btn dh-btn-brand" onclick="exportGajebon()" title="지금 보이는 행만 엑셀로"><i class="ti ti-file-spreadsheet"></i> 엑셀 내려받기</button>
           <input type="file" id="gajebon-record-import" accept=".json" style="display:none" onchange="importGajebonRecords(this)">
         </div>
         <input type="file" accept=".xlsx,.xls" id="gajebon-file-input" style="display:none" onchange="loadGajebonExcel(this)">
       </div>
 
-      <div id="gajebon-empty" style="text-align:center;padding:60px;color:#aaa">
-        <div style="font-size:40px;margin-bottom:12px"></div>
-        <div id="gajebon-empty-msg" style="font-size:14px;margin-bottom:6px">가제본현황_누적.xlsx 파일을 불러오세요</div>
-        <div style="font-size:12px;color:#ccc">C:\Users\user\Claude\Scheduled\tara-erp-gajebon-daily\가제본현황_누적.xlsx</div>
+      <div id="gajebon-empty" class="dh-empty" style="padding:60px 20px">
+        <div id="gajebon-empty-msg" style="font-size:14px;margin-bottom:6px;color:var(--ink-2)">가제본현황_누적.xlsx 파일을 불러오세요</div>
+        <div style="font-size:12px">C:\Users\user\Claude\Scheduled\tara-erp-gajebon-daily\가제본현황_누적.xlsx</div>
       </div>
 
       <div id="gajebon-content" style="display:none">
-        <div id="gajebon-save-status" role="status" style="font-size:12px;color:#666;margin-bottom:8px"></div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:14px" id="gajebon-file-info"></div>
-
         <div class="metrics" id="gajebon-metrics" style="margin-bottom:14px"></div>
         <div id="gajebon-breakdown" style="margin-bottom:20px"></div>
 
-        <!-- 시트 탭 -->
-        <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(0,0,0,0.07);padding-bottom:0">
+        <!-- 시트 탭 (영업본부) -->
+        <div class="gj-tabs">
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('전체',this)">전체</button>
           <button class="gajebon-sheet-btn active" onclick="switchGajebonSheet('기타',this)">국내영업본부</button>
           <button class="gajebon-sheet-btn" onclick="switchGajebonSheet('국내영업본부(EBS)',this)">국내영업본부(EBS)</button>
@@ -2043,31 +2087,33 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         </div>
 
         <!-- 필터 -->
-        <div class="filter-bar" style="margin-bottom:12px">
-          <input type="text" id="gajebon-search" placeholder="거래처, 제품명 검색..." oninput="renderGajebonTable()" style="flex:1;min-width:160px">
-          <select id="gajebon-filter" onchange="renderGajebonTable()">
-            <option value="">전체 상태</option>
-            <option value="완료">완료</option>
-            <option value="진행중">진행중</option>
-            <option value="미처리">미처리</option>
-          </select>
-          <select id="gajebon-emp" onchange="renderGajebonTable()"><option value="">전체 담당자</option></select>
-          <input type="date" id="gajebon-date-from" title="시작일" onchange="renderGajebonTable()">
-          <span style="line-height:32px;color:#aaa;font-size:12px">~</span>
-          <input type="date" id="gajebon-date-to" title="종료일" onchange="renderGajebonTable()">
-          <button class="icon-btn primary" onclick="renderGajebonTable()" title="조회"></button>
-          <button class="icon-btn ghost" onclick="clearGajebonDate()" title="초기화"></button>
-          <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">가제본만</button>
-          <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">완료만 보이기</button>
-          <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">진행중만</button>
-          <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">오늘 신규완료</button>
-          <button type="button" onclick="exportGajebon()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:5px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap">엑셀 내려받기</button>
+        <div class="card dh-card gj-filter">
+          <div class="gj-filter-row">
+            <label class="dh-search gj-search"><i class="ti ti-search"></i><input type="text" id="gajebon-search" placeholder="거래처 · 제품명 · 주문번호 · 날짜(6/10) 검색" oninput="renderGajebonTable()" autocomplete="off"></label>
+            <select id="gajebon-filter" class="dh-select" onchange="renderGajebonTable()">
+              <option value="">전체 상태</option>
+              <option value="완료">완료</option>
+              <option value="진행중">진행중</option>
+              <option value="미처리">미처리</option>
+            </select>
+            <select id="gajebon-emp" class="dh-select" onchange="renderGajebonTable()"><option value="">전체 담당자</option></select>
+            <span class="gj-dates"><input type="date" id="gajebon-date-from" class="dh-select" title="시작일" onchange="renderGajebonTable()"><em>~</em><input type="date" id="gajebon-date-to" class="dh-select" title="종료일" onchange="renderGajebonTable()"></span>
+            <button class="dh-btn" onclick="clearGajebonDate()" title="검색·기간 초기화"><i class="ti ti-x"></i> 초기화</button>
+          </div>
+          <div class="gj-filter-row gj-quick">
+            <span class="gj-quick-l">빠른 필터</span>
+            <button type="button" class="gj-toggle" id="gjt-only" onclick="toggleGajebonFilter('onlyGajebon',this)">가제본만</button>
+            <button type="button" class="gj-toggle" id="gjt-hide" onclick="toggleGajebonFilter('onlyDone',this)">완료만 보이기</button>
+            <button type="button" class="gj-toggle" id="gjt-prog" onclick="toggleGajebonFilter('onlyProgress',this)">진행중만</button>
+            <button type="button" class="gj-toggle" id="gjt-today" onclick="toggleGajebonFilter('todayDone',this)">오늘 신규완료</button>
+            <span class="gj-legend"><i class="gj-sw done"></i>가제본 완료(도장) 행 <i class="gj-sw" style="background:var(--good)"></i>완료 <i class="gj-sw" style="background:var(--warn)"></i>진행중</span>
+          </div>
         </div>
 
-        <div class="card" style="padding:0">
-          <div style="padding:10px 16px;font-size:12px;color:#86868b;border-bottom:1px solid rgba(0,0,0,0.05)" id="gajebon-count"></div>
+        <div class="card dh-card gj-tablecard">
+          <div class="gj-count" id="gajebon-count"></div>
           <div class="tbl-wrap">
-            <table id="gajebon-table" style="table-layout:fixed;min-width:2050px">
+            <table id="gajebon-table" class="dh-tbl gj-tbl" style="table-layout:fixed;min-width:2050px">
               <thead>
                 <tr>
                   <th style="width:90px;cursor:pointer;user-select:none" onclick="toggleGajebonSort()" title="클릭하면 최신순/오래된순 전환">날짜<span id="gaj-sort-arrow"> ▼</span></th><th style="width:132px">주문번호</th><th style="width:110px">거래처</th><th style="width:80px">담당자</th><th style="width:280px">제품명</th>
@@ -2083,11 +2129,11 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
                   <th class="part-col" id="parthd-7" style="width:74px;text-align:center;padding:2px"></th>
                   <th class="part-col" id="parthd-8" style="width:74px;text-align:center;padding:2px"></th>
                   <th class="part-col" id="parthd-9" style="width:74px;text-align:center;padding:2px"></th>
-                  <th class="ovs-col" style="width:130px;text-align:center;background:#eef7f9;border-left:2px solid #17A2B8">F&amp;G 승인일</th>
-                  <th class="ovs-col" style="width:84px;text-align:center;background:#eef7f9">발송견본<br><span style="font-weight:400;color:#aaa">수량</span></th>
-                  <th class="ovs-col" style="width:126px;text-align:center;background:#eef7f9">출고일</th>
-                  <th class="ovs-col" style="width:126px;text-align:center;background:#eef7f9">최종승인일</th>
-                  <th class="ovs-col" style="width:200px;background:#eef7f9">요청사항</th>
+                  <th class="ovs-col" style="width:130px;text-align:center;background:var(--brand-50);border-left:2px solid var(--brand)">F&amp;G 승인일</th>
+                  <th class="ovs-col" style="width:84px;text-align:center;background:var(--brand-50)">발송견본<br><span style="font-weight:400;color:var(--ink-3)">수량</span></th>
+                  <th class="ovs-col" style="width:126px;text-align:center;background:var(--brand-50)">출고일</th>
+                  <th class="ovs-col" style="width:126px;text-align:center;background:var(--brand-50)">최종승인일</th>
+                  <th class="ovs-col" style="width:200px;background:var(--brand-50)">요청사항</th>
                 </tr>
               </thead>
               <tbody id="gajebon-tbody"></tbody>
@@ -6854,7 +6900,7 @@ function renderGajebonTable() {
   const tbody = document.getElementById('gajebon-tbody');
   if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="' + (8 + (showParts() ? 11 : 0) + (isOvsSheet() ? 5 : 0)) + '" class="empty">데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + (8 + (showParts() ? 11 : 0) + (isOvsSheet() ? 5 : 0)) + '"><div class="dh-empty">조건에 맞는 건이 없어요 · 검색어나 필터를 풀어보세요</div></td></tr>';
     return;
   }
   const statusBadge = s => {
@@ -6888,32 +6934,31 @@ function _buildGajebonRowsHTML(rows) {
     const origIdx = idxMap.get(r);
     const status = (gajDate(r['주문번호']||'') || isStickerDone(r) || isStaleGajebon(r)) ? '완료' : (r['진행상태'] || '');
     const inspDate = r['검수일자'] || '';
-    const statusColor = status.includes('완료') ? '#248a3d' : status.includes('진행') ? '#c93400' : '#6e6e73';
-    const gajDone = !!gajDate(r['주문번호']||'');   // 가제본일 도장 = 완료 → 행 전체 노랑
-    return `<tr style="${gajDone?'background:#FFE9A8;':''}">
-      <td style="white-space:nowrap;font-size:13px">${r['날짜']||'-'}</td>
-      <td style="font-size:13px">${r['주문번호']||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['거래처']}">${r['거래처']||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r['부서']||''} ${r['담당자']||''}">${r['담당자']||'-'}</td>
-      <td style="${prodStyle}font-size:13px;font-weight:500;color:#1d1d1f" title="${r['제품명']}">${r['제품명']||'-'}</td>
-      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['요청내용']}">${r['요청내용']||'-'}</td>
-      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['설비명']||''}">${r['설비명']||'-'}</td>
+    // 상태 색: 완료 = good · 진행중 = warn · 그 외 = 잉크 (data-st 로 CSS 에서 칩 색)
+    const stKey = status.includes('완료') ? 'done' : status.includes('진행') ? 'prog' : (status === '대기' || status === '미처리') ? 'wait' : 'none';
+    const gajDone = !!gajDate(r['주문번호']||'');   // 가제본일 도장 = 완료 → 행 전체 연노랑(팀 관습 유지)
+    const gjE = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    return `<tr class="${gajDone ? 'gj-done-row' : ''}">
+      <td class="gj-date-c num">${gjE(r['날짜']||'-')}</td>
+      <td><span class="gj-order">${gjE(r['주문번호']||'-')}</span></td>
+      <td class="gj-ell" title="${gjE(r['거래처'])}">${gjE(r['거래처']||'-')}</td>
+      <td class="gj-ell gj-who" title="${gjE(r['부서']||'')} ${gjE(r['담당자']||'')}">${gjE(r['담당자']||'-')}</td>
+      <td class="gj-prod" style="${prodStyle}" title="${gjE(r['제품명'])}">${gjE(r['제품명']||'-')}</td>
+      <td class="gj-ell gj-dim" title="${gjE(r['요청내용'])}">${gjE(r['요청내용']||'-')}</td>
+      <td class="gj-ell gj-dim" title="${gjE(r['설비명']||'')}">${gjE(r['설비명']||'-')}</td>
       <td>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <select onchange="updateGajebonField(${origIdx},'진행상태',this.value)"
-            style="border:1px solid ${statusColor};border-radius:4px;padding:3px 6px;font-size:12px;font-weight:600;color:${statusColor};background:#fff;cursor:pointer;width:80px;">
+        <div class="gj-stcell">
+          <select class="gj-st" data-st="${stKey}" onchange="updateGajebonField(${origIdx},'진행상태',this.value)">
             <option value="" ${!['진행중','완료','대기','미처리'].includes(status)?'selected':''}>미지정</option>
             <option value="진행중" ${status==='진행중'?'selected':''}>진행중</option>
             <option value="완료"   ${status==='완료'  ?'selected':''}>완료</option>
             <option value="대기"   ${status==='대기'  ?'selected':''}>대기</option>
             <option value="미처리" ${status==='미처리'?'selected':''}>미처리</option>
           </select>
-          <input type="date" value="${gajDate(r['주문번호']||'')}" onchange="saveGajebonDate('${r['주문번호']||''}', this.value)"
-            title="가제본 만든 날짜"
-            style="border:1px solid ${gajDate(r['주문번호']||'')?'#e0a800':'#d2d2d7'};border-radius:7px;padding:2px 6px;font-size:11px;width:110px;cursor:pointer;background:${gajDate(r['주문번호']||'')?'#FFF3B0':'#fff'};">
-          ${status==='완료' ? (gajDate(r['주문번호']||'')
-            ? '<div style="display:inline-block;font-size:10px;color:#7a5c00;font-weight:700;background:#FFE58A;border-radius:4px;padding:1px 7px;margin-top:2px">✓ 가제본 완료</div>'
-            : (isStickerDone(r) ? '<div style="display:inline-block;font-size:10px;color:#7a5c00;font-weight:700;background:#FFF0C2;border-radius:4px;padding:1px 7px;margin-top:2px">✓ 스티커 특례</div>' : '')) : ''}
+          <input type="date" class="gj-gdate${gajDone ? ' has' : ''}" value="${gajDate(r['주문번호']||'')}" onchange="saveGajebonDate('${gjE(r['주문번호']||'')}', this.value)" title="가제본 만든 날짜 (도장)">
+          ${status==='완료' ? (gajDone
+            ? '<span class="gj-stamp">✓ 가제본 완료</span>'
+            : (isStickerDone(r) ? '<span class="gj-stamp soft">✓ 스티커 특례</span>' : '')) : ''}
         </div>
       </td>
       ${(() => { const order = r['주문번호']||'';
