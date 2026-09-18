@@ -69,11 +69,33 @@ export async function onRequest(context) {
   // 3) 쿠키 인증 확인
   const cookie = request.headers.get('Cookie') || '';
   const m = cookie.match(/(?:^|;\s*)tara_auth=([^;]+)/);
+  let authed = false;
   if (m) {
     let val = '';
     try { val = decodeURIComponent(escape(atob(m[1]))); } catch (e) { val = ''; }
-    if (allowed.has(val)) return next(); // 인증됨 → 사이트 표시
+    authed = allowed.has(val);
   }
+
+  // 3.5) 클레임 DB 의미 검색: 질문 문장 → 임베딩 벡터 (Cloudflare Workers AI, 바인딩 이름 AI). 로그인 사용자만.
+  //      바인딩이 없으면 501 → 화면은 글자 검색만으로 동작. 키는 코드에 없음(Pages 설정 → 바인딩 → Workers AI).
+  if (request.method === 'POST' && url.pathname === '/api/embed') {
+    const json = (obj, status) => new Response(JSON.stringify(obj), { status: status || 200, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
+    if (!authed) return json({ ok: false, reason: 'auth' }, 401);
+    if (!env.AI || typeof env.AI.run !== 'function') return json({ ok: false, reason: 'no-binding' }, 501);
+    let text = '';
+    try { const b = await request.json(); text = String(b.text || '').replace(/\s+/g, ' ').trim().slice(0, 1000); } catch (e) {}
+    if (!text) return json({ ok: false, reason: 'empty' }, 400);
+    try {
+      const out = await env.AI.run('@cf/baai/bge-m3', { text: [text] });
+      const vec = out && out.data && out.data[0];
+      if (!vec || !vec.length) throw new Error('empty embedding');
+      return json({ ok: true, model: '@cf/baai/bge-m3', dim: vec.length, vec: Array.from(vec, (x) => Math.round(x * 1e5) / 1e5) });
+    } catch (e) {
+      return json({ ok: false, reason: String(e && e.message || e).slice(0, 160) }, 502);
+    }
+  }
+
+  if (authed) return next(); // 인증됨 → 사이트 표시
 
   // 4) 미인증 → 로그인 페이지
   return loginPage('');
