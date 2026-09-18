@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789729787">
+<meta name="data-version" content="1789730717">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -6801,6 +6801,62 @@ function monthlyLedgerYtd(year, month) {
   return Array.from({length: month}, (_, i) => monthlyLedgerPeriod(year + '-' + String(i + 1).padStart(2, '0'))).filter(Boolean);
 }
 
+// 기안 문서용 차트 → PNG (본 창에서 Chart.js 로 화면 밖 캔버스에 그린 뒤 이미지로 넣는다. 인쇄창엔 라이브러리가 없어도 됨)
+function giahnChartPng(cfg, w, h) {
+  if (typeof Chart === 'undefined') return '';
+  const cv = document.createElement('canvas'); cv.width = w * 2; cv.height = h * 2; cv.style.cssText = 'position:fixed;left:-9999px;top:0;width:' + w + 'px;height:' + h + 'px';
+  document.body.appendChild(cv);
+  try {
+    cfg.options = Object.assign({ responsive: false, animation: false, devicePixelRatio: 2, maintainAspectRatio: false }, cfg.options || {});
+    cfg.options.plugins = Object.assign({ legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, padding: 10 } } }, cfg.options.plugins || {});
+    const ch = new Chart(cv.getContext('2d'), cfg);
+    const url = ch.toBase64Image('image/png', 1);
+    ch.destroy();
+    return url;
+  } catch (e) { console.warn('giahnChartPng', e); return ''; }
+  finally { cv.remove(); }
+}
+// 기안 문서에 넣을 그래프 4장: ① 월별 발생 vs 월 목표 ② 누적 발생 vs 누적 목표 ③ 공정별 누적 목표 대비 ④ 전년 동기 비교
+function giahnCharts(yr, moN) {
+  const Y = (window.NCCOST_DATA || {})[yr]; if (!Y || !Y.months) return {};
+  const P = (window.NCCOST_DATA || {})[String(Number(yr) - 1)];
+  const man = v => Math.round((v || 0) / 10000);
+  const labels = Array.from({ length: 12 }, (_, i) => (i + 1) + '월');
+  const has = i => !!monthlyLedgerPeriod(yr + '-' + String(i + 1).padStart(2, '0'));
+  const cost = labels.map((_, i) => has(i) ? man((Y.months[(i + 1) + '월'] || {}).cost) : null);
+  const goal = labels.map((_, i) => man(ncSum(ncMonthGoal(yr, i + 1) || {}, NC_PRC)));
+  let cc = 0, cg = 0; const cumCost = [], cumGoal = [];
+  labels.forEach((_, i) => { cg += goal[i] || 0; cumGoal.push(cg); if (i < moN && has(i)) { cc += cost[i] || 0; cumCost.push(cc); } else cumCost.push(i < moN ? cc : null); });
+  const prevCost = labels.map((_, i) => (P && P.months && P.months[(i + 1) + '월']) ? man(P.months[(i + 1) + '월'].cost) : null);
+  const teal = '#17A2B8', orange = '#E8630B', gray = '#C7CDD4', ink = '#111827', red = '#D0342A', green = '#0F9D63';
+  const axis = { grid: { color: '#EEF0F3', drawBorder: false }, ticks: { font: { size: 10 }, color: '#5B6470' } };
+  const dl = { display: false };
+  const c1 = giahnChartPng({ type: 'bar', data: { labels, datasets: [
+      { type: 'bar', label: '발생비용(만원)', data: cost, backgroundColor: cost.map((v, i) => v != null && v > (goal[i] || 0) ? red : teal), borderRadius: 3, maxBarThickness: 22, order: 2 },
+      { type: 'line', label: '월 목표(만원)', data: goal, borderColor: ink, borderDash: [4, 3], borderWidth: 1.5, pointRadius: 0, tension: 0, order: 1 }] },
+    options: { scales: { x: axis, y: Object.assign({ beginAtZero: true }, axis) }, plugins: { datalabels: dl } } }, 360, 190);
+  const c2 = giahnChartPng({ type: 'line', data: { labels, datasets: [
+      { label: '누적 발생(만원)', data: cumCost, borderColor: teal, backgroundColor: 'rgba(23,162,184,.15)', fill: true, borderWidth: 2, pointRadius: 2.5, tension: 0.25, spanGaps: false },
+      { label: '누적 목표(만원)', data: cumGoal, borderColor: ink, borderDash: [4, 3], borderWidth: 1.5, pointRadius: 0, tension: 0 }] },
+    options: { scales: { x: axis, y: Object.assign({ beginAtZero: true }, axis) }, plugins: { datalabels: dl } } }, 360, 190);
+  // ③ 공정별 누적 목표 대비 (%) — 100% 선
+  const cum = {}; NC_PRC.forEach(p => cum[p] = 0);
+  for (let i = 1; i <= moN; i++) { const m = Y.months[i + '월']; if (m && m.proc) NC_PRC.forEach(p => cum[p] += m.proc[p] || 0); }
+  const cgoal = ncCumGoal(yr, moN);
+  const pct = NC_PRC.map(p => cgoal[p] ? Math.round(cum[p] / cgoal[p] * 100) : 0);
+  const c3 = giahnChartPng({ type: 'bar', data: { labels: NC_PRC, datasets: [{ label: '누적 발생 ÷ 누적 목표 (%)', data: pct, backgroundColor: pct.map(v => v > 100 ? red : v > 80 ? orange : green), borderRadius: 3, maxBarThickness: 16 }] },
+    options: { indexAxis: 'y', scales: { x: Object.assign({ beginAtZero: true, suggestedMax: 120, ticks: { callback: v => v + '%', font: { size: 10 }, color: '#5B6470' } }, { grid: axis.grid }), y: { grid: { display: false }, ticks: { font: { size: 10 }, color: ink } } },
+      plugins: { datalabels: { display: true, anchor: 'end', align: 'end', formatter: v => v + '%', font: { size: 9.5, weight: '600' }, color: ink, clip: false }, legend: { display: false }, annotation: undefined } } }, 360, 190);
+  // ④ 전년 동기 비교 (1~N월 월별)
+  const c4 = P ? giahnChartPng({ type: 'bar', data: { labels: labels.slice(0, moN), datasets: [
+      { label: (Number(yr) - 1) + '년', data: prevCost.slice(0, moN), backgroundColor: gray, borderRadius: 3, maxBarThickness: 14 },
+      { label: yr + '년', data: cost.slice(0, moN), backgroundColor: teal, borderRadius: 3, maxBarThickness: 14 }] },
+    options: { scales: { x: axis, y: Object.assign({ beginAtZero: true }, axis) }, plugins: { datalabels: dl } } }, 360, 190) : '';
+  const prevYtd = P ? labels.slice(0, moN).reduce((s, _, i) => s + (prevCost[i] || 0), 0) : 0;
+  const prevSame = P && P.months && P.months[moN + '월'] ? man(P.months[moN + '월'].cost) : null;
+  return { c1, c2, c3, c4, prevYtd, prevSame, cumCost: cc, cumGoal: cumGoal[moN - 1] || 0, pct };
+}
+
 function generateGiahnDoc() {
   const sel = document.getElementById('monthly-sel');
   const curM = sel ? sel.value : '';
@@ -6809,6 +6865,22 @@ function generateGiahnDoc() {
   const ND = (window.NCCOST_DATA || {})[yr];
   if (!monthlyLedgerPeriod(curM)) { alert(yr + '년 ' + moN + '월 관리대장 데이터가 없습니다.'); return; }
   const mv = ND.months[moK];
+  // ── 요약·그래프·내역용 추가 계산 ──
+  const CH = giahnCharts(yr, moN);
+  const prevPeriod = moN > 1 ? yr + '-' + String(moN - 1).padStart(2, '0') : String(Number(yr) - 1) + '-12';
+  const pv = monthlyLedgerPeriod(prevPeriod);
+  const manR = v => Math.round((v || 0) / 10000);
+  const deltaTxt = (a, b) => { if (b == null || !b) return '<span style="color:#888">비교 없음</span>'; const d = Math.round((a - b) / b * 100); return d > 0 ? `<span style="color:#c0392b">▲ ${d}%</span>` : d < 0 ? `<span style="color:#248a3d">▼ ${Math.abs(d)}%</span>` : '<span style="color:#666">동일</span>'; };
+  const monthGoalAll = ncSum(ncMonthGoal(yr, moN) || {}, NC_PRC);
+  const monthRows = monthlyLedgerRows(curM);
+  const WD = (window.WORKER_DATA && window.WORKER_DATA.rows) || [];
+  const gradeByOrder = {}; WD.filter(r => r[9] === curM).forEach(r => { if (r[6]) gradeByOrder[String(r[6]).trim()] = r; });
+  const lvCount = {}; WD.filter(r => r[9] === curM).forEach(r => { const k = r[2] || ('Lv' + r[3]); lvCount[k] = (lvCount[k] || 0) + 1; });
+  const lvSummary = Object.entries(lvCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}건`).join(' · ');
+  // 반복 발생 유형: 올해 1~N월에 2회 이상 나온 부적합유형 (이번 달 포함 여부 표시)
+  const _ytdRows = monthlyLedgerYtd(yr, moN).flatMap(m => Array.isArray(m.rows) ? m.rows : []);
+  const _repMap = {}; _ytdRows.forEach(r => { const k = (r[8] || '').trim(); if (!k) return; if (!_repMap[k]) _repMap[k] = { c: 0, cost: 0, thisMonth: false }; _repMap[k].c++; _repMap[k].cost += (Number(r[12]) || 0) + (Number(r[13]) || 0); if (r[0] === curM) _repMap[k].thisMonth = true; });
+  const repeats = Object.entries(_repMap).filter(([, v]) => v.c >= 2).sort((a, b) => b[1].c - a[1].c || b[1].cost - a[1].cost).slice(0, 6);
   const selfM = mv.selfCost || 0, outM = (mv.cost || 0) - selfM;
   const PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
   const PT = ND.procTargets || {};
@@ -6871,6 +6943,24 @@ function generateGiahnDoc() {
     .gvl { white-space:nowrap; color:#666; flex-shrink:0; }
     .gbar-track { height:7px; background:#eef0f2; border-radius:4px; overflow:hidden; margin-top:2px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .gbar-fill { height:100%; border-radius:4px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .kpis { display:flex; gap:8px; margin:10px 0 6px; }
+    .kpi { flex:1; border:1px solid #e2e2e2; border-radius:6px; padding:8px 10px; min-width:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .kpi .l { font-size:10px; color:#666; }
+    .kpi .v { font-size:19px; font-weight:800; letter-spacing:-0.5px; margin:2px 0 1px; color:#111; }
+    .kpi .v small { font-size:11px; font-weight:600; color:#666; margin-left:2px; }
+    .kpi .s { font-size:10px; color:#555; }
+    .charts { display:grid; grid-template-columns:1fr 1fr; gap:8px 10px; margin:6px 0 4px; }
+    .chart { border:1px solid #e2e2e2; border-radius:6px; padding:6px 8px 4px; break-inside:avoid; }
+    .chart .t { font-size:11px; font-weight:bold; margin-bottom:2px; }
+    .chart .n { font-size:9.5px; color:#777; margin-top:1px; }
+    .chart img { width:100%; height:auto; display:block; }
+    section { break-inside:avoid; }
+    table.d.list { font-size:10.5px; }
+    table.d.list th, table.d.list td { padding:3px 5px; }
+    .lv { display:inline-block; padding:0 5px; border-radius:8px; font-size:9.5px; font-weight:bold; border:1px solid #bbb; color:#333; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .lv.l2 { border-color:#E8630B; color:#9A4406; background:#FFF3E8; } .lv.l3, .lv.l4 { border-color:#D0342A; color:#8A2320; background:#FCEBEA; } .lv.l1 { border-color:#0F9D63; color:#0B6B45; background:#E8F6EF; }
+    .rep { font-size:11px; margin:4px 0 0 14px; }
+    .rep b.now { color:#c0392b; }
   </style></head><body>
   <table class="approve"><tr><td class="h">담당</td><td class="h">검토</td><td class="h">승인</td></tr><tr><td class="s"></td><td class="s"></td><td class="s"></td></tr></table>
   <div style="clear:both"></div>
@@ -6881,6 +6971,13 @@ function generateGiahnDoc() {
   </table>
   <div class="lead">${yr}년 ${moN}월 품질사고 내역 및 심의결과에 대하여 아래와 같이 보고 드리오니 재가하여 주시기 바랍니다.</div>
   <div class="center">= 아 래 =</div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="l">${moN}월 발생 건수</div><div class="v">${mv.cnt || 0}<small>건</small></div><div class="s">전월(${pv ? (pv.cnt || 0) + '건' : '없음'}) 대비 ${deltaTxt(mv.cnt || 0, pv ? pv.cnt : null)}</div></div>
+    <div class="kpi"><div class="l">${moN}월 발생 비용</div><div class="v">${manR(mv.cost).toLocaleString()}<small>만원</small></div><div class="s">전월 대비 ${deltaTxt(mv.cost || 0, pv ? pv.cost : null)}${CH.prevSame != null ? ' · 전년 동월 대비 ' + deltaTxt(manR(mv.cost), CH.prevSame) : ''}</div></div>
+    <div class="kpi"><div class="l">${moN}월 목표 대비</div><div class="v" style="color:${monthGoalAll && mv.cost > monthGoalAll ? '#c0392b' : '#111'}">${monthGoalAll ? Math.round(mv.cost / monthGoalAll * 100) : '-'}<small>%</small></div><div class="s">목표 ${manR(monthGoalAll).toLocaleString()}만 · 발생 ${manR(mv.cost).toLocaleString()}만</div></div>
+    <div class="kpi"><div class="l">1~${moN}월 누적 목표 대비</div><div class="v" style="color:${CH.cumGoal && CH.cumCost > CH.cumGoal ? '#c0392b' : '#111'}">${CH.cumGoal ? Math.round(CH.cumCost / CH.cumGoal * 100) : '-'}<small>%</small></div><div class="s">누적 목표 ${(CH.cumGoal || 0).toLocaleString()}만 · 누적 발생 ${(CH.cumCost || 0).toLocaleString()}만${CH.prevYtd ? ' · 전년 동기 ' + CH.prevYtd.toLocaleString() + '만' : ''}</div></div>
+  </div>
 
   <h3>1. ${moN}월 품질 사고 금액</h3>
   <table class="d">
@@ -6915,21 +7012,42 @@ function generateGiahnDoc() {
   <h3>3. ${moN}월 공정별 목표 대비 현황</h3>
   ${ncDocMonthTable(yr, moN, 'd')}
 
-  <h3>4. 연간 누적 TOP 분석 (${yr}년, 1~${moN}월)</h3>
+  <section>
+  <h3>4. 그래프로 보는 ${yr}년 현황</h3>
+  <div class="charts">
+    ${CH.c1 ? `<div class="chart"><div class="t">월별 발생비용 vs 월 목표</div><img src="${CH.c1}" alt="월별 발생비용"><div class="n">막대 = 발생비용, 점선 = 「부적합 목표 성과」 월 목표 · 목표 초과 월은 빨강</div></div>` : ''}
+    ${CH.c2 ? `<div class="chart"><div class="t">누적 발생 vs 누적 목표 (1~${moN}월)</div><img src="${CH.c2}" alt="누적 비용"><div class="n">누적 발생 ${(CH.cumCost || 0).toLocaleString()}만 / 누적 목표 ${(CH.cumGoal || 0).toLocaleString()}만 · 연 목표 ${manR(ND.target).toLocaleString()}만</div></div>` : ''}
+    ${CH.c3 ? `<div class="chart"><div class="t">공정별 누적 목표 대비 (1~${moN}월)</div><img src="${CH.c3}" alt="공정별 달성률"><div class="n">100% 넘으면 목표 초과(빨강), 80~100% 주의(주황)</div></div>` : ''}
+    ${CH.c4 ? `<div class="chart"><div class="t">전년 동기 비교 (1~${moN}월, 만원)</div><img src="${CH.c4}" alt="전년 비교"><div class="n">${Number(yr) - 1}년 1~${moN}월 ${CH.prevYtd.toLocaleString()}만 → ${yr}년 ${(CH.cumCost || 0).toLocaleString()}만 (${deltaTxt(CH.cumCost, CH.prevYtd)})</div></div>` : ''}
+  </div>
+  </section>
+
+  <section>
+  <h3>5. 연간 누적 TOP 분석 (${yr}년, 1~${moN}월)</h3>
   <div class="graphic">
     ${gbar('공정별', procTop, '#17A2B8')}
     ${detailsReady ? gbar('부적합 내용', defTop, '#E67E22') : '<div class="gcol">관리대장 상세내역 준비 중</div>'}
     ${detailsReady && cliTop.some(x => x[0] !== '(미상)') ? gbar('거래처', cliTop.filter(x => x[0] !== '(미상)'), '#7B4EA0') : ''}
   </div>
+  ${repeats.length ? `<div class="rep"><b>반복 발생 유형(올해 2회 이상):</b> ${repeats.map(([k, v]) => `<b class="${v.thisMonth ? 'now' : ''}">${gEsc(k)}</b> ${v.c}회·${gwon(v.cost)}만${v.thisMonth ? '(이달 포함)' : ''}`).join(' · ')}</div>` : ''}
+  </section>
 
-  <h3>5. ${moN}월 품질사고 내역 (첨부파일 참조)</h3>
-  <div style="padding-left:14px">
-    - 협력업체 부담비용 : ${won(outM)} 원<br>
-    - 자사부담 품질비용 : ${won(selfM)} 원<br>
-    - 발생 건수 : ${mv.cnt || 0} 건
+  <section>
+  <h3>6. ${moN}월 품질사고 내역 및 심의결과</h3>
+  <div style="padding-left:14px;margin-bottom:6px">
+    - 발생 건수 : ${mv.cnt || 0} 건 (자사부담 ${won(selfM)} 원 · 협력업체 부담 ${won(outM)} 원)<br>
+    - 심의 판정 : ${lvSummary || '<span style="color:#888">해당 월 심의 등급 기록 없음(외주 비용 건은 등급 대상 아님)</span>'}
   </div>
+  ${monthRows.length ? `<table class="d list">
+    <thead><tr><th style="width:9%">작업번호</th><th style="width:12%">거래처</th><th>제품명</th><th style="width:12%">부적합유형</th><th style="width:11%">설비/외주처</th><th style="width:8%">판정</th><th style="width:9%">자사(원)</th><th style="width:9%">외주(원)</th></tr></thead>
+    <tbody>${monthRows.slice().sort((a, b) => ((Number(b[12]) || 0) + (Number(b[13]) || 0)) - ((Number(a[12]) || 0) + (Number(a[13]) || 0))).map(r => { const g = gradeByOrder[String(r[1] || '').trim()]; const lv = g ? Number(g[3]) : 0; return `<tr>
+      <td class="c" style="font-size:9.5px">${gEsc(r[1] || '-')}</td><td>${gEsc(r[2] || '(미상)')}</td><td title="${gEsc(r[4])}">${gEsc(String(r[4] || '').length > 34 ? String(r[4]).slice(0, 34) + '…' : r[4] || '')}${r[6] && r[6] !== r[8] ? `<div style="color:#666;font-size:9.5px">${gEsc(String(r[6]).slice(0, 40))}</div>` : ''}</td><td class="c">${gEsc(r[8] || '-')}</td><td class="c" style="font-size:10px">${gEsc(r[9] || '-')}</td>
+      <td class="c">${g ? `<span class="lv l${lv}">${gEsc(g[2] || ('Lv' + lv))}</span>` : '<span style="color:#bbb">-</span>'}</td><td class="r">${Number(r[12]) ? won(Number(r[12])) : '-'}</td><td class="r">${Number(r[13]) ? won(Number(r[13])) : '-'}</td></tr>`; }).join('')}</tbody>
+    <tfoot><tr><th colspan="6" class="r">합계</th><th class="r">${won(selfM)}</th><th class="r">${won(outM)}</th></tr></tfoot>
+  </table>` : '<div style="padding-left:14px;color:#888">해당 월 품질사고 없음</div>'}
+  </section>
 
-  <h3>6. 첨부</h3>
+  <h3>7. 첨부</h3>
   <div style="padding-left:14px">- ${yr}년 ${moN}월 품질사고 관리대장</div>
 
   <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 통합품질관리시스템에서 자동 생성되었습니다. (생성일 ${today})</div>
