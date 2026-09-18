@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789710517">
+<meta name="data-version" content="1789711249">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -855,11 +855,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   #dash-refresh-btn:hover { background: var(--gray-700); }
 
   /* 핵심지표 요약 타일 (renderCoreSummary) — 시안과 동일 구조 */
-  /* 카드 규격 = 리디자인 이전처럼 한 줄 3장 전폭(≈350px) · 큰 숫자 36px (형 요청 09-18: "작아졌다 → 이전 크기로") */
-  #core-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 14px !important; margin-bottom: 20px !important; }
-  @media (max-width: 1100px) { #core-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
-  @media (max-width: 700px) { #core-summary-grid { grid-template-columns: minmax(0, 1fr) !important; } }
-  #core-chart-grid { gap: 14px !important; }
+  /* 핵심지표 요약 카드: 09-18 아침 버전(인라인 3열 grid, gap 14) 그대로 — 크기 규칙 추가 안 함 (형 요청) */
   .core-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px 22px 18px; min-height: 176px; box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 0; min-width: 0; cursor: pointer; transition: box-shadow .15s, transform .15s; outline: none; }
   .core-tile .ct-head { font-size: 14px; font-weight: 600; color: var(--ink-2); height: 22px; line-height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; gap: 8px; }
   .core-tile .ct-head .ct-sw { width: 9px; height: 9px; }
@@ -1357,7 +1353,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
           </div>
           <button class="dh-link" onclick="showTab('gajebon',document.getElementById('nav-gajebon'))">전체 보기 →</button>
         </div>
-        <div id="gajebon-today-summary" class="dh-today">
+        <div id="gajebon-today-summary" style="margin-top:14px">
           <span class="dh-loading">데이터 로딩 중...</span>
         </div>
       </div>
@@ -3556,13 +3552,12 @@ function renderCoreSummary() {
     const navCall = s.showTabName
       ? `showTab('${s.showTabName}',document.getElementById('nav-${s.nav}'));setAnalysisSrc('${s.src}')`
       : `showTab('${s.nav}',document.getElementById('nav-${s.nav}'))`;
-    // 시안(design/핵심지표_시안.html) 타일: 큰 숫자는 잉크색, 화면 색은 작은 점, 상태는 배지, 타일 전체가 링크
-    const warn = !!(h && h.warn);
-    return `<div class="core-tile" role="button" tabindex="0" onclick="${navCall}" onkeydown="if(event.key==='Enter'){${navCall}}">
-      <div class="ct-head"><span class="ct-sw" style="background:${s.color}"></span>${s.title}</div>
-      <div class="ct-val">${val}<small>${unit}</small></div>
-      <div class="ct-sub" title="${label}${label && sub ? ' · ' : ''}${sub}">${label}${label && sub ? ' · ' : ''}${sub}</div>
-      <div class="ct-foot">${warn ? '<span class="badge badge-high">● 주의</span>' : '<span class="badge badge-pass">정상</span>'}<span class="ct-go">자세히 →</span></div>
+    // 2026-09-18 아침 버전 그대로 (형 요청: 크기 조정 전으로 복구). 시안형 타일(.core-tile)은 보류.
+    return `<div style="background:#fff;border:1px solid #e7e9ec;border-top:4px solid ${accent};border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:9px;">
+      <div style="font-size:13px;font-weight:800;color:#5a6270;">${s.title}</div>
+      <div style="line-height:1;"><span style="font-size:36px;font-weight:900;letter-spacing:-.02em;color:${accent};">${val}</span><span style="font-size:15px;font-weight:700;color:#8a93a0;margin-left:2px;">${unit}</span></div>
+      <div style="font-size:12px;color:#8a93a0;font-weight:600;">${label}${label && sub ? ' · ' : ''}${sub}</div>
+      <button onclick="${navCall}" style="margin-top:4px;align-self:flex-start;background:#14181d;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">자세히 보기 →</button>
     </div>`;
   }).join('');
 
@@ -8106,21 +8101,27 @@ function renderGajebonTodaySummary() {
   }
   el.innerHTML = _dhTodayHtml(done, progress, total, doneSamples, progressSamples);
 }
-// 오늘 가제본 현황 타일 3개(완료/진행중/전체, 클릭 = 아래 작업지시서 목록 필터) + 완료율 100% 막대 — design/대시보드홈_시안.html 과 동일
+// 오늘 가제본 현황 타일 — 2026-09-18 아침 버전 그대로 복구(형 요청: 크기 조정 전으로). 시안형(dh-stat + 완료율 막대)은 보류.
 function _dhTodayHtml(done, progress, total, doneSamples, progressSamples) {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const pct = total ? Math.round(done / total * 100) : 0;
-  const f = (typeof _printFilter === 'string') ? _printFilter : 'all';
-  const stat = (key, dot, label, n, sub) => `<div class="dh-stat${(f === key && f !== 'all') ? ' on' : ''}" role="button" tabindex="0" onclick="setPrintFilter('${key}',true)" onkeydown="if(event.key==='Enter')setPrintFilter('${key}',true)">
-      <div class="dh-stat-l"><i style="background:${dot}"></i>${label}</div>
-      <div class="dh-stat-v num">${n}<small>건</small></div>
-      <div class="dh-stat-s" title="${esc(sub)}">${esc(sub) || '&nbsp;'}</div></div>`;
-  return stat('done', 'var(--good)', '완료', done, (doneSamples || []).filter(Boolean).join(' · '))
-    + stat('prog', 'var(--warn)', '진행중', progress, (progressSamples || []).filter(Boolean).join(' · '))
-    + stat('all', 'var(--gray-300)', '전체', total, '오늘 대상 가제본')
-    + `<div class="dh-prog"><div class="dh-prog-t"><span>완료율</span><span><b class="num">${pct}%</b> <span class="num">${done} / ${total}</span></span></div>
-       <div class="dh-bar"><i style="width:${pct}%;background:var(--good)"></i><i style="width:${100 - pct}%;background:var(--warn)"></i></div>
-       <div class="dh-legend"><span><i style="background:var(--good)"></i>완료 ${done}</span><span><i style="background:var(--warn)"></i>진행중 ${progress}</span></div></div>`;
+  const ds = (doneSamples || []).filter(Boolean), ps = (progressSamples || []).filter(Boolean);
+  return `
+      <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
+        <div style="background:#f0faf4;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #27ae60;cursor:pointer" onclick="setPrintFilter('done',true)">
+          <div style="font-size:32px;font-weight:800;color:#27ae60;">${done}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">완료</div>
+          ${ds.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${esc(ds.join(', '))}</div>` : ''}
+        </div>
+        <div style="background:#fff8f0;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #e67e22;cursor:pointer" onclick="setPrintFilter('prog',true)">
+          <div style="font-size:32px;font-weight:800;color:#e67e22;">${progress}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">진행중</div>
+          ${ps.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${esc(ps.join(', '))}</div>` : ''}
+        </div>
+        <div style="background:#f5f7fa;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #17A2B8;cursor:pointer" onclick="setPrintFilter('all',true)">
+          <div style="font-size:32px;font-weight:800;color:#17A2B8;">${total}</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">전체</div>
+        </div>
+      </div>`;
 }
 
 
