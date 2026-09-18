@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789717495">
+<meta name="data-version" content="1789719030">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -58,6 +58,50 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   document.addEventListener('DOMContentLoaded', function(){
     if (!window.Chart) taraShowError('차트 라이브러리(Chart.js)를 불러오지 못했습니다. 새로고침해 보시고, 계속되면 네트워크/사내 차단 설정을 확인해 주세요.');
   });
+})();
+</script>
+<script>
+/* ── 공통 대화상자(알림·확인·입력) — 브라우저 기본 팝업 대신 디자인 통일 (2026-09-18, 형 요청) ──
+   alert() 은 전역 대체(호출부 그대로). confirm/prompt 는 동기 함수라 대체 불가 → 호출부를 await taraConfirm/taraPrompt 로 바꿈.
+   테스트·외부 스크립트가 window.alert/confirm/prompt 를 스텁으로 바꿔 놓으면 그 스텁을 그대로 사용(헤드리스 테스트 호환). */
+(function(){
+  var nativeAlert = window.alert, nativeConfirm = window.confirm, nativePrompt = window.prompt;
+  var queue = Promise.resolve();
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function show(opt){
+    return new Promise(function(resolve){
+      var kind = opt.kind || 'alert';
+      var msg = String(opt.message == null ? '' : opt.message);
+      var danger = opt.danger != null ? opt.danger : (kind !== 'alert' && /삭제|초기화|되돌릴 수 없|영구|로그아웃/.test(msg));
+      var isErr = kind === 'alert' && /실패|오류|없습니다|올바르지|않습니다|해 주세요|해주세요/.test(msg);
+      var title = opt.title || (kind === 'alert' ? (isErr ? '확인해 주세요' : '알림') : kind === 'prompt' ? '입력' : (danger ? '정말 진행할까요?' : '확인'));
+      var paras = msg.split(/\n\n+/); var lead = paras.shift() || '';
+      var wrap = document.createElement('div'); wrap.className = 'td-back';
+      wrap.innerHTML = '<div class="td-box" role="dialog" aria-modal="true" aria-labelledby="td-title">'
+        + '<div class="td-head"><span class="td-ic ' + (kind === 'alert' ? (isErr ? 'warn' : 'info') : (danger ? 'danger' : 'ask')) + '"><i class="ti ' + (kind === 'alert' ? (isErr ? 'ti-alert-circle' : 'ti-info-circle') : (danger ? 'ti-alert-triangle' : 'ti-help-circle')) + '"></i></span><h3 id="td-title">' + esc(title) + '</h3></div>'
+        + '<div class="td-body"><p class="td-lead">' + esc(lead) + '</p>' + paras.map(function(p){ return '<p class="td-p">' + esc(p) + '</p>'; }).join('')
+        + (kind === 'prompt' ? '<input class="td-input" type="' + (opt.password ? 'password' : 'text') + '" value="' + esc(opt.defaultValue || '') + '" autocomplete="off" placeholder="' + esc(opt.placeholder || '') + '">' : '') + '</div>'
+        + '<div class="td-foot">' + (kind !== 'alert' ? '<button type="button" class="dh-btn td-cancel">' + esc(opt.cancelText || '취소') + '</button>' : '')
+        + '<button type="button" class="dh-btn ' + (danger && kind !== 'alert' ? 'td-danger' : 'dh-btn-brand') + ' td-ok">' + esc(opt.okText || '확인') + '</button></div></div>';
+      document.body.appendChild(wrap);
+      var input = wrap.querySelector('.td-input'), okBtn = wrap.querySelector('.td-ok'), cancelBtn = wrap.querySelector('.td-cancel');
+      var prevFocus = document.activeElement, done = false;
+      function close(val){ if (done) return; done = true; wrap.classList.remove('in'); wrap.classList.add('out'); setTimeout(function(){ wrap.remove(); }, 150); document.removeEventListener('keydown', onKey, true); try { prevFocus && prevFocus.focus && prevFocus.focus(); } catch(e){} resolve(val); }
+      function ok(){ close(kind === 'prompt' ? (input ? input.value : '') : true); }
+      function cancel(){ close(kind === 'prompt' ? null : (kind === 'confirm' ? false : true)); }
+      function onKey(e){ if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); } else if (e.key === 'Enter' && !(e.target && e.target.tagName === 'TEXTAREA')) { e.preventDefault(); e.stopPropagation(); ok(); } }
+      okBtn.onclick = ok; if (cancelBtn) cancelBtn.onclick = cancel;
+      wrap.addEventListener('mousedown', function(e){ if (e.target !== wrap) return; if (kind === 'alert') ok(); else cancel(); });
+      document.addEventListener('keydown', onKey, true);
+      requestAnimationFrame(function(){ wrap.classList.add('in'); try { (input || okBtn).focus(); if (input) input.select(); } catch(e){} });
+    });
+  }
+  function enqueue(opt){ var p = queue.then(function(){ return show(opt); }); queue = p.catch(function(){}); return p; }
+  function taraAlertOverride(message){ if (!document.body) { try { nativeAlert.call(window, message); } catch(e){} return; } enqueue({ kind: 'alert', message: message }); }
+  window.taraAlert = function(message, opt){ if (window.alert !== taraAlertOverride) { try { window.alert(message); } catch(e){} return Promise.resolve(true); } return enqueue(Object.assign({ kind: 'alert', message: message }, opt || {})); };
+  window.taraConfirm = function(message, opt){ if (window.confirm !== nativeConfirm) return Promise.resolve(!!window.confirm(message)); return enqueue(Object.assign({ kind: 'confirm', message: message }, opt || {})); };
+  window.taraPrompt = function(message, opt){ if (window.prompt !== nativePrompt) return Promise.resolve(window.prompt(message, (opt && opt.defaultValue) || '')); return enqueue(Object.assign({ kind: 'prompt', message: message }, opt || {})); };
+  window.alert = taraAlertOverride;
 })();
 </script>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -1218,7 +1262,8 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .wl-count { font-size: 12px; color: var(--ink-3); margin: 12px 0 6px; font-weight: 500; }
   .wl-tbl { table-layout: fixed; }
   .wl-tbl td { padding: 7px 10px; }
-  .wl-date { color: var(--ink); font-weight: 500; } .wl-time { color: var(--ink-3); font-size: 11px; margin-left: 6px; }
+  .wl-tbl td:first-child { overflow: visible; white-space: nowrap; }                 /* 작업일·시간은 절대 줄이지 않음 (형 요청 09-18) */
+  .wl-date { color: var(--ink); font-weight: 500; } .wl-time { color: var(--ink-2); font-size: 12px; margin-left: 8px; font-variant-numeric: tabular-nums; }
   .wl-order { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-2); letter-spacing: 0; }
   .wl-eq { color: var(--ink-2); }
   .wl-shift { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 6px; white-space: nowrap; }
@@ -1343,6 +1388,28 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .dc-del:hover { background: var(--danger-bg); color: var(--danger); }
   .dc-name { font-size: 13px; font-weight: 600; color: var(--ink); word-break: break-all; line-height: 1.4; }
   .dc-meta { font-size: 11px; color: var(--ink-3); }
+
+  /* ── 공통 대화상자 (td-*) — alert/confirm/prompt 대체 ── */
+  .td-back { position: fixed; inset: 0; z-index: 20000; background: rgba(17, 24, 39, .45); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity .14s; }
+  .td-back.in { opacity: 1; } .td-back.out { opacity: 0; }
+  .td-box { width: 440px; max-width: 100%; background: var(--surface); border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow-3); padding: 20px 22px 16px; transform: translateY(8px) scale(.98); transition: transform .16s; font-family: var(--font-sans); color: var(--ink); }
+  .td-back.in .td-box { transform: none; }
+  .td-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .td-head h3 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: var(--ls-snug); }
+  .td-ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+  .td-ic.info, .td-ic.ask { background: var(--brand-100); color: var(--brand-700); }
+  .td-ic.warn { background: var(--warn-bg); color: var(--warn); }
+  .td-ic.danger { background: var(--danger-bg); color: var(--danger); }
+  .td-body { font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+  .td-lead { margin: 0; color: var(--ink); font-weight: 600; white-space: pre-line; font-size: 13.5px; word-break: keep-all; }
+  .td-p { margin: 8px 0 0; white-space: pre-line; padding: 8px 12px; background: var(--surface-2); border-radius: var(--r-md); font-size: 12.5px; word-break: keep-all; }
+  .td-input { width: 100%; margin-top: 12px; height: 38px; border: 1px solid var(--border-strong); border-radius: var(--r-md); padding: 0 12px; font: inherit; font-size: 14px; color: var(--ink); outline: 0; box-sizing: border-box; }
+  .td-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+  .td-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .td-ok { min-width: 88px; justify-content: center; }
+  .td-danger { background: var(--danger) !important; border-color: var(--danger) !important; color: #fff !important; }
+  .td-danger:hover { filter: brightness(.92); }
+  @media (max-width: 480px) { .td-box { padding: 16px 16px 14px; border-radius: 14px; } .td-foot .dh-btn { flex: 1; justify-content: center; } }
 
   @media (max-width: 720px) {
     .wl-tbl { table-layout: auto; } .wl-tbl col { width: auto !important; }
@@ -1493,7 +1560,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       <button class="nav-item" id="nav-access" onclick="showTab('access',this)" style="display:none">
         <span class="nav-icon"><i class="ti ti-lock-access"></i></span> 접속기록
       </button>
-      <button class="nav-item" id="nav-logout" onclick="if(confirm('로그아웃 할까요?'))location.href='/__logout'" style="display:none;color:#b42318">
+      <button class="nav-item" id="nav-logout" onclick="taraConfirm('로그아웃 할까요?',{okText:'로그아웃'}).then(function(ok){ if(ok) location.href='/__logout'; })" style="display:none;color:#b42318">
         <span class="nav-icon"><i class="ti ti-logout"></i></span> <span id="logout-label">로그아웃</span>
       </button>
     </div>
@@ -2425,7 +2492,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <div id="worklog-count" class="wl-count"></div>
         <div class="dh-tbl-wrap">
           <table class="dh-tbl wl-tbl">
-            <colgroup><col style="width:150px"><col style="width:150px"><col style="width:130px"><col style="width:64px"><col><col style="width:110px"></colgroup>
+            <colgroup><col style="width:210px"><col style="width:150px"><col style="width:130px"><col style="width:64px"><col><col style="width:110px"></colgroup>
             <thead><tr>
               <th>작업일 · 시간</th>
               <th>주문번호</th>
@@ -4808,8 +4875,8 @@ function updateNcrStatus(id, status) {
   if (n) n.status = status;
 }
 
-function deleteNcr(id) {
-  if (!confirm('삭제하시겠습니까?')) return;
+async function deleteNcr(id) {
+  if (!(await taraConfirm('삭제하시겠습니까?', { okText: '삭제' }))) return;
   ncrList = ncrList.filter(n => n.id !== id);
   renderNcrTable();
 }
@@ -4899,8 +4966,8 @@ function renderInspTable() {
   }).join('');
 }
 
-function deleteInsp(id) {
-  if (!confirm('삭제하시겠습니까?')) return;
+async function deleteInsp(id) {
+  if (!(await taraConfirm('삭제하시겠습니까?', { okText: '삭제' }))) return;
   inspList = inspList.filter(i => i.id !== id);
   renderInspTable();
 }
@@ -5011,8 +5078,8 @@ function updateCapaStatus(id, status) {
   if (c) c.status = status;
 }
 
-function deleteCapa(id) {
-  if (!confirm('삭제하시겠습니까?')) return;
+async function deleteCapa(id) {
+  if (!(await taraConfirm('삭제하시겠습니까?', { okText: '삭제' }))) return;
   capaList = capaList.filter(c => c.id !== id);
   renderCapaTable();
 }
@@ -5508,9 +5575,9 @@ function claimApplyDeleted() {
 // 삭제/복원 비밀번호 — 원하는 값으로 변경 가능
 const CLAIM_DEL_PW = '7544';
 let _delAuthed = false;
-function checkDelPw() {
+async function checkDelPw() {
   if (_delAuthed) return true;
-  const p = prompt('삭제 비밀번호를 입력하세요');
+  const p = await taraPrompt('삭제 비밀번호를 입력하세요', { password: true, title: '삭제 권한 확인', okText: '확인', placeholder: '비밀번호' });
   if (p === null) return false;
   if (p === CLAIM_DEL_PW) { _delAuthed = true; return true; }
   alert('비밀번호가 올바르지 않습니다.'); return false;
@@ -5523,12 +5590,12 @@ function _rerenderClaim() {
   renderTrashPanel();
 }
 // 일반 삭제 → 휴지통(이 PC). 복원 가능.
-function deleteClaim(key) {
+async function deleteClaim(key) {
   const r = claimData.find(x => claimKey(x) === key);
   if (!r) return;
-  if (!checkDelPw()) return;
+  if (!(await checkDelPw())) return;
   const label = `${r[0] || ''}  ${r[2] || ''}\n${r[4] || ''}  (${String(r[1] || '').trim()})`;
-  if (!confirm('아래 클레임을 삭제할까요?\n\n' + label + '\n\n· 휴지통으로 이동해요 (선택 복원 가능)\n· "완전삭제"를 눌러야 보고서·다른 PC에서도 영구 제외돼요')) return;
+  if (!(await taraConfirm('아래 클레임을 삭제할까요?\n\n' + label + '\n\n· 휴지통으로 이동해요 (선택 복원 가능)\n· "완전삭제"를 눌러야 보고서·다른 PC에서도 영구 제외돼요', { okText: '휴지통으로' }))) return;
   const t = getTrash();
   if (!t.some(x => x.k === key)) { t.push({ k: key, row: r.slice(), ts: Date.now() }); saveTrash(t); }
   claimData = claimData.filter(x => claimKey(x) !== key);
@@ -5538,8 +5605,8 @@ function deleteClaim(key) {
   _rerenderClaim();
 }
 // 휴지통에서 한 건 복원 (이 PC 휴지통 + 시트 공용 휴지통 모두 처리)
-function restoreOneClaim(key) {
-  if (!checkDelPw()) return;
+async function restoreOneClaim(key) {
+  if (!(await checkDelPw())) return;
   let row = null;
   const t = getTrash(); const i = t.findIndex(x => x.k === key);
   if (i >= 0) { row = t[i].row; t.splice(i, 1); saveTrash(t); }
@@ -5553,12 +5620,12 @@ function restoreOneClaim(key) {
   _rerenderClaim();
 }
 // 완전 삭제 → 시트 무효표시(영구). 웹에서 복원 불가.
-function permanentDeleteClaim(key) {
-  if (!checkDelPw()) return;
+async function permanentDeleteClaim(key) {
+  if (!(await checkDelPw())) return;
   const item = getTrash().find(x => x.k === key) || _sheetTrash.find(x => x.k === key);
   const row = item ? item.row : (claimData.find(x => claimKey(x) === key) || []);
   const order = String((row && row[1]) || '').trim();
-  if (!confirm('완전 삭제할까요?\n\n· 구글시트에 무효표시 전송\n· 보고서·관리대장·모든 PC에서 영구 제외\n· 웹에서는 되돌릴 수 없어요 (무효클레임.txt 편집으로만 복구)')) return;
+  if (!(await taraConfirm('완전 삭제할까요?\n\n· 구글시트에 무효표시 전송\n· 보고서·관리대장·모든 PC에서 영구 제외\n· 웹에서는 되돌릴 수 없어요 (무효클레임.txt 편집으로만 복구)', { okText: '완전 삭제' }))) return;
   if (order) voidClaimToSheet(order);
   saveTrash(getTrash().filter(x => x.k !== key));     // 이 PC 휴지통에서 제거
   _sheetTrash = _sheetTrash.filter(x => x.k !== key); // 시트 공용 휴지통에서 제거
@@ -5604,8 +5671,14 @@ function qmsUser() {
   let u = '';
   try { u = localStorage.getItem('qmsUser') || ''; } catch (e) {}
   if (!u) {
-    u = (prompt('이름을 입력하세요 (변경 이력 기록용, 1회)') || '').trim();
+    // 로그인 쿠키(tara_user)에서 실명을 바로 가져온다 — 동기 함수라 입력 팝업 대신 (2026-09-18, 기본 prompt 제거)
+    try { const id = (typeof _cookie === 'function') ? _cookie('tara_user') : ''; u = id ? (typeof userName === 'function' ? userName(id) : id) : ''; } catch (e) {}
     if (u) { try { localStorage.setItem('qmsUser', u); } catch (e) {} }
+    else if (typeof taraPrompt === 'function' && !window._qmsUserAsked) {
+      // 쿠키도 없으면(로컬 실행 등) 비동기로 한 번만 물어 다음 기록부터 사용
+      window._qmsUserAsked = true;
+      taraPrompt('이름을 입력하세요 (변경 이력 기록용, 1회)', { title: '기록 작성자', placeholder: '예: 배원기' }).then(v => { v = String(v || '').trim(); if (v) { try { localStorage.setItem('qmsUser', v); } catch (e) {} } });
+    }
   }
   return u || '(미상)';
 }
@@ -5709,11 +5782,11 @@ async function loadLogFromSheet(silent) {
   try { const rows = await fetchSheetAll(); build(rows); }                          // 백그라운드 최신화
   catch (e) { if (!silent && !_sheetLog.length) alert('시트 로그 불러오기 실패'); }
 }
-function restoreClaims() {   // 전체 복원
-  if (!checkDelPw()) return;
+async function restoreClaims() {   // 전체 복원
+  if (!(await checkDelPw())) return;
   const all = allTrash();
   if (!all.length) { alert('삭제한 클레임이 없습니다.'); return; }
-  if (!confirm('휴지통 ' + all.length + '건을 모두 되살릴까요?')) return;
+  if (!(await taraConfirm('휴지통 ' + all.length + '건을 모두 되살릴까요?', { okText: '모두 복원', danger: false }))) return;
   _sheetTrash.forEach(x => { const o = String((x.row && x.row[1]) || '').trim(); if (o) markSheet('UNTRASH:', o); });
   localStorage.removeItem(CLAIM_TRASH_KEY); localStorage.removeItem(CLAIM_DEL_KEY);
   setTimeout(() => location.reload(), 400);
@@ -5893,7 +5966,7 @@ async function importGajebonRecords(input) {
     for(const [key,value] of Object.entries(data.records)) {
       if(!GAJEBON_BACKUP_KEYS.includes(key)||!value||typeof value!=='object'||Array.isArray(value))throw Error('백업 파일 형식이 올바르지 않습니다.');
     }
-    if(!confirm('이 브라우저의 가제본 기록을 백업 파일 내용으로 복원할까요? 현재 기록은 먼저 파일로 백업됩니다.'))return;
+    if(!(await taraConfirm('이 브라우저의 가제본 기록을 백업 파일 내용으로 복원할까요?\n\n현재 기록은 먼저 파일로 백업됩니다.', { okText: '복원' })))return;
     exportGajebonRecords();
     const previous = Object.fromEntries(Object.keys(data.records).map(key=>[key,localStorage.getItem(key)]));
     try{
@@ -7056,7 +7129,7 @@ async function bulkStampGajebon() {
     !(typeof isStickerDone === 'function' && isStickerDone(r))
   );
   if (!targets.length) { alert('[' + sheet + '] 탭에 일괄 처리할 ERP완료 가제본 건이 없습니다.\n(이미 가제본일이 있는 건은 제외됩니다)'); return; }
-  if (!confirm('[' + sheet + '] 탭에서 ERP완료된 가제본 ' + targets.length + '건을\n오늘(' + today + ') 날짜로 일괄 가제본 완료 처리합니다.\n\n· 가제본일이 이미 있는 건은 제외\n· 되돌리려면 각 건의 날짜칸을 비우면 됩니다\n\n진행할까요?')) return;
+  if (!(await taraConfirm('[' + sheet + '] 탭에서 ERP완료된 가제본 ' + targets.length + '건을\n오늘(' + today + ') 날짜로 일괄 가제본 완료 처리합니다.\n\n· 가제본일이 이미 있는 건은 제외\n· 되돌리려면 각 건의 날짜칸을 비우면 됩니다', { okText: '일괄 처리', danger: false }))) return;
   let n = 0;
   for (const r of targets) {
     const order = String(r['주문번호'] || '').trim();
@@ -7131,15 +7204,16 @@ function gajWithinGrace(g){
   const today = new Date(new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }) + 'T00:00:00');
   return today.getTime() <= nb.getTime();
 }
-function saveGajebonDate(order, date){
+async function saveGajebonDate(order, date){
   if(!order) return;
   if(date){
     const row = (typeof gajebonRowOfOrder==='function') ? gajebonRowOfOrder(order) : null;
     const prod = row ? String(row['제품명']||'') : '';
     const person = row ? String(row['담당자']||'').trim() : '';
-    const ok = confirm('이 주문을 가제본 완료 처리할까요?\n\n주문번호: '+order+(prod?'\n제품: '+prod:'')+'\n가제본일: '+date
-      +(person ? '\n\n· 담당자 '+person+'에게 완료 안내 메일을 보냅니다' : '')
-      +'\n\n확인하면 "완료만 보이기" 목록에서 사라집니다.');
+    const notifyOn = (typeof GAJ_NOTIFY_ENABLED === 'undefined') || GAJ_NOTIFY_ENABLED;
+    const ok = await taraConfirm('이 주문을 가제본 완료 처리할까요?\n\n주문번호: '+order+(prod?'\n제품: '+prod:'')+'\n가제본일: '+date
+      +((person && notifyOn) ? '\n\n· 담당자 '+person+'에게 완료 안내 메일을 보냅니다' : '')
+      +'\n\n확인하면 "완료만 보이기" 목록에서 사라집니다.', { okText: '완료 처리', danger: false });
     if(!ok){ renderGajebonTable(); return; }  // 취소 시 입력 되돌림
   }
   queueGajebonDate(order, date);
@@ -7155,10 +7229,10 @@ function gajToast(msg, ok){
   let el = document.getElementById('gaj-toast');
   if(!el){
     el = document.createElement('div'); el.id = 'gaj-toast';
-    el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:9999;max-width:min(560px,90vw);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:opacity .3s;pointer-events:none';
+    el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:9999;max-width:min(560px,90vw);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:600;color:#fff;box-shadow:0 12px 36px rgba(16,24,40,.18);transition:opacity .3s;pointer-events:none;font-family:var(--font-sans,inherit)';
     document.body.appendChild(el);
   }
-  el.textContent = msg; el.style.background = ok ? '#1d1d1f' : '#c0392b'; el.style.opacity = '1';
+  el.textContent = msg; el.style.background = ok ? '#111827' : '#B42318'; el.style.opacity = '1';
   clearTimeout(el._t); el._t = setTimeout(() => { el.style.opacity = '0'; }, ok ? 4500 : 7000);
 }
 function gajebonNotifyPayload(order, date){
@@ -7500,7 +7574,7 @@ async function schedSave(){
 }
 async function schedDelete(){
   const id=document.getElementById('sched-f-id').value; if(!id) return;
-  if(!confirm('이 일정을 삭제할까요?')) return;
+  if(!(await taraConfirm('이 일정을 삭제할까요?', { okText: '삭제' }))) return;
   schedEvents=schedEvents.filter(x=>x.id!==id);
   schedCloseModal(); renderSchedule();
   try{
@@ -7827,9 +7901,9 @@ function toggleTemplatePart(i, part) {
   gajebonPartTemplates[name] = app; saveTemplates();
   renderPartTemplates();
 }
-function deletePartProduct(i) {
+async function deletePartProduct(i) {
   const name = _partNames[i]; if (name == null) return;
-  if (!confirm(`'${name}' 품목 구성을 삭제할까요?`)) return;
+  if (!(await taraConfirm(`'${name}' 품목 구성을 삭제할까요?`, { okText: '삭제' }))) return;
   delete gajebonPartTemplates[name]; saveTemplates(); renderPartTemplates();
 }
 function addPartProduct() {
@@ -8072,7 +8146,7 @@ function previewPasteRegister() {
       </tr>`).join('')
     + '</tbody></table></div>';
 }
-function parsePasteRegister() {
+async function parsePasteRegister() {
   const rows = _pasteRows();
   const msg = document.getElementById('reg-paste-msg');
   if (!rows.length) { if (msg) { msg.textContent = '붙여넣은 내용이 없습니다.'; msg.style.color = '#c0392b'; } return; }
@@ -8081,7 +8155,7 @@ function parsePasteRegister() {
   const fresh = rows.filter(r => !have.has(String(r[1]).trim() + '|' + String(r[8]).trim()));
   const dup = rows.length - fresh.length;
   if (!fresh.length) { if (msg) { msg.textContent = `이미 등록된 건입니다 (${dup}건 중복).`; msg.style.color = '#e67e22'; } return; }
-  if (!confirm(`${fresh.length}건을 등록할까요?${dup ? ' (중복 ' + dup + '건 제외)' : ''}\n\n등록 즉시 취합대장·대시보드에 반영되고 클라우드(시트)에 저장됩니다.`)) return;
+  if (!(await taraConfirm(`${fresh.length}건을 등록할까요?${dup ? ' (중복 ' + dup + '건 제외)' : ''}\n\n등록 즉시 취합대장·대시보드에 반영되고 구글시트에 저장됩니다.`, { okText: fresh.length + '건 등록', danger: false, title: '부적합 등록' }))) return;
   let n = 0;
   fresh.forEach(newRow => {
     if (typeof claimData !== 'undefined') claimData.push(newRow);
@@ -9520,7 +9594,7 @@ function filterDocs(type, btn) {
 }
 
 async function deleteDocFile(id) {
-  if (!confirm('이 문서를 목록에서 삭제하시겠습니까?')) return;
+  if (!(await taraConfirm('이 문서를 목록에서 삭제하시겠습니까?\n\n파일 자체는 지워지지 않고 목록 연결만 끊어져요.', { okText: '목록에서 삭제' }))) return;
   const meta = getDocsMeta().filter(function(d){ return d.id !== id; });
   saveDocsMeta(meta);
   try { await deleteDocHandle(id); } catch(e) {}
