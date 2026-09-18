@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789711838">
+<meta name="data-version" content="1789715622">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1159,6 +1159,85 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .sc-del:hover { background: var(--danger-bg); color: var(--danger); }
   @media (max-width: 480px) { .sc-row2 { grid-template-columns: 1fr; } }
 
+  /* ── 설비별 작업현황 (wip-*) ── */
+  .wip-upd { color: var(--ink-3); }
+  .wip-summary { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: -4px 0 14px; font-size: 12.5px; color: var(--ink-2); }
+  .wip-kv { display: inline-flex; align-items: center; gap: 6px; } .wip-kv i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; } .wip-kv b { color: var(--ink); font-weight: 700; }
+  .wip-kv.muted { color: var(--ink-3); margin-left: auto; }
+  .wip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; align-items: start; }   /* 한 카드를 펼쳐도 옆 카드가 같이 늘어나지 않게 */
+  #wip-filter-seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .dh-seg button { white-space: nowrap; }
+  .wip-card { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 10px; overflow: visible; transition: box-shadow .15s; }
+  .wip-card:hover { box-shadow: var(--shadow-2); }
+  .wip-card.stale { border-style: dashed; }
+  .wip-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; user-select: none; }
+  .wip-name { font-size: 15px; font-weight: 700; letter-spacing: var(--ls-snug); display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+  .wip-name small { font-size: 11px; font-weight: 600; color: var(--ink-3); background: var(--surface-2); border-radius: 5px; padding: 1px 6px; }
+  .wip-state { width: 9px; height: 9px; border-radius: 50%; background: var(--gray-300); flex-shrink: 0; }
+  .wip-card.prog .wip-state { background: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); animation: hp-blink 2s ease-in-out infinite; }
+  .wip-card.idle .wip-state { background: var(--good); }
+  .wip-cnt { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .wip-pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--gray-100); color: var(--ink-2); white-space: nowrap; }
+  .wip-pill.on { background: var(--brand-100); color: var(--brand-700); }
+  .wip-pill.dim { color: var(--ink-3); }
+  .wip-card.open .dh-caret { transform: rotate(90deg); }
+  .wip-cur { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: var(--r-md); background: var(--brand-50); border: 1px solid var(--brand-100); }
+  .wip-cur + .wip-cur { margin-top: -4px; }
+  .wip-cur-t { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .wip-cur-t b { margin-left: auto; color: var(--brand-700); font-size: 13px; }
+  .wip-cur-p { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+  .wip-cur-s { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wip-bar { height: 6px; border-radius: 3px; background: var(--surface); overflow: hidden; border: 1px solid var(--brand-100); }
+  .wip-bar i { display: block; height: 100%; background: var(--brand); border-radius: 3px; }
+  .wip-next { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); min-width: 0; padding: 4px 0; flex-wrap: wrap; }
+  .wip-next span:not(.dh-tag) { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--ink); }
+  .wip-next small { color: var(--ink-3); font-size: 11px; width: 100%; padding-left: 40px; }
+  .wip-idle { padding: 4px 0; }
+  .wip-detail { border-top: 1px solid var(--border); padding-top: 6px; }
+  .wip-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 2px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .wip-row:last-child { border-bottom: 0; }
+  .wip-row-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: var(--gray-300); }
+  .wip-row.prog .wip-row-dot { background: var(--brand); } .wip-row.done .wip-row-dot { background: var(--good); }
+  .wip-row-main { min-width: 0; flex: 1; }
+  .wip-row-p { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .wip-row-p .dh-tag { flex-shrink: 0; }
+  .wip-row-s { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wip-row.done .wip-row-p, .wip-row.done .wip-row-s { color: var(--ink-3); text-decoration: line-through; font-weight: 500; }
+  .wip-row-n { flex-shrink: 0; font-size: 11px; color: var(--ink-3); padding-top: 2px; }
+  @media (max-width: 720px) { .wip-grid { grid-template-columns: 1fr; } .wip-kv.muted { margin-left: 0; } }
+
+  /* ── 작업이력 추적 (wl-*) ── */
+  .wl-search { display: flex; flex-direction: column; gap: 10px; }
+  .wl-q { width: 100%; height: 40px; font-size: 13.5px; }
+  .wl-filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .wl-f { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .wl-f em { font-style: normal; color: var(--ink-3); }
+  .wl-f .dh-select { height: 32px; font-weight: 500; }
+  .wl-f input[type=date].dh-select { padding: 0 8px; }
+  .wl-count { font-size: 12px; color: var(--ink-3); margin: 12px 0 6px; font-weight: 500; }
+  .wl-tbl { table-layout: fixed; }
+  .wl-tbl td { padding: 7px 10px; }
+  .wl-date { color: var(--ink); font-weight: 500; } .wl-time { color: var(--ink-3); font-size: 11px; margin-left: 6px; }
+  .wl-order { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-2); letter-spacing: 0; }
+  .wl-eq { color: var(--ink-2); }
+  .wl-shift { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 6px; white-space: nowrap; }
+  .wl-shift.day { background: #FFF5DB; color: #7A5200; } .wl-shift.night { background: #E8EEFA; color: #1F3F80; }
+  .wl-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wl-p { font-weight: 600; color: var(--ink); }
+  .wl-part { margin-left: 6px; }
+  .wl-detail { color: var(--ink-3); font-size: 11px; margin-left: 6px; }
+  .wl-detail::before { content: '· '; }
+  .wl-who { font-weight: 600; color: var(--ink); }
+  .wl-tbl mark { background: var(--warn-bg); color: inherit; border-radius: 3px; padding: 0 1px; }
+  @media (max-width: 720px) {
+    .wl-tbl { table-layout: auto; } .wl-tbl col { width: auto !important; }
+    .wl-tbl th:nth-child(2), .wl-tbl td:nth-child(2), .wl-tbl th:nth-child(4), .wl-tbl td:nth-child(4) { display: none; }
+    .wl-tbl td { padding: 7px 6px; white-space: normal; }
+    .wl-time { display: block; margin-left: 0; } .wl-item { white-space: normal; } .wl-eq { font-size: 11.5px; }
+    .wl-filters { gap: 8px; } .wl-f { width: 100%; }
+  }
+
 </style>
 
 
@@ -2107,15 +2186,19 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
     <!-- ============ 작업 진행중 ============ -->
     <div id="tab-wip" class="tab">
-      <div class="section-header">
-        <div class="section-title">설비별 작업현황</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span id="wip-updated" style="font-size:12px;color:#86868b"></span>
-          <button class="icon-btn primary" onclick="reloadGajebonData()" title="지금 새로고침"></button>
+      <!-- 설비별 작업현황 (dh-* 디자인, 2026-09-18) -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">설비별 작업현황</h1>
+          <div class="dh-sub">ERP 인쇄생산일정 기준 · 설비마다 지금 인쇄 중인 작업과 대기 순서 · 카드를 누르면 전체 작업 목록 <span id="wip-updated" class="wip-upd"></span></div>
+        </div>
+        <div class="dh-actions">
+          <div class="dh-seg" id="wip-filter-seg"></div>
+          <button class="dh-btn" onclick="reloadGajebonData()" title="지금 새로고침"><i class="ti ti-refresh"></i> 새로고침</button>
         </div>
       </div>
-      <div id="wip-summary" style="margin-bottom:14px;color:#86868b;font-size:13px"></div>
-      <div id="wip-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px"></div>
+      <div id="wip-summary" class="wip-summary"></div>
+      <div id="wip-grid" class="wip-grid"></div>
     </div>
 
     <!-- ============ 부적합 목표·성과 ============ -->
@@ -2206,36 +2289,35 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         #wl-dates select option{color:#182a31}
         #worklog-count{font-size:12px;color:#8a999f;margin:2px 0 10px;font-weight:500}
       </style>
-      <div class="card" style="padding:18px 20px;background:transparent;box-shadow:none;border:none">
-        <div id="wl-hero">
-          <div class="wl-title"><i class="ti ti-user-search"></i> 작업이력 추적 <span id="worklog-updated" style="font-size:11px;font-weight:400;color:#8a999f"></span></div>
-          <div class="wl-sub">불량 발생 시 추적용 — 품목·구성으로 검색하면 <b>언제·어느 설비·주야 어느 조·누가</b> 작업했는지 바로 나옵니다. <span style="opacity:.75">(ERP 작업실적 + 조 편성표 기준)</span></div>
-          <div id="wl-searchbar">
-            <i class="ti ti-search wl-ic"></i>
-            <input type="text" id="worklog-q" placeholder="품목·구성(표지/본문)·설비·작업자·주문번호 검색…  예: 만점왕 4-2 표지" oninput="renderWorklog()">
-          </div>
-          <div id="wl-dates">
-            <span style="opacity:.85"><i class="ti ti-settings" style="vertical-align:-2px"></i> 설비</span>
-            <select id="worklog-equip" onchange="renderWorklog()" title="설비 선택"><option value="">전체 설비</option></select>
-            <span style="opacity:.5;margin:0 4px">|</span>
-            <span style="opacity:.85"><i class="ti ti-calendar" style="vertical-align:-2px"></i> 기간</span>
-            <input type="date" id="worklog-from" onchange="renderWorklog()" title="시작일">
-            <span style="opacity:.6">~</span>
-            <input type="date" id="worklog-to" onchange="renderWorklog()" title="종료일">
+      <!-- 작업이력 추적 (dh-* 디자인, 2026-09-18) -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">작업이력 추적</h1>
+          <div class="dh-sub">불량 발생 시 추적용 · 품목·구성으로 검색하면 <b>언제 · 어느 설비 · 주야 어느 조 · 누가</b> 작업했는지 바로 나와요 · ERP 작업실적 + 조 편성표 기준 <span id="worklog-updated"></span></div>
+        </div>
+      </div>
+      <div class="card dh-card">
+        <div class="wl-search">
+          <label class="dh-search wl-q"><i class="ti ti-search"></i><input type="text" id="worklog-q" placeholder="품목 · 구성(표지/본문) · 설비 · 작업자 · 주문번호 검색  예: 만점왕 4-2 표지" oninput="renderWorklog()" autocomplete="off"></label>
+          <div class="wl-filters">
+            <label class="wl-f"><span>설비</span><select id="worklog-equip" class="dh-select" onchange="renderWorklog()" title="설비 선택"><option value="">전체 설비</option></select></label>
+            <label class="wl-f"><span>기간</span><input type="date" id="worklog-from" class="dh-select" onchange="renderWorklog()" title="시작일"><em>~</em><input type="date" id="worklog-to" class="dh-select" onchange="renderWorklog()" title="종료일"></label>
+            <button class="dh-btn" onclick="document.getElementById('worklog-q').value='';document.getElementById('worklog-equip').value='';document.getElementById('worklog-from').value='';document.getElementById('worklog-to').value='';renderWorklog()"><i class="ti ti-x"></i> 초기화</button>
           </div>
         </div>
-        <div id="worklog-count"></div>
-        <div style="overflow-x:auto">
-          <table style="width:auto;max-width:100%;border-collapse:collapse;font-size:12.5px">
-            <thead><tr style="color:#888;text-align:left;border-bottom:1px solid #f0f0ee">
-              <th style="padding:5px 10px;font-weight:600;white-space:nowrap">작업일</th>
-              <th style="padding:5px 10px;font-weight:600;white-space:nowrap">주문번호</th>
-              <th style="padding:5px 10px;font-weight:600;white-space:nowrap">설비</th>
-              <th style="padding:5px 10px;font-weight:600;text-align:center;white-space:nowrap">주야</th>
-              <th style="padding:5px 10px;font-weight:600">품목 · 구성/대수</th>
-              <th style="padding:5px 10px;font-weight:600">작업자</th>
+        <div id="worklog-count" class="wl-count"></div>
+        <div class="dh-tbl-wrap">
+          <table class="dh-tbl wl-tbl">
+            <colgroup><col style="width:150px"><col style="width:150px"><col style="width:130px"><col style="width:64px"><col><col style="width:110px"></colgroup>
+            <thead><tr>
+              <th>작업일 · 시간</th>
+              <th>주문번호</th>
+              <th>설비</th>
+              <th class="c">주야</th>
+              <th>품목 · 구성/대수</th>
+              <th>작업자</th>
             </tr></thead>
-            <tbody id="worklog-tbody"><tr><td colspan="6" style="padding:16px;color:#ccc">작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.</td></tr></tbody>
+            <tbody id="worklog-tbody"><tr><td colspan="6"><div class="dh-empty">작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.</div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -3390,6 +3472,8 @@ const TAB_TITLES = {
   register: '부적합사고 등록',
   'kpi-reg': 'KPI 등록',
   log: '변경 이력',
+  worklog: '작업이력 추적',
+  access: '접속 기록',
 };
 
 let openTabs = ['dashboard'];   // 열려있는 탭 목록 (홈은 항상)
@@ -5967,17 +6051,19 @@ function renderWorklog(){
   const searching=(terms.length||from||to||equip);
   const CAP=searching?2000:200;   // 검색/설비선택 전엔 최근 200행만(가볍게), 조건 있으면 넉넉히
   const cnt=document.getElementById('worklog-count'); if(cnt) cnt.textContent='총 '+rows.length+'건 중 '+hit.length+'건'+(hit.length>CAP?(' (상위 '+CAP+'건 표시 — 검색으로 좁혀보세요)'):'');
-  if(!hit.length){ tb.innerHTML='<tr><td colspan="6" style="padding:16px;color:#ccc">'+(rows.length?'검색 결과 없음':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</td></tr>'; return; }
+  if(!hit.length){ tb.innerHTML='<tr><td colspan="6"><div class="dh-empty">'+(rows.length?'검색 결과가 없어요 · 검색어나 기간을 넓혀보세요':'작업이력 데이터가 없습니다. auto_collect(작업실적 수집)를 한 번 돌려주세요.')+'</div></td></tr>'; return; }
   hit.sort((a,b)=>((wDate(b)+' '+wTime(b)).localeCompare(wDate(a)+' '+wTime(a))));
-  const shBadge=s=>{const t=String(s||'');const day=t.includes('주');return '<span style="background:'+(day?'#fff4e0':'#e8ecff')+';color:'+(day?'#b26a00':'#3a49b0')+';font-size:11px;padding:2px 8px;border-radius:6px;white-space:nowrap">'+wipEsc(t||'-')+'</span>';};
-  const partBadge=r=>{const c=String(r['구성']||'').trim();const n=String(r['대수']||'').trim();const ab=String(r['대수AB']||'').trim();if(!c&&!n&&!ab)return '';let txt=(c||'')+(n?(c?' ':'')+n+'대':'');if(ab)txt+=(txt?' ':'')+'('+ab+')';return '<span style="background:#eef3ff;color:#3355aa;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:6px;white-space:nowrap;margin-left:6px">'+wipEsc(txt)+'</span>';};
-  tb.innerHTML=hit.slice(0,CAP).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
-    <td style="padding:3px 10px;white-space:nowrap;color:#444">${wipEsc(wDate(r))}${wRange(r)?'<span style="color:#9aa0ad;font-size:11px;margin-left:5px">'+wipEsc(wRange(r))+'</span>':''}</td>
-    <td style="padding:3px 10px;white-space:nowrap;font-family:monospace;font-size:11.5px;color:#667">${wipEsc(r['주문번호']||'')}</td>
-    <td style="padding:3px 10px;white-space:nowrap">${wipEsc(r['설비'])}</td>
-    <td style="padding:3px 10px;text-align:center">${shBadge(r['주야'])}</td>
-    <td style="padding:3px 10px">${wipEsc(gv(r,['품목','품명']))}${partBadge(r)}${r['세부품목']?'<span style="color:#aaa;font-size:11px"> · '+wipEsc(r['세부품목'])+'</span>':''}</td>
-    <td style="padding:3px 10px;font-weight:500;color:#1d5c99">${wipEsc(r['작업자']||'-')}</td></tr>`).join('');
+  // 주/야 = 상태가 아니라 구분이므로 옅은 태그(주 = 금색 계열, 야 = 파랑 계열 · 글자는 잉크)
+  const shBadge=s=>{const t=String(s||'');const day=t.includes('주');return '<span class="wl-shift '+(day?'day':'night')+'">'+wipEsc(t||'-')+'</span>';};
+  const partBadge=r=>{const c=String(r['구성']||'').trim();const n=String(r['대수']||'').trim();const ab=String(r['대수AB']||'').trim();if(!c&&!n&&!ab)return '';let txt=(c||'')+(n?(c?' ':'')+n+'대':'');if(ab)txt+=(txt?' ':'')+'('+ab+')';return '<span class="dh-tag wl-part">'+wipEsc(txt)+'</span>';};
+  const hl=s=>{ let h=wipEsc(s); if(!terms.length) return h; terms.forEach(t=>{ try{ h=h.replace(new RegExp('('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>'); }catch(e){} }); return h; };
+  tb.innerHTML=hit.slice(0,CAP).map(r=>`<tr>
+    <td class="num"><span class="wl-date">${wipEsc(wDate(r))}</span>${wRange(r)?'<span class="wl-time">'+wipEsc(wRange(r))+'</span>':''}</td>
+    <td><span class="wl-order">${hl(r['주문번호']||'')}</span></td>
+    <td class="wl-eq">${hl(r['설비'])}</td>
+    <td class="c">${shBadge(r['주야'])}</td>
+    <td class="wl-item"><span class="wl-p">${hl(gv(r,['품목','품명']))}</span>${partBadge(r)}${r['세부품목']?'<span class="wl-detail">'+hl(r['세부품목'])+'</span>':''}</td>
+    <td class="wl-who">${hl(r['작업자']||'-')}</td></tr>`).join('');
 }
 
 function reloadGajebonData() {
@@ -5991,19 +6077,27 @@ function reloadGajebonData() {
 
 function toggleWip(id) {
   const e = document.getElementById(id);
-  if (e) e.style.display = (e.style.display === 'none' || !e.style.display) ? 'block' : 'none';
+  if (!e) return;
+  const open = (e.style.display === 'none' || !e.style.display);
+  e.style.display = open ? 'block' : 'none';
+  const card = e.closest('.wip-card'); if (card) card.classList.toggle('open', open);
 }
+
+// 설비 필터: 'all' | 'prog'(인쇄중 있는 설비만) | 유형명(매엽/국윤전/46윤전…)
+let _wipFilter = 'all';
+function setWipFilter(f) { _wipFilter = f; renderWip(); }
 
 function renderWip() {
   const grid = document.getElementById('wip-grid');
   const sum  = document.getElementById('wip-summary');
   const upd  = document.getElementById('wip-updated');
+  const seg  = document.getElementById('wip-filter-seg');
   if (!grid) return;
   const sd = window.SCHEDULE_DATA;
-  if (upd) upd.textContent = (sd && sd.updated) ? ('기준 ' + sd.updated) : '';
+  if (upd) upd.textContent = (sd && sd.updated) ? ('· 기준 ' + sd.updated) : '';
   if (!sd || !sd.machines || !sd.machines.length) {
-    grid.innerHTML = '<div style="color:#86868b;padding:20px">일정 데이터가 아직 없어요. 수집(auto_collect_schedule.py)을 한 번 돌려주세요.</div>';
-    if (sum) sum.textContent = '';
+    grid.innerHTML = '<div class="dh-empty">일정 데이터가 아직 없어요. 수집(auto_collect_schedule.py)을 한 번 돌려주세요.</div>';
+    if (sum) sum.innerHTML = ''; if (seg) seg.innerHTML = '';
     return;
   }
   const fmtDue = s => (s && String(s).length === 8) ? (String(s).slice(4,6)+'/'+String(s).slice(6,8)) : (s||'');
@@ -6011,55 +6105,56 @@ function renderWip() {
   const isProg = j => (Number(j.workcnt) > 0 && Number(j.retong) > 0);
   const pctOf = j => (Number(j.tong) > 0) ? Math.min(100, Math.round(Number(j.workcnt) / Number(j.tong) * 100)) : 0;
   const rank = n => /외부입고/.test(n) ? 3 : (/외주|대기/.test(n) ? 2 : (/(문화|제이드)/.test(n) ? 1 : 0));
-  const machines = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
-  let totProg = 0;
-  const cards = machines.map((m, mi) => {
+  const all = sd.machines.slice().sort((a,b) => rank(a.name)-rank(b.name) || a.name.localeCompare(b.name,'ko'));
+  // 유형 목록(매엽·국윤전·46윤전…) → 필터 세그먼트
+  const types = [...new Set(all.map(m => m.typeName || m.type).filter(Boolean))];
+  let totProg = 0, totWait = 0, totDone = 0;
+  all.forEach(m => (m.jobs || []).forEach(j => { if (isProg(j)) totProg++; else if (isDone(j)) totDone++; else totWait++; }));
+  if (seg) seg.innerHTML = [['all', '전체', all.length], ['prog', '인쇄중', all.filter(m => (m.jobs || []).some(isProg)).length]]
+    .concat(types.map(t => [t, t, all.filter(m => (m.typeName || m.type) === t).length]))
+    .map(([k, l, n]) => `<button class="${_wipFilter === k ? 'on' : ''}" onclick="setWipFilter('${wipEsc(k)}')">${wipEsc(l)} <b>${n}</b></button>`).join('');
+  const machines = all.filter(m => _wipFilter === 'all' ? true : _wipFilter === 'prog' ? (m.jobs || []).some(isProg) : (m.typeName || m.type) === _wipFilter);
+  if (sum) sum.innerHTML = `<span class="wip-kv"><i style="background:var(--brand)"></i>인쇄중 <b>${totProg}</b>건</span><span class="wip-kv"><i style="background:var(--gray-300)"></i>대기 <b>${totWait}</b>건</span><span class="wip-kv"><i style="background:var(--good)"></i>완료 <b>${totDone}</b>건</span><span class="wip-kv muted">설비 ${all.length}곳${machines.length !== all.length ? ' 중 ' + machines.length + '곳 표시' : ''}</span>`;
+  const cards = machines.map((m) => {
+    const mi = all.indexOf(m);
     const jobs = (m.jobs || []).slice().sort((a,b)=>(a.sq||0)-(b.sq||0));
     const prog = jobs.filter(isProg);
     const done = jobs.filter(isDone);
     const waiting = jobs.filter(j => !isDone(j) && !isProg(j));
-    totProg += prog.length;
-    const curLine = prog.length
-      ? prog.map(j => `<span style="color:#17A2B8;font-weight:700">▶ ${wipEsc(j.product)}</span><span style="color:#86868b"> · ${wipEsc(j.config)} · <b style="color:#17A2B8">${pctOf(j)}%</b></span>`).join('<br>')
+    const state = prog.length ? 'prog' : (waiting.length ? 'wait' : 'idle');
+    // 현재 작업(들): 제품 · 구성 · 진행 막대 · %
+    const cur = prog.length
+      ? prog.map(j => `<div class="wip-cur">
+            <div class="wip-cur-t"><span class="wip-dot"></span><span class="wip-cur-p" title="${wipEsc(j.product)}">${wipEsc(j.product)}</span><b class="num">${pctOf(j)}%</b></div>
+            <div class="wip-cur-s">${wipEsc(j.config)}${j.partner ? ' · ' + wipEsc(j.partner) : ''}${j.due ? ' · 납기 ' + fmtDue(j.due) : ''}</div>
+            <div class="wip-bar"><i style="width:${pctOf(j)}%"></i></div>
+          </div>`).join('')
       : (waiting.length
-          ? `<span style="color:#86868b">인쇄중 아님 · 다음 ▸ ${wipEsc(waiting[0].product)}</span>`
-          : '<span style="color:#248a3d;font-weight:600">작업 없음</span>');
+          ? `<div class="wip-next"><span class="dh-tag" style="background:var(--gray-100);color:var(--ink-2)">다음</span><span title="${wipEsc(waiting[0].product)}">${wipEsc(waiting[0].product)}</span><small>${wipEsc(waiting[0].config)}${waiting[0].due ? ' · 납기 ' + fmtDue(waiting[0].due) : ''}</small></div>`
+          : '<div class="wip-idle"><span class="badge badge-pass">작업 없음</span></div>');
     const rowsHtml = jobs.map(j => {
-      if (isDone(j)) {
-        return `<div style="padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
-          <div style="font-size:12px;color:#c7c7cc;text-decoration:line-through">${wipEsc(j.product)}</div>
-          <div style="font-size:10px;color:#d2d2d7;text-decoration:line-through">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}</div>
-        </div>`;
-      }
-      if (isProg(j)) {
-        return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04);background:#EAF4FF;border-left:3px solid #17A2B8;padding-left:8px">
-          <div style="font-size:12.5px;font-weight:600;color:#17A2B8">${wipEsc(j.product)} <span style="background:#17A2B8;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">진행중 ${pctOf(j)}%</span></div>
-          <div style="font-size:10.5px;color:#5a7fa6">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>
-        </div>`;
-      }
-      return `<div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
-        <div style="font-size:12.5px;font-weight:600">${wipEsc(j.product)}</div>
-        <div style="font-size:10.5px;color:#86868b">${wipEsc(j.config)}${j.partner ? (' · ' + wipEsc(j.partner)) : ''}${j.due ? (' · 납기 ' + fmtDue(j.due)) : ''}</div>
+      const st = isDone(j) ? 'done' : isProg(j) ? 'prog' : 'wait';
+      return `<div class="wip-row ${st}">
+        <span class="wip-row-dot"></span>
+        <div class="wip-row-main">
+          <div class="wip-row-p">${wipEsc(j.product)}${st === 'prog' ? `<span class="dh-tag">진행 ${pctOf(j)}%</span>` : ''}</div>
+          <div class="wip-row-s">${wipEsc(j.config)}${j.partner ? ' · ' + wipEsc(j.partner) : ''}${j.due ? ' · 납기 ' + fmtDue(j.due) : ''}</div>
+        </div>
+        <span class="wip-row-n num">${Number(j.tong) > 0 ? (Number(j.workcnt) || 0).toLocaleString() + ' / ' + Number(j.tong).toLocaleString() : ''}</span>
       </div>`;
     }).join('');
-    return `<div class="card" style="padding:14px">
-      <div style="cursor:pointer" onclick="toggleWip('wipd-${mi}')">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="font-size:15px;font-weight:700">${wipEsc(m.name)} <span style="font-size:11px;color:#86868b">▾</span></div>
-          <div style="display:flex;gap:5px">
-            <span style="background:#EAF4FF;color:#17A2B8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">인쇄중 ${prog.length}</span>
-            <span style="background:#F2F2F7;color:#86868b;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px">대기 ${waiting.length}</span>
-          </div>
-        </div>
-        <div style="font-size:12px;line-height:1.5">${curLine}</div>
+    return `<div class="card wip-card ${state}${m.stale ? ' stale' : ''}">
+      <div class="wip-head" onclick="toggleWip('wipd-${mi}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')toggleWip('wipd-${mi}')">
+        <div class="wip-name"><span class="wip-state"></span>${wipEsc(m.name)}${m.typeName ? `<small>${wipEsc(m.typeName)}</small>` : ''}${m.stale ? '<span class="badge badge-mid" title="이번 수집에서 응답이 늦어 직전 값입니다">직전값</span>' : ''}</div>
+        <div class="wip-cnt"><span class="wip-pill on">인쇄중 ${prog.length}</span><span class="wip-pill">대기 ${waiting.length}</span><span class="wip-pill dim">완료 ${done.length}</span><span class="dh-caret">▶</span></div>
       </div>
-      <div id="wipd-${mi}" style="display:none;margin-top:10px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">
-        ${rowsHtml || '<div style="color:#86868b;font-size:12px">작업 없음</div>'}
+      ${cur}
+      <div id="wipd-${mi}" class="wip-detail" style="display:none">
+        ${rowsHtml || '<div class="dh-empty" style="padding:12px">작업 없음</div>'}
       </div>
     </div>`;
   });
-  if (sum) sum.textContent = '설비 ' + machines.length + '곳 · 인쇄중 ' + totProg + '건 · (카드 클릭 시 상세)';
-  grid.innerHTML = cards.join('');
+  grid.innerHTML = cards.join('') || '<div class="dh-empty">조건에 맞는 설비가 없어요</div>';
 }
 
 // ========================
