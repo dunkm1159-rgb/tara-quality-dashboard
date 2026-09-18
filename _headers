@@ -6,3 +6,6 @@
 
 /vendor/*
   Cache-Control: public, max-age=86400
+
+/gajebon_work_sync.js
+  Cache-Control: no-cache, must-revalidate
