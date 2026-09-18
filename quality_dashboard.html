@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789698194">
+<meta name="data-version" content="1789698642">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -2281,12 +2281,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       <div class="cph-desc" id="kpi-period">목표 대비 실적</div>
       <!-- 연도 탭 -->
       <div class="cph-years">
-        <button class="claim-year-btn" onclick="coreVisual(this)">전체</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2022</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2023</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2024</button>
-        <button class="claim-year-btn" onclick="coreVisual(this)">2025</button>
-        <button class="claim-year-btn active" onclick="coreVisual(this)">2026</button>
+        <span class="claim-year-btn active" aria-label="팀 KPI 기준 연도: 2026년">2026년</span>
       </div>
       <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
@@ -3341,7 +3336,8 @@ function renderCoreTrendCharts(costCanvasId, workerCanvasId, costLabelId, worker
     const wLbl = workerLabelId && document.getElementById(workerLabelId);
     const lv = H.worker && H.worker.lvCnt;
     if (wLbl) wLbl.textContent = (H.worker && H.worker.year) ? H.worker.year + '년' : '전체';
-    if (lv) renderPie(workerCanvasId, ['면책(Lv1)','경고(Lv2)','중대경고(Lv3)','치명적위반(Lv4)'], [lv[1]||0, lv[2]||0, lv[3]||0, lv[4]||0]);
+    // 등급 = 심각도(순서형) → 도넛 대신 가로 막대, 색은 회색→주의→주황→위험 (시안과 동일)
+    if (lv) renderCoreSeverityBars(workerCanvasId, ['Lv1 면책','Lv2 경고','Lv3 중대경고','Lv4 치명적위반'], [lv[1]||0, lv[2]||0, lv[3]||0, lv[4]||0]);
   } catch (e) { console.warn('core worker chart error', e); }
 }
 // 단위(unit)를 지정할 수 있는 범용 막대그래프 — renderBar는 툴팁 단위가 '만원'으로 고정돼 있어 %·건 단위 데이터엔 못 씀
@@ -3394,20 +3390,64 @@ function renderCorePie(id, labels, values, unit) {
 // 나머지 4개 화면(팀KPI·협력사현황·원인분석·월간리포트)의 대표 그래프 — core-summary/dashboard 공용
 function renderCoreExtraCharts(prefix) {
   const H = window.CORE_HEADLINES || {};
+  // 시안 규칙: 단일 계열은 틸 하나(카테고리에 색 램프 금지), '미상'은 회색으로 힘 빼기, 2조각 파이는 100% 막대
+  const TEAL = '#17A2B8', MUTED = '#C5CCD3';
   const specs = [
-    { key: 'kpi',      id: prefix + '-chart-kpi',      type: 'bar',  unit: '%',   colors: ['#e8630b','#c2870a','#0f9d63'] },
-    { key: 'erp',      id: prefix + '-chart-erp',      type: 'bar',  unit: '만원', colors: '#c2870a' },
-    { key: 'analysis', id: prefix + '-chart-analysis', type: 'bar',  unit: '건',  colors: '#0f9d63' },
-    { key: 'monthly',  id: prefix + '-chart-monthly',  type: 'pie',  unit: '만원' },
+    { key: 'kpi',      id: prefix + '-chart-kpi',      type: 'bar',   unit: '%',   colors: TEAL },
+    { key: 'erp',      id: prefix + '-chart-erp',      type: 'bar',   unit: '만원', colors: TEAL },
+    { key: 'analysis', id: prefix + '-chart-analysis', type: 'bar',   unit: '건',  colors: labels => labels.map(l => l === '미상' ? MUTED : TEAL) },
+    { key: 'monthly',  id: prefix + '-chart-monthly',  type: 'split', unit: '만원' },
   ];
   specs.forEach(s => {
     const c = H[s.key] && H[s.key].chart;
     if (!c || !c.labels || !c.labels.length) return;
     try {
-      if (s.type === 'bar') renderCoreBar(s.id, c.labels, c.values, s.colors, s.unit);
-      else renderCorePie(s.id, c.labels, c.values, s.unit);
+      if (s.type === 'bar') renderCoreBar(s.id, c.labels, c.values, typeof s.colors === 'function' ? s.colors(c.labels) : s.colors, s.unit);
+      else renderCoreSplitBar(s.id, c.labels, c.values, s.unit);
     } catch (e) { console.warn('core extra chart error', s.key, e); }
   });
+}
+// 심각도(순서형) 가로 막대: Lv1 회색 → Lv2 주의색 → Lv3 주황 → Lv4 위험색. 값은 막대 끝에 '건'
+function renderCoreSeverityBars(id, labels, values) {
+  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  const colors = ['#C5CCD3', '#9A6700', '#E8630B', '#B42318'];
+  try {
+    chartInstances[id] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), maxBarThickness: 22,
+        datalabels: { display: true, anchor: 'end', align: 'end', offset: 4, clip: false, color: '#4b5563', font: { size: 11, weight: '600' }, formatter: v => v + '건' } }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 40 } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.x}건 (${Math.round(c.parsed.x/total*100)}%)` } } },
+        scales: { x: { beginAtZero: true, ticks: { precision: 0, maxTicksLimit: 5 } }, y: { grid: { display: false }, ticks: { color: '#4b5563', font: { size: 12 } } } } }
+    });
+  } catch(e) { console.warn('renderCoreSeverityBars error', id, e); }
+}
+// 100% 가로 막대 (사내 : 외주 등 2~3조각 비중). 범례에 값·비율, 막대 안에 비율
+function renderCoreSplitBar(id, labels, values, unit) {
+  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  const u = unit || '';
+  const colors = labels.map((_,i) => CHART_PALETTE[i % CHART_PALETTE.length]);
+  try {
+    chartInstances[id] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [''], datasets: labels.map((l, i) => ({ label: l, data: [values[i]], backgroundColor: colors[i], borderRadius: 6, borderSkipped: false, barThickness: 36,
+        datalabels: { display: () => values[i] / total >= 0.12, anchor: 'center', align: 'center', clamp: true, color: '#fff', font: { size: 12, weight: '700' },
+          formatter: () => `${l} ${Math.round(values[i]/total*100)}%` } })) },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { top: 6, bottom: 6 } },
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, padding: 16, font: { size: 12 },
+            generateLabels: chart => labels.map((l, i) => ({ text: `${l}  ${Math.round(values[i]).toLocaleString()}${u} (${Math.round(values[i]/total*100)}%)`, fillStyle: colors[i], strokeStyle: colors[i], lineWidth: 0, index: i, datasetIndex: i, hidden: false })) } },
+          tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${Math.round(c.parsed.x).toLocaleString()}${u} (${Math.round(c.parsed.x/total*100)}%)` } }
+        },
+        scales: { x: { stacked: true, display: false, max: total }, y: { stacked: true, display: false } } }
+    });
+  } catch(e) { console.warn('renderCoreSplitBar error', id, e); }
 }
 // ── 모바일 사이드바 서랍 열기/닫기 ──
 function toggleSidebar(force){
@@ -4494,7 +4534,8 @@ function deleteCapa(id) {
 let chartInstances = {};
 
 // 색상 팔레트
-const CHART_PALETTE = ['#17A2B8','#27ae60','#e67e22','#c0392b','#7B4EA0','#16a085','#2980b9','#f39c12','#8e44ad','#1abc9c','#e74c3c','#3498db'];
+// 계열 팔레트 = 디자인 토큰 --s1~--s8 (dataviz 검증 통과 순서). 9번째부터는 순환 대신 힘 뺀 회색(→ '기타'로 묶는 것이 원칙)
+const CHART_PALETTE = ['#17A2B8','#E8630B','#7B4EA0','#0F9D63','#D0342A','#C2870A','#1F5C99','#D9569A','#C5CCD3','#AEB6BF','#98A2AD','#83909C'];
 
 function renderPie(id, labels, data) {
   if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
@@ -4631,8 +4672,8 @@ function renderBar(id, labels, data, colors) {
   try {
     chartInstances[id] = new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ data, backgroundColor: colors || '#17A2B8', borderRadius: 5, maxBarThickness: 60,
-        datalabels:{ anchor:'end', align:'top', clip:false, color:'#333', font:{size:10,weight:'600'}, formatter:v=> (v||v===0)? Math.round(v).toLocaleString():'' } }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors || '#17A2B8', borderRadius: 4, maxBarThickness: 28,
+        datalabels:{ anchor:'end', align:'top', clip:false, color:'#4b5563', font:{size:10.5,weight:'600'}, formatter:v=> (v||v===0)? Math.round(v).toLocaleString():'' } }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         layout:{ padding:{ top:24 } },
@@ -5352,7 +5393,7 @@ function applyGajebonSavedStatus() {
     if (Object.prototype.hasOwnProperty.call(gajebonStatusStore, order)) row['진행상태'] = gajebonStatusStore[order];
   }));
 }
-const GAJEBON_BACKUP_KEYS = ['gajebonStatusStore','gajebonDateState','gajebonEbsWork','gajebonParts','gajebonPartTpl','gajebonPartLabels','gajebonPartRowLabels','gajebonPartNameTpl','gajebonOvs'];
+const GAJEBON_BACKUP_KEYS = ['gajebonStatusStore','gajebonDateState','gajebonEbsWork','gajebonWorkSync','gajebonParts','gajebonPartTpl','gajebonPartLabels','gajebonPartRowLabels','gajebonPartNameTpl','gajebonOvs'];
 function exportGajebonRecords() {
   const records = Object.fromEntries(GAJEBON_BACKUP_KEYS.map(key => [key, readGajebonLocal(key)]));
   const backup = {format:'tara-gajebon-records',version:1,savedAt:new Date().toISOString(),records};
@@ -6545,9 +6586,9 @@ function showGajebonSaveStatus(){
   const el = document.getElementById('gajebon-save-status');
   if(!el) return;
   const n = Object.keys(gajebonDatePending).length;
-  el.textContent = '진행상태·구성 기록: 이 브라우저에 저장 · 완료 날짜: ' +
+  el.textContent = '작업·출고완료: ' + (typeof gajWorkStatus === 'function' ? gajWorkStatus() : '공유 기능 로딩 필요') + ' · 완료 날짜: ' +
     (n ? '서버 전송 대기 ' + n + '건 (자동 재시도)' : gajebonDateLoaded ? '서버 확인 완료' : '서버 확인 중 / 저장된 날짜 표시') +
-    ' · 다른 PC로 옮기거나 브라우저 데이터를 지우기 전에는 기록 백업을 눌러 주세요.';
+    ' · 그 외 진행상태·구성 편집은 이 브라우저에 저장됩니다. PC 이동 전 기록을 백업해 주세요.';
 }
 function queueGajebonDate(order, date){
   if(!order) return false;
@@ -7167,19 +7208,18 @@ try { gajebonEbsWork = JSON.parse(localStorage.getItem('gajebonEbsWork') || '{}'
 function getEbsWork(order, idx) { return (gajebonEbsWork[order] || {})[idx] || null; }
 function toggleEbsWork(order, idx) {
   const o = String(order);
-  if (!gajebonEbsWork[o]) gajebonEbsWork[o] = {};
   const shipmentEnabled = [EBS_SHEET, GAENYUM_SHEET].includes(gajebonCurrentSheet);
   const work = getEbsWork(o, idx) || (gajDate(o) ? {st:'done',date:gajDate(o)} : null);
   const now = new Date();
   const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  let next = null;
   if (shipmentEnabled && work) {
-    gajebonEbsWork[o][idx] = work.st === 'shipped'
+    next = work.st === 'shipped'
       ? {st:'done',date:work.workDate || work.date}
       : {st:'shipped',date:today,workDate:work.date || today};
-  } else if (gajebonEbsWork[o][idx]) delete gajebonEbsWork[o][idx];
-  else gajebonEbsWork[o][idx] = { st: 'done', date: today };
-  if (!Object.keys(gajebonEbsWork[o]).length) delete gajebonEbsWork[o];
-  try { localStorage.setItem('gajebonEbsWork', JSON.stringify(gajebonEbsWork)); } catch (e) {}
+  } else if (!getEbsWork(o,idx)) next = { st: 'done', date: today };
+  if (typeof queueGajebonWork !== 'function') { alert('공유 기능을 불러오지 못했습니다. 새로고침 후 다시 시도하세요.'); return; }
+  if (!queueGajebonWork(o,idx,next)) return;
   renderGajebonTable();
 }
 // 긴 구성명 축약 (좁은 칸에서 잘림 방지)
@@ -9165,6 +9205,21 @@ function applyChartTheme() {
   const D = Chart.defaults;
   try {
     Chart.register(chartAxisFitPlugin);
+    // ── 옛 하드코딩 색 → 디자인 토큰 계열색 자동 치환 (모든 차트 공통). 의미(빨강=초과 등)는 같은 계열로 유지 ──
+    const LEGACY_COLORS = {
+      '#17a2b8':'#17A2B8','#0e9aae':'#17A2B8','#16a085':'#17A2B8','#1abc9c':'#17A2B8','#138496':'#0F8A9E',
+      '#27ae60':'#0F9D63','#12996a':'#0F9D63','#1baf7a':'#0F9D63','#248a3d':'#0F9D63','#34c759':'#0F9D63','#0f9d63':'#0F9D63',
+      '#e67e22':'#E8630B','#eb6834':'#E8630B','#ff9500':'#E8630B','#e8630b':'#E8630B',
+      '#f39c12':'#C2870A','#eda100':'#C2870A','#c2870a':'#C2870A',
+      '#c0392b':'#D0342A','#e74c3c':'#D0342A','#d70015':'#D0342A','#ff3b30':'#D0342A','#d0342a':'#D0342A',
+      '#8e44ad':'#7B4EA0','#7b4ea0':'#7B4EA0',
+      '#2980b9':'#1F5C99','#3498db':'#1F5C99','#1f5c99':'#1F5C99',
+    };
+    const remap = c => { if (typeof c !== 'string') return c; const k = c.trim().toLowerCase(); return LEGACY_COLORS[k] || c; };
+    Chart.register({ id: 'taraTokenColors', beforeUpdate(chart) {
+      try { (chart.data.datasets || []).forEach(ds => { ['backgroundColor','borderColor','pointBackgroundColor','hoverBackgroundColor'].forEach(k => {
+        const v = ds[k]; if (typeof v === 'string') ds[k] = remap(v); else if (Array.isArray(v)) ds[k] = v.map(remap); }); }); } catch (e) {}
+    } });
     // 디자인 토큰(:root --font-sans/--chart-tick/--chart-grid) 우선, 없으면 종전 값
     const _cs = getComputedStyle(document.documentElement); const _tok = (n, d) => { try { return _cs.getPropertyValue(n).trim() || d; } catch (e) { return d; } };
     D.font.family = _tok('--font-sans', "'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif");
