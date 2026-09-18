@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789698824">
+<meta name="data-version" content="1789699775">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -796,7 +796,9 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .otab.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--brand); }
   .otab .otab-x { color: var(--ink-3); font-size: 15px; line-height: 1; padding: 0 2px; border-radius: 4px; }
   .otab .otab-x:hover { color: var(--danger); background: var(--danger-bg); }
-  #health-pill.hp { align-self: center; margin-left: 12px; box-shadow: 0 0 0 6px var(--surface); }   /* 탭이 밀려 들어와도 알약 주변은 흰 여백 */
+  #health-pill.hp { align-self: center; margin-left: auto; box-shadow: 0 0 0 6px var(--surface); }   /* 오른쪽 끝 고정, 탭이 밀려 들어와도 알약 주변은 흰 여백 */
+  #health-pill.hp::before { content: ''; position: absolute; left: -18px; top: -8px; bottom: -8px; width: 18px; background: linear-gradient(90deg, transparent, var(--surface)); pointer-events: none; }
+  #health-pill.hp { position: sticky; }
 
   /* 콘텐츠 · 제목 */
   .content { padding: 24px 32px 40px; }
@@ -919,6 +921,106 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     .content { padding: 12px 12px 28px; }
     #open-tabbar { padding: 0 12px !important; }
     .core-tile { padding: 12px 14px; } .core-tile .ct-val { font-size: 22px; }
+  }
+
+  /* ── 대시보드 홈 상단 2카드 (dh-*) — design/대시보드홈_시안.html 과 동일 ── */
+  .dh-card { margin-bottom: 12px; overflow: visible; }
+  .dh-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .dh-title { font-size: 14px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; letter-spacing: var(--ls-snug); }
+  .dh-title small { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+  .dh-sub { font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+  .dh-link { background: none; border: 0; padding: 0; color: var(--brand-700); font-weight: 600; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .dh-link:hover { text-decoration: underline; }
+  .dh-loading { color: var(--ink-3); font-size: 12.5px; }
+  .dh-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .dh-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: var(--r-md); font-size: 12px; font-weight: 600; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-2); white-space: nowrap; cursor: pointer; transition: background .12s, color .12s; }
+  .dh-btn:hover { background: var(--surface-2); color: var(--ink); }
+  .dh-btn .ti { font-size: 14px; opacity: .85; }
+  .dh-btn-dark { background: var(--gray-900); color: #fff; border-color: var(--gray-900); }
+  .dh-btn-dark:hover { background: var(--gray-700); border-color: var(--gray-700); color: #fff; }
+  .dh-btn:disabled { opacity: .45; cursor: default; }
+  .dh-btn:disabled:hover { background: var(--surface); color: var(--ink-2); }
+  /* 오늘 가제본 현황 */
+  .dh-today { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(240px, 1.4fr); gap: 12px; margin-top: 14px; align-items: stretch; }
+  .dh-stat { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px 11px; background: var(--surface); display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: box-shadow .12s, border-color .12s; min-width: 0; }
+  .dh-stat:hover { box-shadow: var(--shadow-2); }
+  .dh-stat.on { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+  .dh-stat-l { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .dh-stat-l i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+  .dh-stat-v { font-size: 28px; font-weight: 700; letter-spacing: var(--ls-tight); line-height: 1.05; color: var(--ink); }
+  .dh-stat-v small { font-size: 12px; font-weight: 600; color: var(--ink-3); margin-left: 3px; }
+  .dh-stat-s { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-prog { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px 11px; background: var(--surface-2); display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 0; }
+  .dh-prog-t { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--ink-2); }
+  .dh-prog-t b { font-size: 18px; letter-spacing: var(--ls-tight); color: var(--ink); }
+  .dh-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; background: var(--surface); }
+  .dh-bar > i { display: block; height: 100%; }
+  .dh-legend { display: flex; gap: 14px; font-size: 11px; color: var(--ink-3); }
+  .dh-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+  /* 툴바 */
+  .dh-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 12px 0 8px; }
+  .dh-seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px; }
+  .dh-seg button { border: 0; background: transparent; padding: 5px 11px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--ink-3); display: inline-flex; gap: 6px; align-items: center; cursor: pointer; font-family: inherit; }
+  .dh-seg button b { font-weight: 600; color: var(--ink-3); background: var(--gray-200); border-radius: 999px; padding: 0 6px; font-size: 11px; line-height: 16px; }
+  .dh-seg button.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-1); }
+  .dh-seg button.on b { background: var(--gray-900); color: #fff; }
+  .dh-search { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); width: 280px; max-width: 100%; color: var(--ink-3); }
+  .dh-search input { border: 0 !important; outline: 0; font: inherit; width: 100%; background: transparent; color: var(--ink); padding: 0 !important; box-shadow: none !important; }
+  .dh-search input::placeholder { color: var(--ink-3); }
+  .dh-search:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+  .dh-hint { font-size: 11px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .dh-kbd { font: 600 10px/1 var(--font-mono); background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 5px; color: var(--ink-2); }
+  /* 표 */
+  .dh-tbl-wrap { overflow-x: auto; margin: 0 -4px; }
+  .dh-tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; table-layout: fixed; }
+  .dh-tbl th { position: sticky; top: 0; z-index: 2; text-align: left; font-weight: 600; color: var(--ink-3); font-size: 11px; padding: 8px 10px; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); white-space: nowrap; letter-spacing: 0; }
+  .dh-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .dh-tbl td:last-child { overflow: visible; padding-left: 4px; padding-right: 4px; }
+  .dh-tbl tbody tr:hover td { background: var(--surface-2); }
+  .dh-tbl tr.sel td { background: var(--brand-50); }
+  .dh-tbl tr.sel:hover td { background: var(--brand-100); }
+  .dh-tbl td.name { font-weight: 600; }
+  .dh-tbl td.dim { color: var(--ink-3); }
+  .dh-tbl input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--brand); cursor: pointer; vertical-align: -2px; margin: 0; }
+  .dh-tbl tr.grp td { padding: 12px 10px 6px; background: var(--surface) !important; border-bottom: 0; font-size: 12px; font-weight: 700; color: var(--ink-2); white-space: normal; }
+  .dh-tbl .g { display: inline-flex; align-items: center; gap: 8px; }
+  .dh-tbl .g i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dh-tbl .g b { font-weight: 600; background: var(--gray-100); color: var(--ink-2); border-radius: 999px; padding: 0 7px; font-size: 11px; line-height: 17px; }
+  .dh-tbl .g span.x { font-weight: 500; color: var(--ink-3); }
+  .dh-tbl tr.grp.click .g { cursor: pointer; user-select: none; }
+  .dh-tbl tr.grp.click .g:hover { color: var(--ink); }
+  .dh-tbl .chev { display: inline-block; transition: transform .15s; color: var(--ink-3); font-size: 10px; }
+  .dh-tbl tr.grp.open .chev { transform: rotate(90deg); }
+  .dh-order { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: var(--font-mono); letter-spacing: 0; }
+  .dh-order:hover { box-shadow: 0 0 0 2px var(--border-strong); }
+  .dh-order.done { background: var(--good-bg); color: var(--good); }
+  .dh-order.prog { background: var(--warn-bg); color: var(--warn); }
+  .dh-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); color: var(--ink-2); font-size: 11px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+  .dh-who { color: var(--ink-2); } .dh-who small { color: var(--ink-3); margin-left: 4px; font-size: 11px; }
+  .dh-rowcopy { opacity: 0; border: 0; background: transparent; color: var(--ink-3); padding: 2px 6px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+  .dh-tbl tr:hover .dh-rowcopy { opacity: 1; } .dh-rowcopy:hover { background: var(--gray-100); color: var(--ink); }
+  .dh-tbl td.name .sub-client { display: none; }
+  .dh-empty { padding: 28px; text-align: center; color: var(--ink-3); font-size: 12px; }
+  /* 선택 액션바 · 하단 고정 */
+  .dh-selbar { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: all .18s; background: var(--gray-900); color: #fff; border-radius: 12px; padding: 10px 12px 10px 16px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-3); font-size: 12px; z-index: 900; }
+  .dh-selbar.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+  .dh-selbar b { font-size: 13px; }
+  .dh-selbar .dh-sep { width: 1px; height: 18px; background: rgba(255,255,255,.2); }
+  .dh-selbar button { border: 0; background: rgba(255,255,255,.1); color: #fff; height: 30px; padding: 0 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .dh-selbar button:hover { background: rgba(255,255,255,.2); }
+  .dh-selbar button.ghost { background: transparent; color: rgba(255,255,255,.7); }
+  @media (max-width: 1280px) { .dh-tbl .col-eq { display: none; } }
+  @media (max-width: 1100px) { .dh-today { grid-template-columns: repeat(3, minmax(0, 1fr)); } .dh-prog { grid-column: 1 / -1; } .dh-tbl .col-req { display: none; } }
+  @media (max-width: 720px) {
+    .dh-today { gap: 8px; } .dh-stat { padding: 10px 12px; } .dh-stat-v { font-size: 22px; } .dh-stat-s { display: none; }
+    .dh-tbl .col-who, .dh-tbl .col-date, .dh-tbl .col-client, .dh-tbl .col-req, .dh-tbl .col-eq, .dh-tbl .col-copy { display: none; }
+    .dh-tbl { table-layout: auto; }
+    .dh-tbl td { padding: 8px 6px; }
+    .dh-order { font-size: 11px; padding: 2px 6px; }
+    .dh-tbl td.name { white-space: normal; line-height: 1.3; }
+    .dh-tbl td.name .sub-client { display: block; font-weight: 500; color: var(--ink-3); font-size: 11px; margin-top: 2px; }
+    .dh-search { width: 100%; } .dh-actions { width: 100%; justify-content: flex-end; }
+    .dh-selbar { bottom: 12px; padding: 8px 10px 8px 12px; gap: 6px; max-width: calc(100vw - 16px); }
   }
 
 </style>
@@ -1106,36 +1208,45 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
       <div class="metrics" id="dash-metrics" style="display:none"></div>
 
-      <!-- 오늘 가제본 현황 -->
-      <div class="card" style="border-color:#e5ebec;border-radius:14px;box-shadow:0 1px 2px rgba(16,32,39,.04);margin-bottom:16px;padding:18px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
-          <div class="card-title" style="margin:0;border-left:none;padding-left:0;">
-            <span class="dash-icon-chip"><i class="ti ti-book"></i></span>
-            오늘 가제본 현황 <span id="gajebon-today-date" style="font-size:11px;font-weight:400;color:#aaa;"></span>
+      <!-- 오늘 가제본 현황 (design/대시보드홈_시안.html 기준, 2026-09-18) -->
+      <div class="card dh-card" id="dh-today-card">
+        <div class="dh-head">
+          <div>
+            <h2 class="dh-title">오늘 가제본 현황 <small id="gajebon-today-date"></small></h2>
+            <div class="dh-sub">직전 영업일부터 오늘까지 대수마감된 완료 건 + 현재 진행중 · 카드를 누르면 아래 목록이 그 상태로 좁혀져요</div>
           </div>
-          <button onclick="showTab('gajebon',document.getElementById('nav-gajebon'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
+          <button class="dh-link" onclick="showTab('gajebon',document.getElementById('nav-gajebon'))">전체 보기 →</button>
         </div>
-        <div id="gajebon-today-summary" style="display:flex;gap:16px;flex-wrap:wrap;">
-          <span style="color:#aaa;font-size:13px;">데이터 로딩 중...</span>
+        <div id="gajebon-today-summary" class="dh-today">
+          <span class="dh-loading">데이터 로딩 중...</span>
         </div>
       </div>
 
       <!-- 작업지시서 출력 대상 -->
-      <div class="card" style="border-color:#e5ebec;border-radius:14px;box-shadow:0 1px 2px rgba(16,32,39,.04);margin-bottom:16px;padding:18px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:12px;">
-          <div class="card-title" style="margin:0;border-left:none;padding-left:0;">
-            <span class="dash-icon-chip"><i class="ti ti-file-text"></i></span>
-            작업지시서 출력 대상 <span id="print-target-count" style="font-size:11px;font-weight:400;color:#aaa;"></span>
+      <div class="card dh-card" id="dh-print-card">
+        <div class="dh-head">
+          <div>
+            <h2 class="dh-title">작업지시서 출력 대상 <small id="print-target-count"></small></h2>
+            <div class="dh-sub">최근 3일 완료 + 현재 진행중 품목 · 작업번호를 ERP 검색창에 붙여 작업지시서를 인쇄하세요 · 번호 칩을 누르면 그 번호만 복사</div>
           </div>
-          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
-            <button id="copy-selected-print-btn" onclick="copySelectedPrintTargets()" disabled style="background:#17A2B8;color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:default;opacity:.45;"><i class="ti ti-checks"></i> 선택 복사 (0)</button>
-            <button onclick="copyPrintTargets()" style="background:#14181d;color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer;"><i class="ti ti-copy"></i> 전체 복사</button>
-            <button onclick="copyPrintTargetDetails()" title="작업번호·제품명·거래처를 탭 구분으로 복사 (선택한 항목이 있으면 그것만, 없으면 전체)" style="background:#fff;color:#14181d;border:1px solid #d2d6db;border-radius:9px;padding:6px 13px;font-size:12.5px;font-weight:700;cursor:pointer;"><i class="ti ti-clipboard-text"></i> 상세 복사</button>
+          <div class="dh-actions">
+            <button id="copy-selected-print-btn" class="dh-btn" onclick="copySelectedPrintTargets()" disabled><i class="ti ti-checks"></i> 선택 복사 (<span id="copy-selected-print-n">0</span>)</button>
+            <button class="dh-btn dh-btn-dark" onclick="copyPrintTargets()"><i class="ti ti-copy"></i> 전체 복사</button>
+            <button class="dh-btn" onclick="copyPrintTargetDetails()" title="작업번호·제품명·거래처를 탭 구분으로 복사 (선택한 항목이 있으면 그것만, 없으면 전체 · 엑셀에 붙이면 3열)"><i class="ti ti-clipboard-text"></i> 상세 복사</button>
           </div>
         </div>
-        <div style="font-size:11.5px;color:#8a93a0;font-weight:600;margin-bottom:8px">최근 3일 완료 + 현재 진행중 품목 (완료일 표시) · ERP에서 이 작업번호로 검색해 작업지시서 인쇄하세요</div>
-        <div id="print-target-list" style="font-size:12.5px;color:#aaa">데이터 로딩 중...</div>
+        <div class="dh-toolbar">
+          <div class="dh-seg" id="print-filter-seg">
+            <button class="on" data-f="all" onclick="setPrintFilter('all')">전체 <b>0</b></button>
+            <button data-f="done" onclick="setPrintFilter('done')">오늘 완료 <b>0</b></button>
+            <button data-f="prog" onclick="setPrintFilter('prog')">진행중 <b>0</b></button>
+          </div>
+          <label class="dh-search"><i class="ti ti-search"></i><input id="print-q" placeholder="작업번호 · 제품명 · 거래처 · 담당자 검색" oninput="setPrintQuery(this.value)" autocomplete="off"></label>
+        </div>
+        <div id="print-target-list" class="dh-tbl-wrap"><span class="dh-loading">데이터 로딩 중...</span></div>
+        <div class="dh-hint">체크 후 <span class="dh-kbd">Ctrl</span>+<span class="dh-kbd">C</span> 로도 선택한 작업번호가 복사돼요 · 완료 판정은 대수마감일 기준</div>
       </div>
+      <div class="dh-selbar" id="print-selbar" aria-live="polite"><b id="print-selbar-n">0건 선택</b><span class="dh-sep"></span><button onclick="copySelectedPrintTargets()">작업번호 복사</button><button onclick="copyPrintTargetDetails()">상세 복사</button><button class="ghost" onclick="clearPrintSelection()">해제</button></div>
 
       <!-- 지금 인쇄 중 -->
       <div class="card" style="margin-bottom:16px;padding:18px 20px;">
@@ -3602,22 +3713,55 @@ function collectPrintTargets() {
 }
 let _showOlderPrint = false;
 const _selectedPrintTargets = new Set();
+let _printFilter = 'all', _printQuery = '';        // 세그먼트 필터(all/done/prog) · 검색어
 function toggleOlderPrint() { _showOlderPrint = !_showOlderPrint; renderPrintTargets(); }
+function _dhNotify(msg) { if (typeof gajToast === 'function') gajToast(msg, true); else alert(msg); }
+function setPrintFilter(f, fromStat) {
+  _printFilter = (fromStat && _printFilter === f) ? 'all' : f;   // 상단 카드 재클릭 = 필터 해제
+  renderPrintTargets();
+  if (typeof renderGajebonTodaySummary === 'function') renderGajebonTodaySummary();
+  if (fromStat) { const el = document.getElementById('dh-print-card'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
+}
+function setPrintQuery(q) { _printQuery = String(q || '').trim().toLowerCase(); renderPrintTargets(); }
+function copyOnePrintOrder(o) { if (!o) return; writePrintTargetClipboard(o, () => _dhNotify(o + ' 복사했어요 · ERP 검색창에 붙여넣으세요')); }
+function copyPrintRowDetail(o) {
+  const { done, prog } = collectPrintTargets();
+  const r = [...done, ...prog].find(x => String(x['주문번호'] || '').trim() === o); if (!r) return;
+  const cell = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
+  writePrintTargetClipboard([r['주문번호'], r['제품명'], r['거래처']].map(cell).join('\t'), () => _dhNotify('1건 상세(번호·제품명·거래처)를 복사했어요'));
+}
+function togglePrintAll(cb) {
+  document.querySelectorAll('#print-target-list tr[data-order]').forEach(tr => cb.checked ? _selectedPrintTargets.add(tr.dataset.order) : _selectedPrintTargets.delete(tr.dataset.order));
+  renderPrintTargets();
+}
+function clearPrintSelection() { _selectedPrintTargets.clear(); renderPrintTargets(); }
 function updateSelectedPrintButton() {
+  const n = _selectedPrintTargets.size;
   const btn = document.getElementById('copy-selected-print-btn');
-  if (!btn) return;
-  btn.disabled = _selectedPrintTargets.size === 0;
-  btn.style.opacity = btn.disabled ? '.45' : '1';
-  btn.style.cursor = btn.disabled ? 'default' : 'pointer';
-  btn.innerHTML = `<i class="ti ti-checks"></i> 선택 복사 (${_selectedPrintTargets.size})`;
+  if (btn) { btn.disabled = n === 0; const c = document.getElementById('copy-selected-print-n'); if (c) c.textContent = n; }
+  const bar = document.getElementById('print-selbar');
+  if (bar) { bar.classList.toggle('show', n > 0 && !!document.getElementById('tab-dashboard')?.classList.contains('active')); const bn = document.getElementById('print-selbar-n'); if (bn) bn.textContent = n + '건 선택'; }
+  const all = document.getElementById('print-chk-all');
+  if (all) { const vis = [...document.querySelectorAll('#print-target-list tr[data-order]')]; all.checked = vis.length > 0 && vis.every(tr => _selectedPrintTargets.has(tr.dataset.order)); all.indeterminate = !all.checked && vis.some(tr => _selectedPrintTargets.has(tr.dataset.order)); }
 }
 function togglePrintTargetSelection(input) {
   const order = String(input?.value || '').trim();
   if (!order) return;
   if (input.checked) _selectedPrintTargets.add(order);
   else _selectedPrintTargets.delete(order);
+  const tr = input.closest && input.closest('tr'); if (tr) tr.classList.toggle('sel', input.checked);
   updateSelectedPrintButton();
 }
+// Ctrl+C: 대시보드에서 작업번호를 체크해 둔 상태면(텍스트 드래그 선택이 없을 때) 선택 번호 복사
+document.addEventListener('keydown', e => {
+  try {
+    if (!(e.ctrlKey || e.metaKey) || String(e.key).toLowerCase() !== 'c' || !_selectedPrintTargets.size) return;
+    if (!document.getElementById('tab-dashboard')?.classList.contains('active')) return;
+    if (String(window.getSelection && window.getSelection()).trim()) return;
+    if (/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || '')) return;
+    e.preventDefault(); copySelectedPrintTargets();
+  } catch (err) {}
+});
 // '오늘 완료' 구간 = 직전 영업일 ~ 어제. (평일: 어제만 / 월요일: 금·토·일)
 // 예) 21일(목)엔 20일 완료분, 24일(월)엔 21·22·23일 완료분이 뜬다.
 function gajTodayDoneWindow() {
@@ -3648,29 +3792,43 @@ function renderPrintTargets() {
   const cnt = document.getElementById('print-target-count');
   if (cnt) cnt.textContent = `오늘 완료 ${todayDone.length} · 진행중 ${prog.length}`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const rowHtml = (r, color, showDate) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #f1f2f4;">
-     <input type="checkbox" value="${esc(r['주문번호'])}" aria-label="${esc(r['주문번호'])} 선택" onchange="togglePrintTargetSelection(this)" ${_selectedPrintTargets.has(String(r['주문번호'] || '').trim()) ? 'checked' : ''} style="width:16px;height:16px;accent-color:#17A2B8;cursor:pointer;flex-shrink:0;">
-     <span style="width:40px;flex-shrink:0;color:#8a93a0;font-size:11px;font-weight:700;">${showDate ? esc((r['완료일'] || '').slice(5)) : ''}</span>
-     <span style="flex-shrink:0;font-family:monospace;font-size:11.5px;font-weight:800;color:${color};background:${color}1a;border-radius:6px;padding:3px 8px;">${esc(r['주문번호'])}</span>
-     <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:#1d1d1f;" title="${esc(r['제품명'])}">${esc(r['제품명'])}</span>
-     <span style="flex-shrink:0;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;font-weight:700;color:#5a6270;background:#f2f3f5;border-radius:6px;padding:3px 9px;">${esc(r['거래처'])}</span>
-   </div>`;
-  const table = (arr, color, showDate) => `<div>${arr.map(r => rowHtml(r, color, showDate)).join('')}</div>`;
-  const head = (title, count, color) => `<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;">
-    <span style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:${color};">${title}</span>
-    <span style="background:${color};color:#fff;border-radius:980px;padding:1px 9px;font-size:11px;font-weight:800;">${count}</span>
-  </div>`;
-  let html = '';
-  if (todayDone.length) html += head('오늘 완료', todayDone.length, '#248a3d') + table(todayDone, '#248a3d', true);
-  if (olderDone.length) {
-    html += `<div onclick="toggleOlderPrint()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;margin:14px 0 8px;">`
-      + `<span style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#248a3d;">${_showOlderPrint ? '▾' : '▸'} 이전 완료</span>`
-      + `<span style="background:#248a3d;color:#fff;border-radius:980px;padding:1px 9px;font-size:11px;font-weight:800;">${olderDone.length}</span>`
-      + `<span style="font-size:11px;color:#8a93a0;font-weight:700;">${_showOlderPrint ? '접기' : '펼치기'}</span></div>`;
-    if (_showOlderPrint) html += table(olderDone, '#248a3d', true);
+  // 세그먼트 필터 숫자 · 활성 표시
+  const segN = { all: todayDone.length + prog.length, done: todayDone.length, prog: prog.length };
+  document.querySelectorAll('#print-filter-seg [data-f]').forEach(b => { const bb = b.querySelector('b'); if (bb) bb.textContent = segN[b.dataset.f] ?? 0; b.classList.toggle('on', b.dataset.f === _printFilter); });
+  // 검색 (작업번호·제품명·거래처·담당자)
+  const q = _printQuery;
+  const match = r => !q || ['주문번호', '제품명', '거래처', '담당자'].some(k => String(r[k] || '').toLowerCase().includes(q));
+  const tD = todayDone.filter(match), oD = olderDone.filter(match), pR = prog.filter(match);
+  const rowHtml = (r, cls, showDate) => {
+    const o = String(r['주문번호'] || '').trim(); const on = _selectedPrintTargets.has(o);
+    return `<tr data-order="${esc(o)}" class="${on ? 'sel' : ''}">
+      <td><input type="checkbox" value="${esc(o)}" aria-label="${esc(o)} 선택" onchange="togglePrintTargetSelection(this)" ${on ? 'checked' : ''}></td>
+      <td class="dim num col-date">${showDate ? esc(String(r['완료일'] || '').slice(5)) : ''}</td>
+      <td><span class="dh-order ${cls}" title="이 번호만 복사" onclick="copyOnePrintOrder('${esc(o)}')">${esc(o)}</span></td>
+      <td class="name" title="${esc(r['제품명'])}">${esc(r['제품명'])}<span class="sub-client">${esc(r['거래처'])}</span></td>
+      <td class="col-client"><span class="dh-chip" title="${esc(r['거래처'])}">${esc(r['거래처'])}</span></td>
+      <td class="dh-who col-who">${esc(r['담당자'] || '')}${r['부서'] ? `<small>${esc(r['부서'])}</small>` : ''}</td>
+      <td class="dim col-req">${esc(r['요청내용'] || '')}</td>
+      <td class="dim col-eq" title="${esc(r['설비명'] || '')}">${esc(r['설비명'] || '')}</td>
+      <td class="col-copy"><button class="dh-rowcopy" title="번호·제품명·거래처 복사" onclick="copyPrintRowDetail('${esc(o)}')"><i class="ti ti-copy"></i></button></td>
+    </tr>`;
+  };
+  const grp = (cls, dot, title, n, extra, onclick) => `<tr class="grp ${cls}"><td colspan="9"><span class="g" ${onclick ? `onclick="${onclick}"` : ''}>${onclick ? '<span class="chev">▶</span>' : ''}<i style="background:${dot}"></i>${title} <b>${n}</b>${extra ? `<span class="x">${extra}</span>` : ''}</span></td></tr>`;
+  let body = '';
+  if (_printFilter !== 'prog') {
+    if (tD.length) body += grp('', 'var(--good)', '오늘 완료', tD.length) + tD.map(r => rowHtml(r, 'done', true)).join('');
+    if (oD.length) {
+      if (q) body += grp('', 'var(--gray-300)', '이전 완료', oD.length) + oD.map(r => rowHtml(r, 'done', true)).join('');   // 검색 중엔 항상 펼침
+      else body += grp('click' + (_showOlderPrint ? ' open' : ''), 'var(--gray-300)', '이전 완료', oD.length, _showOlderPrint ? ' · 접기' : ' · 펼치기', 'toggleOlderPrint()') + (_showOlderPrint ? oD.map(r => rowHtml(r, 'done', true)).join('') : '');
+    }
   }
-  if (prog.length) html += head('진행중', prog.length, '#c93400') + table(prog, '#c93400', false);
-  el.innerHTML = html || '<span style="color:#ccc">최근 완료 대상 없음</span>';
+  if (_printFilter !== 'done' && pR.length) body += grp('', 'var(--warn)', '진행중', pR.length) + pR.map(r => rowHtml(r, 'prog', false)).join('');
+  el.innerHTML = body
+    ? `<table class="dh-tbl">
+        <colgroup><col style="width:36px"><col class="col-date" style="width:60px"><col class="c-order" style="width:160px"><col><col class="col-client" style="width:140px"><col class="col-who" style="width:112px"><col class="col-req" style="width:76px"><col class="col-eq" style="width:150px"><col class="col-copy" style="width:40px"></colgroup>
+        <thead><tr><th><input type="checkbox" id="print-chk-all" onchange="togglePrintAll(this)" title="보이는 항목 전체 선택"></th><th class="col-date">완료일</th><th>작업번호</th><th>제품명</th><th class="col-client">거래처</th><th class="col-who">담당자</th><th class="col-req">요청</th><th class="col-eq">설비</th><th class="col-copy"></th></tr></thead>
+        <tbody>${body}</tbody></table>`
+    : `<div class="dh-empty">${q ? `"${esc(q)}" 에 맞는 항목이 없어요` : (_printFilter === 'done' ? '오늘 완료된 가제본이 없어요' : _printFilter === 'prog' ? '진행중인 가제본이 없어요' : '최근 완료 대상 없음')}</div>`;
   updateSelectedPrintButton();
 }
 function writePrintTargetClipboard(txt, okMsg) {
@@ -3680,7 +3838,7 @@ function writePrintTargetClipboard(txt, okMsg) {
 }
 function writePrintTargetNumbers(nums) {
   if (!nums.length) { alert('출력 대상이 없습니다.'); return; }
-  writePrintTargetClipboard(nums.join('\n'), () => alert(nums.length + '개 작업번호를 복사했어요. ERP 검색창에 붙여넣으세요.'));
+  writePrintTargetClipboard(nums.join('\n'), () => _dhNotify(nums.length + '개 작업번호를 복사했어요 · ERP 검색창에 붙여넣으세요'));
 }
 // 작업번호·제품명·거래처를 탭 구분으로 복사 (엑셀에 붙이면 3열). 선택한 항목이 있으면 그것만, 없으면 전체.
 function copyPrintTargetDetails() {
@@ -3692,7 +3850,7 @@ function copyPrintTargetDetails() {
   if (!rows.length) { alert('출력 대상이 없습니다.'); return; }
   const cell = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
   const txt = rows.map(r => [r['주문번호'], r['제품명'], r['거래처']].map(cell).join('\t')).join('\n');
-  writePrintTargetClipboard(txt, () => alert(rows.length + '개 항목(작업번호·제품명·거래처)을 복사했어요. 엑셀에 붙이면 3열로 들어가요.' + (useSel ? '' : ' (선택 없음 → 전체)')));
+  writePrintTargetClipboard(txt, () => _dhNotify(rows.length + '건 상세(작업번호·제품명·거래처)를 복사했어요 · 엑셀에 붙이면 3열' + (useSel ? '' : ' · 선택 없음 → 전체')));
 }
 function copyPrintTargets() {
   const { done, prog } = collectPrintTargets();
@@ -7778,24 +7936,7 @@ function renderGajebonTodaySummary() {
     const total = done + progress;
     const doneSamples = _todayDone.slice(0,3).map(r => r['거래처'] || '');
     const progressSamples = _actProg.slice(0,3).map(r => r['거래처'] || '');
-    el.innerHTML = `
-      <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
-        <div style="background:#f0faf4;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #27ae60;">
-          <div style="font-size:32px;font-weight:800;color:#27ae60;">${done}</div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">완료</div>
-          ${doneSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${doneSamples.join(', ')}</div>` : ''}
-        </div>
-        <div style="background:#fff8f0;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #e67e22;">
-          <div style="font-size:32px;font-weight:800;color:#e67e22;">${progress}</div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">진행중</div>
-          ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
-        </div>
-        <div style="background:#f5f7fa;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #17A2B8;">
-          <div style="font-size:32px;font-weight:800;color:#17A2B8;">${total}</div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">전체</div>
-        </div>
-      </div>
-    `;
+    el.innerHTML = _dhTodayHtml(done, progress, total, doneSamples, progressSamples);
     return;
   }
 
@@ -7816,27 +7957,26 @@ function renderGajebonTodaySummary() {
     });
   });
   if (total === 0) {
-    el.innerHTML = `<span style="color:#aaa;font-size:13px;">오늘(${today}) 가제본 없음</span>`;
+    el.innerHTML = `<span class="dh-loading">오늘(${today}) 가제본 없음</span>`;
     return;
   }
-  el.innerHTML = `
-    <div style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;">
-      <div style="background:#f0faf4;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #27ae60;">
-        <div style="font-size:32px;font-weight:800;color:#27ae60;">${done}</div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">완료</div>
-        ${doneSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${doneSamples.join(', ')}</div>` : ''}
-      </div>
-      <div style="background:#fff8f0;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #e67e22;">
-        <div style="font-size:32px;font-weight:800;color:#e67e22;">${progress}</div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">진행중</div>
-        ${progressSamples.length ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">${progressSamples.join(', ')}</div>` : ''}
-      </div>
-      <div style="background:#f5f7fa;border-radius:10px;padding:12px 20px;min-width:120px;text-align:center;border:none;border-top:3px solid #17A2B8;">
-        <div style="font-size:32px;font-weight:800;color:#17A2B8;">${total}</div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#555;margin-top:2px;">전체</div>
-      </div>
-    </div>
-  `;
+  el.innerHTML = _dhTodayHtml(done, progress, total, doneSamples, progressSamples);
+}
+// 오늘 가제본 현황 타일 3개(완료/진행중/전체, 클릭 = 아래 작업지시서 목록 필터) + 완료율 100% 막대 — design/대시보드홈_시안.html 과 동일
+function _dhTodayHtml(done, progress, total, doneSamples, progressSamples) {
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const f = (typeof _printFilter === 'string') ? _printFilter : 'all';
+  const stat = (key, dot, label, n, sub) => `<div class="dh-stat${(f === key && f !== 'all') ? ' on' : ''}" role="button" tabindex="0" onclick="setPrintFilter('${key}',true)" onkeydown="if(event.key==='Enter')setPrintFilter('${key}',true)">
+      <div class="dh-stat-l"><i style="background:${dot}"></i>${label}</div>
+      <div class="dh-stat-v num">${n}<small>건</small></div>
+      <div class="dh-stat-s" title="${esc(sub)}">${esc(sub) || '&nbsp;'}</div></div>`;
+  return stat('done', 'var(--good)', '완료', done, (doneSamples || []).filter(Boolean).join(' · '))
+    + stat('prog', 'var(--warn)', '진행중', progress, (progressSamples || []).filter(Boolean).join(' · '))
+    + stat('all', 'var(--gray-300)', '전체', total, '오늘 대상 가제본')
+    + `<div class="dh-prog"><div class="dh-prog-t"><span>완료율</span><span><b class="num">${pct}%</b> <span class="num">${done} / ${total}</span></span></div>
+       <div class="dh-bar"><i style="width:${pct}%;background:var(--good)"></i><i style="width:${100 - pct}%;background:var(--warn)"></i></div>
+       <div class="dh-legend"><span><i style="background:var(--good)"></i>완료 ${done}</span><span><i style="background:var(--warn)"></i>진행중 ${progress}</span></div></div>`;
 }
 
 
