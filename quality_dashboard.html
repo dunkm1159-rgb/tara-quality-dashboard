@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789726239">
+<meta name="data-version" content="1789726583">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1447,6 +1447,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .cdb-act { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; padding: 8px 10px; border-left: 3px solid var(--good); background: var(--good-bg); border-radius: 0 var(--r-md) var(--r-md) 0; word-break: keep-all; }
   .cdb-act.generic { border-left-color: var(--gray-300); background: var(--surface-2); color: var(--ink-3); }
   .cdb-act.none { border-left-color: var(--gray-300); background: var(--surface-2); color: var(--ink-3); font-style: italic; }
+  .cdb-act.cause { border-left-color: var(--brand); background: var(--brand-50); color: var(--ink-2); margin-bottom: 6px; }
   .cdb-act b { color: var(--ink); font-weight: 600; margin-right: 4px; }
   .cdb-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .cdb-detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-strong); font-size: 12px; color: var(--ink-2); display: none; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px 14px; }
@@ -6010,11 +6011,15 @@ function cdbExpand(q) {   // 동의어 확장: 질문에 포함된 말의 동의
 function cdbTokens(q) { return [...new Set(String(q || '').toLowerCase().split(/[\s,./·]+/).map(t => t.trim()).filter(t => t.length >= 2))]; }
 function cdbIndex() {   // 행별 bigram 캐시(1회)
   const D = window.CLAIMDB; if (!D || !D.rows || D._indexed) return;
-  D.rows.forEach(r => { r._bs = cdbBigrams(r.symptom); r._bd = cdbBigrams(r.dtype); r._ba = cdbBigrams(r.action); r._bp = cdbBigrams(r.product); r._txt = cdbNorm(r.symptom + ' ' + r.dtype + ' ' + r.action + ' ' + r.product + ' ' + r.equip); });
+  D.rows.forEach(r => { r._bs = cdbBigrams(r.symptom); r._bd = cdbBigrams(r.dtype); r._ba = cdbBigrams(r.action); r._bp = cdbBigrams(r.product); r._bc = cdbBigrams(r.cause || ''); r._txt = cdbNorm(r.symptom + ' ' + r.dtype + ' ' + r.action + ' ' + r.product + ' ' + r.equip + ' ' + (r.cause || '') + ' ' + (r.vendor || '')); });
   D._indexed = true;
 }
 function cdbScore(r, qb, qtoks) {
-  const s = 0.55 * cdbDice(qb, r._bs) + 0.15 * cdbDice(qb, r._bd) + 0.15 * cdbDice(qb, r._ba) + 0.10 * cdbDice(qb, r._bp);
+  // 원인(사유, ERP)이 있으면 현상 가중치 일부를 원인으로 (현상 .45 · 원인 .15 · 유형 .13 · 조치 .12 · 제품 .10)
+  const hasCause = r._bc && r._bc.size > 1;
+  const s = hasCause
+    ? 0.45 * cdbDice(qb, r._bs) + 0.15 * cdbDice(qb, r._bc) + 0.13 * cdbDice(qb, r._bd) + 0.12 * cdbDice(qb, r._ba) + 0.10 * cdbDice(qb, r._bp)
+    : 0.55 * cdbDice(qb, r._bs) + 0.15 * cdbDice(qb, r._bd) + 0.15 * cdbDice(qb, r._ba) + 0.10 * cdbDice(qb, r._bp);
   let hit = 0; qtoks.forEach(t => { if (r._txt.includes(cdbNorm(t))) hit++; });
   return s + 0.05 * (qtoks.length ? hit / qtoks.length : 0) + (r.dtype && qtoks.some(t => cdbNorm(t) === cdbNorm(r.dtype)) ? 0.08 : 0);
 }
@@ -6058,19 +6063,24 @@ function renderClaimDb() {
     res.innerHTML = hits.map(({ r, s }) => {
       const pct = s == null ? null : Math.min(99, Math.round(s * 100 / 0.8));
       const ring = pct == null ? '' : `<div class="cdb-score"><div class="cdb-ring ${pct >= 60 ? 'hi' : pct < 30 ? 'lo' : ''}" style="--p:${pct}"><span>${pct}%</span></div><small>유사도</small></div>`;
+      const cause = r.cause ? `<div class="cdb-act cause"><b>원인</b>${cdbHl(r.cause, qtoks)}</div>` : '';
       const act = r.aq === 2 ? `<div class="cdb-act"><b>조치</b>${cdbHl(r.action, qtoks)}${r.actiondate ? ` <span style="color:var(--ink-3)">· ${esc(r.actiondate)}</span>` : ''}</div>`
         : r.aq === 1 ? `<div class="cdb-act generic"><b>조치</b>${esc(r.action)} <span>· 형식적 기록</span></div>` : `<div class="cdb-act none">조치 기록 없음</div>`;
-      const tags = [r.proc ? `<span class="dh-tag alt">${esc(r.proc)}</span>` : '', r.equip ? `<span class="dh-tag alt">${esc(r.equip)}</span>` : '', r.qtype ? `<span class="badge badge-low">${esc(r.qtype)}</span>` : '', r.dtype ? `<span class="dh-tag">${esc(r.dtype)}</span>` : '', r.cost ? `<span class="dh-tag alt">비용 ${Math.round(r.cost / 10000).toLocaleString()}만원</span>` : '', `<span class="dh-tag alt" style="opacity:.7">${esc(r.src)}</span>`].join('');
+      const tags = [r.proc ? `<span class="dh-tag alt">${esc(r.proc)}</span>` : '', r.equip ? `<span class="dh-tag alt">${esc(r.equip)}</span>` : '',
+        r.inout ? `<span class="dh-tag ${r.inout === '외주' ? '' : 'alt'}">${esc(r.inout)}${r.vendor ? ' · ' + esc(r.vendor) : ''}</span>` : '',
+        r.qtype ? `<span class="badge badge-low">${esc(r.qtype)}</span>` : '', r.dtype ? `<span class="dh-tag">${esc(r.dtype)}</span>` : '',
+        r.cost ? `<span class="dh-tag alt">비용 ${Math.round(r.cost / 10000).toLocaleString()}만원</span>` : '', r.nq ? `<span class="dh-tag alt">${esc(r.nq)}</span>` : '', `<span class="dh-tag alt" style="opacity:.7">${esc(r.src)}</span>`].join('');
       return `<div class="cdb-hit${_cdbOpen === r.id ? ' open' : ''}" data-id="${r.id}" onclick="cdbToggle('${r.id}')">
         ${ring || '<div class="cdb-score"><div class="cdb-ring lo" style="--p:0"><span>·</span></div><small>최근</small></div>'}
         <div class="cdb-hit-body">
           <div class="cdb-meta"><b class="num">${esc(r.date || '날짜 없음')}</b><span>·</span><b>${esc(r.client || '미상')}</b><span>·</span><span title="${esc(r.product)}">${esc((r.product || '').slice(0, 48))}${(r.product || '').length > 48 ? '…' : ''}</span>${r.order ? `<span class="wl-order" style="margin-left:auto">${esc(r.order)}</span>` : ''}</div>
           <div class="cdb-sym">${cdbHl(r.symptom || '(현상 미기재)', qtoks)}</div>
-          ${act}
+          ${cause}${act}
           <div class="cdb-tags">${tags}</div>
           <div class="cdb-detail">
             <div><span>담당자</span>${esc(r.mgr || '-')}</div><div><span>수량</span>${r.qty ? r.qty.toLocaleString() : '-'}</div><div><span>작업일</span>${esc(r.workdate || '-')}</div>
             <div><span>주/야</span>${esc(r.shift || '-')}</div><div><span>작업자</span>${esc(r.worker || '-')}</div><div><span>조치설비</span>${esc(r.actequip || '-')}</div>
+            ${r.dept || r.owner ? `<div><span>책임</span>${esc(r.dept || '')}${r.owner ? ' ' + esc(r.owner) : ''}</div>` : ''}${r.vendor ? `<div><span>외주처</span>${esc(r.vendor)}</div>` : ''}
           </div>
         </div></div>`;
     }).join('');
@@ -6088,6 +6098,7 @@ function renderClaimDb() {
     side.innerHTML = `
       <div class="card"><h4>${searching ? '이 검색 결과 요약' : '검색 대상 요약'} <small>${base.length.toLocaleString()}건</small></h4>
         <div class="cdb-kpis"><div class="cdb-kpi"><b class="num">${aq[2]}</b><span>조치 내용 있음</span></div><div class="cdb-kpi"><b class="num">${aq[1]}</b><span>형식적 조치</span></div><div class="cdb-kpi"><b class="num">${aq[0]}</b><span>조치 없음</span></div></div>
+        ${(() => { const c = base.filter(r => r.cause).length; return c ? `<div style="font-size:12px;color:var(--ink-2);margin-top:8px">원인(ERP 사유) 기록 <b>${c}</b>건</div>` : ''; })()}
         ${cost ? `<div style="font-size:12px;color:var(--ink-2);margin-top:8px">기록된 비용 합계 <b>${Math.round(cost / 10000).toLocaleString()}만원</b></div>` : ''}
         ${reps.length ? `<div class="cdb-warn">재발 의심 ${reps.length}건 · 같은 거래처에 같은 유형이 반복</div><div style="margin-top:6px">${bars(reps, true)}</div>` : ''}
       </div>
