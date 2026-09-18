@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789726583">
+<meta name="data-version" content="1789727876">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1471,6 +1471,45 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   @media (max-width: 1100px) { .cdb-body { grid-template-columns: 1fr; } .cdb-side { position: static; } .cdb-hint { margin-left: 0; width: 100%; } }
   @media (max-width: 720px) { .cdb-hit { grid-template-columns: 44px minmax(0, 1fr); padding: 10px 12px; } .cdb-ring { width: 40px; height: 40px; font-size: 11px; } #cdb-client { width: 100%; } }
 
+  /* ── 업데이트 기록(#tab-updates) ── */
+  .nav-new { display: inline-block; min-width: 8px; height: 8px; border-radius: 999px; background: var(--brand); margin-left: 6px; vertical-align: middle; box-shadow: 0 0 0 3px rgba(23, 162, 184, .2); }
+  .nav-new[hidden] { display: none; }
+  .nav-new[data-n] { min-width: 18px; height: 18px; line-height: 18px; padding: 0 5px; font-size: 10.5px; font-weight: 700; color: #fff; text-align: center; box-shadow: none; }
+  .ul-list { display: flex; flex-direction: column; gap: 0; max-width: 980px; }
+  .ul-month { font-size: 12.5px; font-weight: 700; color: var(--ink-3); letter-spacing: .02em; padding: 18px 0 10px 4px; display: flex; align-items: center; gap: 10px; }
+  .ul-month::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .ul-item { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 0 16px; position: relative; padding-bottom: 14px; }
+  .ul-item::before { content: ''; position: absolute; left: 76px; top: 26px; bottom: -6px; width: 1px; background: var(--border); }
+  .ul-item:last-child::before { display: none; }
+  .ul-date { text-align: right; padding: 12px 18px 0 0; position: relative; }
+  .ul-date b { display: block; font-size: 15px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .ul-date span { display: block; font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .ul-date::after { content: ''; position: absolute; right: -4.5px; top: 19px; width: 9px; height: 9px; border-radius: 999px; background: var(--brand); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ul-item.pending .ul-date::after { background: var(--gray-400, #9aa3ae); }
+  .ul-item.new .ul-date::after { box-shadow: 0 0 0 4px rgba(23, 162, 184, .18); }
+  .ul-card { background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 18px 12px; }
+  .ul-item.pending .ul-card { background: var(--gray-50, #f8fafc); border-style: dashed; }
+  .ul-head { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .ul-title { font-size: 14.5px; font-weight: 700; color: var(--ink); letter-spacing: -.01em; line-height: 1.4; flex: 1; min-width: 200px; }
+  .ul-tags { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .ul-tag { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--brand-50); color: var(--brand-700, #0e7c8c); border: 1px solid rgba(23, 162, 184, .18); }
+  .ul-tag.a-화면 { background: #F3EEFA; color: #5B3A8A; border-color: rgba(123, 78, 160, .2); }
+  .ul-tag.a-데이터 { background: #E8F6EF; color: #0B6B45; border-color: rgba(15, 157, 99, .2); }
+  .ul-tag.a-수집 { background: #FFF3E8; color: #9A4406; border-color: rgba(232, 99, 11, .2); }
+  .ul-tag.a-보안 { background: #FCEBEA; color: #8A2320; border-color: rgba(208, 52, 42, .2); }
+  .ul-tag.st { background: var(--gray-100, #f1f3f5); color: var(--ink-3); border-color: var(--border); }
+  .ul-tag.new { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .ul-items { margin: 10px 0 0; padding: 0 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--ink-2, #374151); }
+  .ul-items li { margin: 3px 0; }
+  .ul-items li::marker { color: var(--brand); }
+  .ul-items mark, .ul-title mark { background: #FFF1B8; color: inherit; padding: 0 1px; border-radius: 2px; }
+  .ul-by { font-size: 11px; color: var(--ink-3); margin-top: 8px; }
+  @media (max-width: 720px) {
+    .ul-item { grid-template-columns: 1fr; } .ul-item::before, .ul-date::after { display: none; }
+    .ul-date { text-align: left; padding: 0 0 6px 2px; } .ul-date b { display: inline; font-size: 13px; } .ul-date span { display: inline; margin-left: 6px; }
+    .dh-actions .dh-search { width: 100%; }
+  }
+
   @media (max-width: 720px) {
     .wl-tbl { table-layout: auto; } .wl-tbl col { width: auto !important; }
     .wl-tbl th:nth-child(2), .wl-tbl td:nth-child(2), .wl-tbl th:nth-child(4), .wl-tbl td:nth-child(4) { display: none; }
@@ -1509,6 +1548,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 <script>document.write('<script src="health_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
 <!-- 클레임 DB 통합(import_claimdb.py) — 유사사례 검색. 없으면 화면에서 안내만 -->
 <script>document.write('<script src="claimdb_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
+<script>document.write('<script src="changelog_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
 <!-- worklog_data.js 는 '작업이력 추적' 탭 열 때만 지연 로드 (초기 로드 가볍게) -->
 <!-- GAJEBON_DATA_END -->
 
@@ -1621,6 +1661,9 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       </button>
       <button class="nav-item" id="nav-log" onclick="showTab('log',this)">
         <span class="nav-icon"><i class="ti ti-history"></i></span> 변경 이력
+      </button>
+      <button class="nav-item" id="nav-updates" onclick="showTab('updates',this)">
+        <span class="nav-icon"><i class="ti ti-sparkles"></i></span> 업데이트 기록 <span class="nav-new" id="nav-updates-new" hidden></span>
       </button>
       <button class="nav-item" id="nav-access" onclick="showTab('access',this)" style="display:none">
         <span class="nav-icon"><i class="ti ti-lock-access"></i></span> 접속기록
@@ -2269,7 +2312,8 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <div class="cdb-filters">
           <select id="cdb-proc" class="dh-select" onchange="renderClaimDb()"><option value="">전체 공정</option></select>
           <select id="cdb-year" class="dh-select" onchange="renderClaimDb()"><option value="">전체 연도</option></select>
-          <input id="cdb-client" class="dh-select" list="cdb-client-list" placeholder="거래처" oninput="cdbDebounce()" autocomplete="off"><datalist id="cdb-client-list"></datalist>
+          <select id="cdb-inout" class="dh-select" onchange="renderClaimDb()" title="ERP 부적합내역의 사내/외주 구분 (원본 엑셀 건은 '구분 없음')"><option value="">사내+외주 전체</option><option value="사내">사내</option><option value="외주">외주</option><option value="none">구분 없음(엑셀·취합대장)</option></select>
+          <input id="cdb-client" class="dh-select" list="cdb-client-list" placeholder="거래처 · 외주처" oninput="cdbDebounce()" autocomplete="off"><datalist id="cdb-client-list"></datalist>
           <button type="button" class="gj-toggle" id="cdb-rich" onclick="this.classList.toggle('gj-on');renderClaimDb()">조치 내용 있는 건만</button>
           <button type="button" class="dh-btn" onclick="cdbClear()"><i class="ti ti-x"></i> 초기화</button>
           <span class="cdb-hint">유사도는 글자 2자 조합의 겹침으로 계산 · 같은 뜻 말(요고레=더러움=묻음 등)은 함께 찾아요</span>
@@ -2283,6 +2327,28 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         </div>
         <aside class="cdb-side" id="cdb-side"></aside>
       </div>
+    </div>
+
+    <!-- ============ 업데이트 기록 (changelog.json → changelog_data.js) ============ -->
+    <div id="tab-updates" class="tab">
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">업데이트 기록</h1>
+          <div class="dh-sub">시스템이 어떻게 달라졌는지 날짜별로 · 최신이 위 · 회색 '적용 대기'는 서버 설정이 끝나야 켜지는 것 <span id="ul-meta" class="gj-meta"></span></div>
+        </div>
+        <div class="dh-actions">
+          <label class="dh-search"><i class="ti ti-search"></i><input id="ul-q" placeholder="검색 (예: 가제본, 차트, 로그인)" oninput="renderUpdates()"></label>
+          <div class="dh-seg" id="ul-seg">
+            <button class="on" onclick="setUpdatesFilter('',this)">전체</button>
+            <button onclick="setUpdatesFilter('화면',this)">화면</button>
+            <button onclick="setUpdatesFilter('기능',this)">기능</button>
+            <button onclick="setUpdatesFilter('데이터',this)">데이터</button>
+            <button onclick="setUpdatesFilter('수집',this)">수집</button>
+            <button onclick="setUpdatesFilter('보안',this)">보안</button>
+          </div>
+        </div>
+      </div>
+      <div id="ul-list" class="ul-list"></div>
     </div>
 
     <!-- ============ 가제본 현황 ============ -->
@@ -3758,6 +3824,7 @@ const TAB_TITLES = {
   worklog: '작업이력 추적',
   access: '접속 기록',
   claimdb: '클레임 DB · 유사사례',
+  updates: '업데이트 기록',
 };
 
 let openTabs = ['dashboard'];   // 열려있는 탭 목록 (홈은 항상)
@@ -4094,6 +4161,7 @@ function showTab(name, btn) {
   if (name === 'kpi') renderKpi();
   if (name === 'claim' && claimData.length) renderClaimTable();
   if (name === 'claimdb' && typeof renderClaimDb === 'function') renderClaimDb();
+  if (name === 'updates' && typeof renderUpdates === 'function') renderUpdates(true);
   if (name === 'worker') renderWorker();
   if (name === 'gajebon') {
     if (Object.keys(gajebonSheets).length) renderGajebonTable();
@@ -5988,6 +6056,64 @@ function exportGajebon() {
   downloadCSV('가제본현황_' + (gajebonCurrentSheet || 'sheet') + '.csv', COLS, out);
 }
 // ══════════════════════════════════════════════════════
+// ========================
+// 업데이트 기록 (changelog_data.js = build_changelog.py ← changelog.json)
+// 새 항목 여부는 localStorage 'tara_updates_seen'(마지막으로 본 최신 날짜) 기준. 화면을 열면 본 것으로 처리.
+// ========================
+let _ulFilter = '';
+function _ulSeen() { try { return localStorage.getItem('tara_updates_seen') || ''; } catch (e) { return ''; } }
+function _ulEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function _ulHl(s, q) { const h = _ulEsc(s); if (!q) return h; try { return h.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>'); } catch (e) { return h; } }
+function updatesBadge() {
+  const el = document.getElementById('nav-updates-new'); const D = window.CHANGELOG;
+  if (!el || !D || !D.entries) return;
+  const seen = _ulSeen();
+  const n = D.entries.filter(e => e.date > seen).length;
+  if (!n) { el.hidden = true; el.removeAttribute('data-n'); el.textContent = ''; return; }
+  el.hidden = false;
+  if (seen) { el.setAttribute('data-n', n); el.textContent = n > 9 ? '9+' : String(n); }   // 이미 본 적 있으면 새 항목 수, 처음이면 점만
+  else { el.removeAttribute('data-n'); el.textContent = ''; }
+}
+function setUpdatesFilter(a, btn) {
+  _ulFilter = a || '';
+  document.querySelectorAll('#ul-seg button').forEach(b => b.classList.toggle('on', b === btn || (!btn && !a && b.textContent === '전체')));
+  renderUpdates();
+}
+function renderUpdates(markSeen) {
+  const list = document.getElementById('ul-list'); const meta = document.getElementById('ul-meta'); const D = window.CHANGELOG;
+  if (!list) return;
+  if (!D || !D.entries || !D.entries.length) { list.innerHTML = '<div class="dh-empty">업데이트 기록 파일(changelog_data.js)이 없어요.<br>PC 에서 <b>python build_changelog.py</b> 를 돌리면 만들어져요.</div>'; return; }
+  const seenBefore = _ulSeen();
+  const q = (document.getElementById('ul-q')?.value || '').trim();
+  const ql = q.toLowerCase();
+  const rows = D.entries.filter(e => (!_ulFilter || (e.area || []).includes(_ulFilter))
+    && (!ql || (e.title + ' ' + (e.items || []).join(' ') + ' ' + (e.area || []).join(' ')).toLowerCase().includes(ql)));
+  if (meta) meta.textContent = '· 총 ' + D.count + '건' + (rows.length !== D.count ? ' 중 ' + rows.length + '건 표시' : '') + (D.updated ? ' · 기준 ' + D.updated : '');
+  if (!rows.length) { list.innerHTML = '<div class="dh-empty">조건에 맞는 기록이 없어요.</div>'; }
+  else {
+    let html = ''; let curMonth = '';
+    rows.forEach(e => {
+      const m = e.date.slice(0, 7);
+      if (m !== curMonth) { curMonth = m; html += '<div class="ul-month">' + m.slice(0, 4) + '년 ' + parseInt(m.slice(5), 10) + '월</div>'; }
+      const isNew = e.date > seenBefore;
+      const d = e.date.split('-');
+      html += '<div class="ul-item' + (e.status === 'pending' ? ' pending' : '') + (isNew ? ' new' : '') + '">'
+        + '<div class="ul-date"><b>' + parseInt(d[1], 10) + '.' + parseInt(d[2], 10) + '</b><span>' + d[0] + '</span></div>'
+        + '<div class="ul-card"><div class="ul-head"><div class="ul-title">' + _ulHl(e.title, q) + '</div><div class="ul-tags">'
+        + (isNew ? '<span class="ul-tag new">NEW</span>' : '')
+        + (e.area || []).map(a => '<span class="ul-tag a-' + _ulEsc(a) + '">' + _ulEsc(a) + '</span>').join('')
+        + (e.status === 'pending' ? '<span class="ul-tag st">적용 대기</span>' : '')
+        + '</div></div>'
+        + '<ul class="ul-items">' + (e.items || []).map(t => '<li>' + _ulHl(t, q) + '</li>').join('') + '</ul>'
+        + (e.by ? '<div class="ul-by">' + _ulEsc(e.by) + '</div>' : '')
+        + '</div></div>';
+    });
+    list.innerHTML = html;
+  }
+  if (markSeen && D.latest) { try { localStorage.setItem('tara_updates_seen', D.latest); } catch (e) {} updatesBadge(); }
+}
+try { updatesBadge(); } catch (e) {}
+
 // 클레임 DB · 유사사례 검색 (claimdb_data.js = import_claimdb.py, 2023~ 945건)
 //  - 유사도: 글자 2자 조합(bigram) Dice 계수. 현상 0.55 · 부적합유형 0.15 · 조치 0.15 · 제품명 0.10 · 단어 정확일치 0.05
 //  - 동의어: 요고레=더러움=묻음=오염 등은 질문에 같이 붙여 검색
@@ -6025,7 +6151,7 @@ function cdbScore(r, qb, qtoks) {
 }
 function cdbDebounce() { clearTimeout(_cdbTimer); _cdbTimer = setTimeout(renderClaimDb, 180); }
 function setCdbMode(m) { _cdbMode = m; document.querySelectorAll('#cdb-mode button').forEach((b, i) => b.classList.toggle('on', (i === 0) === (m === 'search'))); renderClaimDb(); }
-function cdbClear() { ['cdb-q', 'cdb-client'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); ['cdb-proc', 'cdb-year'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); document.getElementById('cdb-rich')?.classList.remove('gj-on'); renderClaimDb(); }
+function cdbClear() { ['cdb-q', 'cdb-client'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); ['cdb-proc', 'cdb-year', 'cdb-inout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); document.getElementById('cdb-rich')?.classList.remove('gj-on'); renderClaimDb(); }
 function cdbToggle(id) { _cdbOpen = (_cdbOpen === id) ? null : id; document.querySelectorAll('.cdb-hit').forEach(el => el.classList.toggle('open', el.dataset.id === _cdbOpen)); }
 function cdbHl(text, toks) { let h = String(text == null ? '' : text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); toks.filter(t => t.length >= 2).slice(0, 12).forEach(t => { try { h = h.replace(new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>'); } catch (e) {} }); return h; }
 function renderClaimDb() {
@@ -6047,7 +6173,11 @@ function renderClaimDb() {
   const proc = document.getElementById('cdb-proc')?.value || '', year = document.getElementById('cdb-year')?.value || '';
   const client = (document.getElementById('cdb-client')?.value || '').trim().toLowerCase();
   const richOnly = document.getElementById('cdb-rich')?.classList.contains('gj-on');
-  let rows = D.rows.filter(r => (!proc || r.proc === proc) && (!year || r.year === year) && (!client || (r.client || '').toLowerCase().includes(client)) && (!richOnly || r.aq === 2));
+  const inout = document.getElementById('cdb-inout')?.value || '';
+  let rows = D.rows.filter(r => (!proc || r.proc === proc) && (!year || r.year === year)
+    && (!client || (r.client || '').toLowerCase().includes(client) || (r.vendor || '').toLowerCase().includes(client))
+    && (!inout || (inout === 'none' ? !r.inout : r.inout === inout))
+    && (!richOnly || r.aq === 2));
   const qtoks = cdbTokens(q);
   let hits;
   if (_cdbMode === 'search' && q) {
@@ -6057,7 +6187,7 @@ function renderClaimDb() {
     hits = rows.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, _cdbMode === 'all' ? 300 : 30).map(r => ({ r, s: null }));
   }
   const searching = _cdbMode === 'search' && q;
-  if (cnt) cnt.innerHTML = `<span>${searching ? `유사사례 <b>${hits.length}</b>건 (검색 대상 ${rows.length.toLocaleString()}건)` : (_cdbMode === 'all' ? `전체 ${rows.length.toLocaleString()}건 중 최신 ${hits.length}건` : `검색어를 입력하면 유사사례가 나와요 · 아래는 최근 ${hits.length}건`)}</span><span style="font-size:11px;color:var(--ink-3)">${searching ? '유사도 순' : '접수일 최신순'}</span>`;
+  if (cnt) cnt.innerHTML = `<span>${searching ? `유사사례 <b>${hits.length}</b>건 (검색 대상 ${rows.length.toLocaleString()}건)` : (_cdbMode === 'all' ? `전체 ${rows.length.toLocaleString()}건 중 최신 ${hits.length}건` : `검색어를 입력하면 유사사례가 나와요 · 조건에 맞는 ${rows.length.toLocaleString()}건 중 최근 ${hits.length}건`)}</span><span style="font-size:11px;color:var(--ink-3)">${searching ? '유사도 순' : '접수일 최신순'}</span>`;
   if (!hits.length) { res.innerHTML = `<div class="cdb-empty">비슷한 사례를 못 찾았어요.<br>말을 바꿔보거나(예: "묻음" → "요고레"), 공정·연도 필터를 풀어보세요.</div>`; }
   else {
     res.innerHTML = hits.map(({ r, s }) => {
@@ -6069,7 +6199,7 @@ function renderClaimDb() {
       const tags = [r.proc ? `<span class="dh-tag alt">${esc(r.proc)}</span>` : '', r.equip ? `<span class="dh-tag alt">${esc(r.equip)}</span>` : '',
         r.inout ? `<span class="dh-tag ${r.inout === '외주' ? '' : 'alt'}">${esc(r.inout)}${r.vendor ? ' · ' + esc(r.vendor) : ''}</span>` : '',
         r.qtype ? `<span class="badge badge-low">${esc(r.qtype)}</span>` : '', r.dtype ? `<span class="dh-tag">${esc(r.dtype)}</span>` : '',
-        r.cost ? `<span class="dh-tag alt">비용 ${Math.round(r.cost / 10000).toLocaleString()}만원</span>` : '', r.nq ? `<span class="dh-tag alt">${esc(r.nq)}</span>` : '', `<span class="dh-tag alt" style="opacity:.7">${esc(r.src)}</span>`].join('');
+        r.cost ? `<span class="dh-tag alt">비용 ${Math.round(r.cost / 10000).toLocaleString()}만원</span>` : '', r.nq ? `<span class="dh-tag alt">${esc(r.nq)}</span>` : '', `<span class="dh-tag alt" style="opacity:.7" title="${esc((r.srcs || [r.src]).join(' + '))}">${esc(r.src)}${(r.srcs || []).length > 1 ? ' +' + (r.srcs.length - 1) : ''}</span>`].join('');
       return `<div class="cdb-hit${_cdbOpen === r.id ? ' open' : ''}" data-id="${r.id}" onclick="cdbToggle('${r.id}')">
         ${ring || '<div class="cdb-score"><div class="cdb-ring lo" style="--p:0"><span>·</span></div><small>최근</small></div>'}
         <div class="cdb-hit-body">
