@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789736923">
+<meta name="data-version" content="1789737771">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1682,6 +1682,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 <!-- 클레임 DB 통합(import_claimdb.py) — 유사사례 검색. 없으면 화면에서 안내만 -->
 <script>document.write('<script src="claimdb_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
 <script>document.write('<script src="changelog_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
+<script>document.write('<script src="claim_vec.js?v=' + TARA_DATA_VER + '" onerror="window.CLAIM_VEC_MISSING=true"><\/script>');</script>
 <!-- worklog_data.js 는 '작업이력 추적' 탭 열 때만 지연 로드 (초기 로드 가볍게) -->
 <!-- GAJEBON_DATA_END -->
 
@@ -2470,7 +2471,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
           <input id="cdb-client" class="dh-select" list="cdb-client-list" placeholder="거래처 · 외주처" oninput="cdbDebounce()" autocomplete="off"><datalist id="cdb-client-list"></datalist>
           <button type="button" class="gj-toggle" id="cdb-rich" onclick="this.classList.toggle('gj-on');renderClaimDb()">조치 내용 있는 건만</button>
           <button type="button" class="dh-btn" onclick="cdbClear()"><i class="ti ti-x"></i> 초기화</button>
-          <span class="cdb-hint">유사도는 글자 2자 조합의 겹침으로 계산 · 같은 뜻 말(요고레=더러움=묻음 등)은 함께 찾아요</span>
+          <span class="cdb-hint" id="cdb-hint">유사도는 글자 2자 조합의 겹침으로 계산 · 같은 뜻 말(요고레=더러움=묻음 등)은 함께 찾아요</span>
         </div>
       </div>
 
@@ -3123,15 +3124,15 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       </div>
       <div class="cph-period">
         <span style="font-weight:600">기간(월)</span>
-        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
+        <select id="kpi-mon-from" onchange="setKpiMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="0">전체</option><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
         <span>~</span>
-        <select style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option>전체</option><option>1월</option><option>2월</option><option>3월</option><option>4월</option><option>5월</option><option>6월</option><option>7월</option><option>8월</option><option>9월</option><option>10월</option><option>11월</option><option>12월</option></select>
-        <span style="display:inline-flex;gap:4px;margin-left:4px">
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">1분기</button>
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">2분기</button>
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">3분기</button>
-          <button class="claim-year-btn" onclick="coreVisual(this)" style="padding:4px 9px">4분기</button>
-          <button class="claim-year-btn active" onclick="coreVisual(this)" style="padding:4px 9px">전체월</button>
+        <select id="kpi-mon-to" onchange="setKpiMonths()" style="border:1px solid #d2d2d7;border-radius:7px;padding:5px 8px;font-size:12.5px"><option value="0">전체</option><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
+        <span id="kpi-quarters" style="display:inline-flex;gap:4px;margin-left:4px">
+          <button class="claim-year-btn" onclick="setKpiQuarter(1,3,this)" style="padding:4px 9px">1분기</button>
+          <button class="claim-year-btn" onclick="setKpiQuarter(4,6,this)" style="padding:4px 9px">2분기</button>
+          <button class="claim-year-btn" onclick="setKpiQuarter(7,9,this)" style="padding:4px 9px">3분기</button>
+          <button class="claim-year-btn" onclick="setKpiQuarter(10,12,this)" style="padding:4px 9px">4분기</button>
+          <button class="claim-year-btn active" onclick="setKpiQuarter(0,0,this)" style="padding:4px 9px">전체월</button>
         </span>
       </div>
             </div>
@@ -3501,17 +3502,9 @@ function renderErp() {
     return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n);
   };
   const tp = cntBy(r => r['접수유형'], 8);
-  mkChart('chartErpType', 'type', {
-    type: 'doughnut',
-    data: { labels: tp.map(x => x[0]), datasets: [{ data: tp.map(x => x[1]), backgroundColor: TARA_COLORS }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-  });
+  mkChart('chartErpType', 'type', shareBarConfig(tp.map(x => x[0]), tp.map(x => x[1]), { unit: '건' }));
   const io = cntBy(r => r['사내외주'], 5);
-  mkChart('chartErpInout', 'inout', {
-    type: 'doughnut',
-    data: { labels: io.map(x => x[0]), datasets: [{ data: io.map(x => x[1]), backgroundColor: ['#17A2B8', '#E67E22', '#7B4EA0', '#98A2B3'] }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-  });
+  mkChart('chartErpInout', 'inout', shareBarConfig(io.map(x => x[0]), io.map(x => x[1]), { unit: '건', colors: ['#17A2B8', '#E8630B', '#7B4EA0', '#98A2B3'] }));
   const pr = cntBy(r => r['발생공정'] || r['설비명'], 10);
   mkChart('chartErpProc', 'proc', {
     type: 'bar', data: { labels: pr.map(x => x[0]), datasets: [{ data: pr.map(x => x[1]), backgroundColor: '#17A2B8' }] },
@@ -3601,7 +3594,7 @@ function renderVendor() {
   const agg = (field) => { const o = {}; rows.forEach(r => { const k = (r[field] || '기타').trim(); o[k] = (o[k] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 8); };
   const pr = agg('발생공정'), ty = agg('부적합내역');
   const PAL = ['#17A2B8', '#1F5C99', '#7B4EA0', '#E67E22', '#27AE60', '#C0392B', '#F1C40F', '#98A2B3'];
-  mkChart('chartVendorProc', 'vProc', { type: 'doughnut', data: { labels: pr.map(x => x[0]), datasets: [{ data: pr.map(x => x[1]), backgroundColor: PAL }] }, options: { responsive:true, maintainAspectRatio:false, plugins: { legend: { position: 'right' } } } });
+  mkChart('chartVendorProc', 'vProc', shareBarConfig(pr.map(x => x[0]), pr.map(x => x[1]), { unit: '건' }));
   mkChart('chartVendorType', 'vType', { type: 'bar', data: { labels: ty.map(x => x[0]), datasets: [{ label: '건수', data: ty.map(x => x[1]), backgroundColor: '#7B4EA0' }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } } } });
 
   // 테이블
@@ -4199,33 +4192,44 @@ function renderCoreBar(id, labels, values, colors, unit) {
     });
   } catch(e) { console.warn('renderCoreBar error', id, e); }
 }
-// 단위(unit)를 지정할 수 있는 범용 도넛그래프 — renderPie는 툴팁 단위가 '건'으로 고정돼 있어 금액 등엔 못 씀
-function renderCorePie(id, labels, values, unit) {
-  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-  const total = values.reduce((a,b)=>a+b,0) || 1;
-  const colors = labels.map((_,i) => CHART_PALETTE[i % CHART_PALETTE.length]);
-  const u = unit || '';
-  try {
-    chartInstances[id] = new Chart(ctx, {
-      type: 'doughnut',
-      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '58%',
-        plugins: {
-          legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 13, padding: 10,
-            generateLabels: chart => chart.data.labels.map((l,i) => ({
-              text: `${l}  ${values[i]}${u} (${Math.round(values[i]/total*100)}%)`,
-              fillStyle: colors[i], strokeStyle: colors[i], lineWidth: 0, index: i, hidden: false
-            }))
-          }},
-          tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}${u} (${Math.round(c.parsed/total*100)}%)` } }
-        }
+// ── 구성비(도넛) 대체: 가로막대 + 직접 라벨 "값 (xx%)" ── 디자인 규칙(시안): 파이/도넛 대신 정렬된 가로막대, 계열색은 항목별 점 역할, '미상'류는 회색
+// shareBarConfig(labels, values, {unit, fmt, colors, sort}) → Chart 설정. fmt(v) 가 있으면 값 표기에 사용(금액 등)
+function shareBarConfig(labels, values, opt) {
+  opt = opt || {};
+  const u = opt.unit || '';
+  const fmt = opt.fmt || (v => (typeof v === 'number' ? v.toLocaleString() : v) + u);
+  let pairs = labels.map((l, i) => [l, values[i] || 0, i]);
+  if (opt.sort !== false) pairs.sort((a, b) => b[1] - a[1]);
+  const total = pairs.reduce((s, p) => s + (p[1] || 0), 0) || 1;
+  const grey = new Set(['미상', '(미상)', '기타', '(설비 미기재)', '데이터없음']);
+  const pal = opt.colors || CHART_PALETTE;
+  const colors = pairs.map(p => grey.has(String(p[0]).trim()) ? '#C5CCD3' : (labels.length <= pal.length ? pal[p[2] % pal.length] : '#17A2B8'));
+  return {
+    type: 'bar',
+    data: { labels: pairs.map(p => p[0]), datasets: [{ data: pairs.map(p => p[1]), backgroundColor: colors, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 22 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 84 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: { display: true, anchor: 'end', align: 'end', clip: false, color: '#111827', font: { size: 10.5, weight: '600' },
+                      formatter: v => `${fmt(v)} (${Math.round(v / total * 100)}%)` },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.parsed.x)} (${Math.round(c.parsed.x / total * 100)}%)` } }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { display: false }, grid: { color: 'rgba(0,0,0,0.05)', drawTicks: false }, border: { display: false } },
+        y: { ticks: { font: { size: 11 }, color: '#111827', autoSkip: false }, grid: { display: false } }
       }
-    });
-  } catch(e) { console.warn('renderCorePie error', id, e); }
+    }
+  };
 }
+function renderShareBars(id, labels, values, opt) {
+  if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch (e) {} }
+  const ctx = document.getElementById(id); if (!ctx) return;
+  try { chartInstances[id] = new Chart(ctx, shareBarConfig(labels, values, opt)); } catch (e) { console.warn('renderShareBars error', id, e); }
+}
+// 단위(unit)를 지정할 수 있는 범용 구성비 그래프 (옛 도넛 → 가로막대) — renderPie는 단위가 '건'으로 고정
+function renderCorePie(id, labels, values, unit) { renderShareBars(id, labels, values, { unit: unit || '' }); }
 // 나머지 4개 화면(팀KPI·협력사현황·원인분석·월간리포트)의 대표 그래프 — core-summary/dashboard 공용
 function renderCoreExtraCharts(prefix) {
   const H = window.CORE_HEADLINES || {};
@@ -5423,29 +5427,12 @@ let chartInstances = {};
 const CHART_PALETTE = ['#17A2B8','#E8630B','#7B4EA0','#0F9D63','#D0342A','#C2870A','#1F5C99','#D9569A','#C5CCD3','#AEB6BF','#98A2AD','#83909C'];
 
 function renderPie(id, labels, data) {
+  // 옛 도넛 → 구성비 가로막대(값·비율 직접 라벨). 이름은 호출부 호환을 위해 유지
   if (chartInstances[id]) { try { chartInstances[id].destroy(); } catch(e){} }
   const ctx = document.getElementById(id);
   if (!ctx) return;
-  const total = data.reduce((a,b)=>a+b,0);
-  const colors = labels.map((_,i) => CHART_PALETTE[i % CHART_PALETTE.length]);
   try {
-    chartInstances[id] = new Chart(ctx, {
-      type: 'doughnut',
-      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        cutout: '58%',
-        plugins: {
-          legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 13, padding: 10,
-            generateLabels: chart => chart.data.labels.map((l,i) => ({
-              text: `${l}  ${data[i]}건 (${Math.round(data[i]/total*100)}%)`,
-              fillStyle: colors[i], strokeStyle: colors[i], lineWidth: 0, index: i, hidden: false
-            }))
-          }},
-          tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}건 (${Math.round(c.parsed/total*100)}%)` } }
-        }
-      }
-    });
+    chartInstances[id] = new Chart(ctx, shareBarConfig(labels, data, { unit: '건' }));
   } catch(e) { console.warn('renderPie error', id, e); }
 }
 
@@ -5758,7 +5745,8 @@ let claimCurrentYear = '2026';
 
 function switchClaimYear(year, btn) {
   claimCurrentYear = year;
-  document.querySelectorAll('.claim-year-btn').forEach(b => b.classList.remove('active'));
+  // 취합대장 연도 버튼만 (다른 화면의 .claim-year-btn — 팀 KPI 분기 버튼 등 — 은 건드리지 않음)
+  (btn && btn.parentNode ? btn.parentNode : document.getElementById('tab-claim') || document).querySelectorAll('.claim-year-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   refreshClaimFilters(year);
   renderClaimMetrics();
@@ -5837,8 +5825,8 @@ function initClaim() {
   // 필터 드롭다운 초기화 (2026 기준)
   refreshClaimFilters('2026');
 
-  // 2026 버튼 active
-  document.querySelectorAll('.claim-year-btn').forEach(b => {
+  // 2026 버튼 active — 취합대장 탭 안의 연도 버튼만
+  (document.getElementById('tab-claim') || document).querySelectorAll('.claim-year-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.trim() === '2026');
   });
 
@@ -6308,6 +6296,64 @@ function cdbScore(r, qb, qtoks) {
   return s + 0.05 * (qtoks.length ? hit / qtoks.length : 0) + (r.dtype && qtoks.some(t => cdbNorm(t) === cdbNorm(r.dtype)) ? 0.08 : 0);
 }
 function cdbDebounce() { clearTimeout(_cdbTimer); _cdbTimer = setTimeout(renderClaimDb, 180); }
+
+// ── 의미 검색(AI 임베딩) — claim_vec.js(문서 벡터, int8) + /api/embed(질문 벡터, Cloudflare Workers AI) ──
+// 둘 중 하나라도 없으면 글자(bigram) 검색만으로 동작. 상태: off(벡터 파일 없음) / wait(질문 벡터 요청 중) / on / nosvr(서버 바인딩 없음) / err
+let _cvIndex = null, _cvStatus = 'off';
+const _cvQueryCache = new Map(); let _cvInflight = null;
+function cdbVecIndex() {
+  if (_cvIndex !== null) return _cvIndex;
+  const V = window.CLAIM_VEC;
+  if (!V || !V.q || !V.ids || !V.dim) { _cvIndex = false; _cvStatus = 'off'; return false; }
+  try {
+    const bin = atob(V.q); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const i8 = new Int8Array(u8.buffer);
+    const pos = new Map(); V.ids.forEach((id, i) => pos.set(id, i));
+    _cvIndex = { i8, pos, dim: V.dim, scale: V.scale, n: V.ids.length };
+    if (_cvStatus === 'off') _cvStatus = 'wait';
+  } catch (e) { console.warn('CLAIM_VEC decode', e); _cvIndex = false; _cvStatus = 'off'; }
+  return _cvIndex;
+}
+// 질문 벡터: 캐시에 있으면 즉시 반환, 없으면 요청하고 null 반환(도착 시 onReady 호출)
+function cdbSemanticVec(text, onReady) {
+  const idx = cdbVecIndex(); if (!idx) return null;
+  const key = cdbNorm(text);
+  if (!key || key.length < 2) return null;
+  if (_cvQueryCache.has(key)) return _cvQueryCache.get(key);
+  if (_cvStatus === 'nosvr') return null;                 // 서버 바인딩 없음 확인됨 → 다시 묻지 않음
+  if (_cvInflight && _cvInflight.key === key) { _cvInflight.cbs.push(onReady); return null; }
+  const req = { key, cbs: [onReady] }; _cvInflight = req; _cvStatus = 'wait';
+  fetch('/api/embed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text.slice(0, 1000) }) })
+    .then(async r => { const j = await r.json().catch(() => ({})); if (r.status === 501) { _cvStatus = 'nosvr'; return null; } if (!r.ok || !j.ok || !Array.isArray(j.vec)) { _cvStatus = 'err'; return null; } return Float32Array.from(j.vec); })
+    .catch(() => { _cvStatus = 'err'; return null; })
+    .then(vec => {
+      if (vec && vec.length === idx.dim) { let n = 0; for (let i = 0; i < vec.length; i++) n += vec[i] * vec[i]; n = Math.sqrt(n) || 1; for (let i = 0; i < vec.length; i++) vec[i] /= n; _cvQueryCache.set(key, vec); _cvStatus = 'on'; }
+      else if (vec) { _cvStatus = 'err'; }
+      if (_cvInflight === req) _cvInflight = null;
+      if (_cvQueryCache.size > 60) _cvQueryCache.delete(_cvQueryCache.keys().next().value);
+      req.cbs.forEach(cb => { try { cb && cb(); } catch (e) {} });
+    });
+  return null;
+}
+// 문서 r 과 질문 벡터의 코사인 → 글자 점수와 섞기 (글자 .55 · 의미 .45). 벡터 없으면 글자 점수 그대로
+function cdbBlend(r, s, qv) {
+  const idx = _cvIndex; if (!qv || !idx) return s;
+  const p = idx.pos.get(r.id); if (p === undefined) return s;
+  const off = p * idx.dim, i8 = idx.i8; let dot = 0;
+  for (let i = 0; i < idx.dim; i++) dot += qv[i] * i8[off + i];
+  const cos = dot * (idx.scale[p] || 0);                      // 문서는 단위벡터 → cos ≈ scale·dot
+  const sem = Math.max(0, Math.min(1, (cos - 0.35) / 0.45));  // bge-m3 는 무관 .3 안팎 · 매우 유사 .8+
+  return 0.55 * s + 0.45 * sem;
+}
+function cdbSemanticHint(qv) {
+  const h = document.getElementById('cdb-hint'); if (!h) return;
+  const base = '유사도는 글자 2자 조합의 겹침으로 계산 · 같은 뜻 말(요고레=더러움=묻음 등)은 함께 찾아요';
+  const idx = cdbVecIndex();
+  if (!idx) { h.textContent = base; h.dataset.sem = 'off'; return; }
+  const st = qv ? 'on' : _cvStatus;
+  const txt = { on: 'AI 의미 검색 켜짐 · 글자 유사도와 섞어서 순위를 매겨요', wait: 'AI 의미 검색 준비 중… (먼저 글자 유사도로 보여줘요)', nosvr: 'AI 의미 검색 대기: 서버 Workers AI 바인딩이 아직 없어 글자 검색만 동작', err: 'AI 의미 검색 일시 오류 · 글자 검색으로 동작' }[st] || base;
+  h.textContent = txt; h.dataset.sem = st;
+}
 function setCdbMode(m) { _cdbMode = m; document.querySelectorAll('#cdb-mode button').forEach((b, i) => b.classList.toggle('on', (i === 0) === (m === 'search'))); renderClaimDb(); }
 function cdbClear() { ['cdb-q', 'cdb-client'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); ['cdb-proc', 'cdb-year', 'cdb-inout'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; }); document.getElementById('cdb-rich')?.classList.remove('gj-on'); renderClaimDb(); }
 function cdbToggle(id) { _cdbOpen = (_cdbOpen === id) ? null : id; document.querySelectorAll('.cdb-hit').forEach(el => el.classList.toggle('open', el.dataset.id === _cdbOpen)); }
@@ -6340,8 +6386,12 @@ function renderClaimDb() {
   let hits;
   if (_cdbMode === 'search' && q) {
     const qb = cdbBigrams(cdbExpand(q));
-    hits = rows.map(r => ({ r, s: cdbScore(r, qb, qtoks) })).filter(x => x.s >= 0.12).sort((a, b) => b.s - a.s).slice(0, 40);
+    // 의미 검색(AI 벡터)이 준비돼 있으면 글자 점수와 섞고, 아직 벡터가 안 왔으면 글자 점수로 먼저 보여주고 도착하면 다시 그린다
+    const qv = cdbSemanticVec(q, () => { if ((document.getElementById('cdb-q')?.value || '').trim() === q) renderClaimDb(); });
+    hits = rows.map(r => ({ r, s: cdbBlend(r, cdbScore(r, qb, qtoks), qv) })).filter(x => x.s >= 0.12).sort((a, b) => b.s - a.s).slice(0, 40);
+    cdbSemanticHint(qv);
   } else {
+    cdbSemanticHint(null);
     hits = rows.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, _cdbMode === 'all' ? 300 : 30).map(r => ({ r, s: null }));
   }
   const searching = _cdbMode === 'search' && q;
@@ -8828,8 +8878,9 @@ function renderRegSimilar() {
   const qx = cdbExpand(text);
   const qb = cdbBigrams(qx), qtoks = cdbTokens(qx);
   const cli = cdbNorm(q.client);
+  const qv = cdbSemanticVec(text, () => { const now = _rsQuery(); if ([now.sym, now.dtype, now.product].filter(Boolean).join(' ') === text) renderRegSimilar(); });
   const hits = D.rows.map(r => {
-    let s = cdbScore(r, qb, qtoks);
+    let s = cdbBlend(r, cdbScore(r, qb, qtoks), qv);
     if (cli && cli.length >= 2 && r.client && cdbNorm(r.client).includes(cli)) s += 0.06;   // 같은 거래처 가산
     return { r, s };
   }).filter(x => x.s >= 0.14).sort((a, b) => b.s - a.s).slice(0, 5);
@@ -9808,6 +9859,30 @@ try {
 // ========================
 let kpiMonth = '';      // 월별 보기: '1월' ~ '12월' (비어있으면 최신 달 자동)
 function setKpiMonth(m) { kpiMonth = m; renderKpi(); }
+// 팀 KPI 헤더 기간(월)·분기 — 요약 카드·월별 표·월별 카드가 구간 안의 달만 집계 (0 = 전체)
+let kpiMonFrom = 0, kpiMonTo = 0;
+function kpiRange() {
+  if (!kpiMonFrom && !kpiMonTo) return [1, 12];
+  let a = kpiMonFrom || 1, b = kpiMonTo || 12; if (a > b) [a, b] = [b, a]; return [a, b];
+}
+function kpiInRange(monthLabel) { const n = parseInt(String(monthLabel), 10); const [a, b] = kpiRange(); return n >= a && n <= b; }
+function setKpiMonths() {
+  kpiMonFrom = Number(document.getElementById('kpi-mon-from')?.value || 0);
+  kpiMonTo = Number(document.getElementById('kpi-mon-to')?.value || 0);
+  kpiMonth = '';   // 월별 보기 기본 달을 구간 안에서 다시 잡기
+  kpiSyncQuarterBtns(); renderKpi();
+}
+function setKpiQuarter(a, b, btn) {
+  kpiMonFrom = a; kpiMonTo = b; kpiMonth = '';
+  const f = document.getElementById('kpi-mon-from'), t = document.getElementById('kpi-mon-to');
+  if (f) f.value = String(a || 0); if (t) t.value = String(b || 0);
+  kpiSyncQuarterBtns(); renderKpi();
+}
+function kpiSyncQuarterBtns() {
+  const Q = { '1,3': 0, '4,6': 1, '7,9': 2, '10,12': 3, '0,0': 4 };
+  const key = kpiMonFrom + ',' + kpiMonTo; const on = Q[key];
+  document.querySelectorAll('#kpi-quarters .claim-year-btn').forEach((b, i) => b.classList.toggle('active', on === i));
+}
 let proofDev = '';      // G7 프루프 장비 필터: '' = 전체
 function setProofDev(d) { proofDev = d; renderKpi(); }
 
@@ -9821,25 +9896,31 @@ function renderKpi() {
     const li = Math.max(lastOf(D.top3.monthly), lastOf(D.cost.monthly), lastOf(D.sop.monthly), lastOf(D.std.monthly));
     const lm = (D.cost.monthly[li] || D.top3.monthly[li] || {}).m || '';
     const el = document.getElementById('kpi-period');
-    if (el) el.textContent = '목표 대비 실적 (2026년 1월~' + (lm || '') + ')'
+    const [ra, rb] = kpiRange(); const ranged = !!(kpiMonFrom || kpiMonTo);
+    if (el) el.textContent = (ranged ? `목표 대비 실적 (2026년 ${ra === rb ? ra + '월' : ra + '~' + rb + '월'} · ${rb - ra + 1}개월 구간 · 목표는 월할 계산)` : '목표 대비 실적 (2026년 1월~' + (lm || '') + ')')
       + (window.KPI_DATA_SRC ? '  ·  자동반영 ' + window.KPI_DATA_SRC.updated : '');
   } catch (e) {}
 
-  // 요약 카드
-  const top3Total = D.top3.monthly.reduce((s,r)=>s+(r.total||0),0);
-  const top3Rate  = Math.round(top3Total/D.top3.target*100);
+  // 요약 카드 — 헤더 기간(월)/분기 구간이 잡혀 있으면 그 달들만 합산하고, 연간 목표는 구간 개월수/12 로 월할
+  const inR = r => kpiInRange(r.m);
+  const [kra, krb] = kpiRange(); const kMonths = krb - kra + 1; const kRanged = !!(kpiMonFrom || kpiMonTo);
+  const share = kRanged ? kMonths / 12 : 1;
+  const top3Total = D.top3.monthly.filter(inR).reduce((s,r)=>s+(r.total||0),0);
+  const top3Target = Math.max(1, Math.round(D.top3.target * share));
+  const top3Rate  = Math.round(top3Total/top3Target*100);
   // 품질비용 = 부적합 목표·성과(NCCOST, 관리대장 품질사고비용 전체·외주포함) 기준 — 부적합 목표성과와 동일
   const NC = window.NCCOST_DATA || {};
   const nc2026 = NC['2026'] || { totalCost: 0, months: {} };
   const nc2025 = NC['2025'] || { totalCost: 0 };
   // 품질비용: 운영전략 결과보고 엑셀(D.cost) 기준 — 관리대장은 월판정 버그로 7·8월 리셋되어 임시로 운영전략 사용
-  const costTotal  = (D.cost.monthly||[]).reduce((a,r)=>a+(r.소계||0),0);
+  const costTotal  = (D.cost.monthly||[]).filter(inR).reduce((a,r)=>a+(r.소계||0),0);
   const costPrev   = D.cost.actual2025 || 0;
-  const costTarget = D.cost.target2026 || 60000000;
+  const costTarget = Math.round((D.cost.target2026 || 60000000) * share);
   const costRate   = costTarget ? Math.round(costTotal/costTarget*100) : 0;
-  const sopVals   = D.sop.monthly.filter(r=>r.actual!=null&&r.actual>0).map(r=>r.actual);
+  const sopVals   = D.sop.monthly.filter(inR).filter(r=>r.actual!=null&&r.actual>0).map(r=>r.actual);
   const sopAvg    = sopVals.length ? Math.round(sopVals.reduce((a,b)=>a+b,0)/sopVals.length) : '-';
-  const stdTotal  = D.std.monthly.reduce((s,r)=>s+(r.actual||0),0);
+  const stdTotal  = D.std.monthly.filter(inR).reduce((s,r)=>s+(r.actual||0),0);
+  const kLabel = kRanged ? (kra === krb ? kra + '월' : kra + '~' + krb + '월') : '연';
   window.CORE_HEADLINES = window.CORE_HEADLINES || {};
   window.CORE_HEADLINES.kpi = { value: costRate, unit: '%', label: '품질비용 달성률', sub: Math.round(costTotal/10000).toLocaleString() + '만 / 목표 ' + Math.round(costTarget/10000).toLocaleString() + '만', warn: costRate >= 100,
     chart: { labels: ['품질비용 달성률','반복불량 소진율','SOP 준수율'], values: [costRate, top3Rate, sopAvg==='-'?0:sopAvg] } };
@@ -9851,11 +9932,11 @@ function renderKpi() {
     `<div class="metric"><div class="team-card-heading"><div class="label">${label}</div>${_pill(pillTxt, pillK)}</div><div class="value">${value}<span style="font-size:13px;font-weight:400">${unit}</span></div><div class="sub neutral">${sub}</div></div>`;
 
   document.getElementById('kpi-summary').innerHTML =
-    heroCard('품질비용 누적', Math.round(costTotal/10000).toLocaleString(), '만원',
+    heroCard(kRanged ? '품질비용 (' + kLabel + ')' : '품질비용 누적', Math.round(costTotal/10000).toLocaleString(), '만원',
              '목표 대비 ' + costRate + '%', costRate<100?'good':'crit',
-             '연 목표 ' + Math.round(costTarget/10000).toLocaleString() + '만원 · 전년 ' + Math.round(costPrev/10000).toLocaleString() + '만', costRate) +
+             (kRanged ? kLabel + ' 목표(월할) ' : '연 목표 ') + Math.round(costTarget/10000).toLocaleString() + '만원 · 전년 ' + Math.round(costPrev/10000).toLocaleString() + '만', costRate) +
     stCard('반복불량 재발', top3Total, '건',
-           '목표 ' + D.top3.target + '건 이내', top3Rate<60?'good':(top3Rate<100?'warn':'crit'), top3Rate + '% 소진') +
+           '목표 ' + top3Target + '건 이내' + (kRanged ? '(월할)' : ''), top3Rate<60?'good':(top3Rate<100?'warn':'crit'), top3Rate + '% 소진') +
     stCard('SOP 준수율 평균', sopAvg, '점',
            (sopAvg!=='-'&&sopAvg>=95)?'우수':(sopAvg!=='-'&&sopAvg>=90?'주의':'개선 필요'), (sopAvg!=='-'&&sopAvg>=95)?'good':(sopAvg!=='-'&&sopAvg>=90?'warn':'crit'), '목표 95점 이상') +
     stCard('표준미준수 사고', stdTotal, '건',
@@ -9890,9 +9971,9 @@ function renderKpi() {
       return (t.total || 0) || (c.소계 || 0) || (s.actual != null) || (st.actual || 0)
           || t.note || c.note || s.note || st.note;
     };
-    const withData = MO.filter(hasM);
-    const avail = MO;   // 12개월 전부 탭으로 노출 (데이터 없는 달도 표시)
-    if (!kpiMonth || !avail.includes(kpiMonth)) kpiMonth = (withData[withData.length - 1] || '1월');   // 기본 = 데이터 있는 최신 달
+    const avail = MO.filter(kpiInRange);   // 헤더 구간 안의 달만 탭으로 (전체면 12개월 전부, 데이터 없는 달도 표시)
+    const withData = avail.filter(hasM);
+    if (!kpiMonth || !avail.includes(kpiMonth)) kpiMonth = (withData[withData.length - 1] || avail[0] || '1월');   // 기본 = 구간 안 데이터 있는 최신 달
     const tabsEl = document.getElementById('kpi-month-tabs');
     if (tabsEl) tabsEl.innerHTML = avail.map(m =>
       `<button class="claim-year-btn ${kpiMonth === m ? 'active' : ''}" onclick="setKpiMonth('${m}')">${m}</button>`).join('');
@@ -9943,7 +10024,7 @@ function renderKpi() {
           </div>` : '<div style="font-size:11.5px;color:#ccc">해당 내역 없음</div>'}
         </div>`;
       };
-      const cards = MO.map(m => {
+      const cards = MO.filter(kpiInRange).map(m => {
         const t = find(D.top3.monthly, m), c = find(D.cost.monthly, m),
               s = find(D.sop.monthly, m), st = find(D.std.monthly, m);
         const hasData = (t.total || 0) || (c.소계 || 0) || (s.actual != null) || (st.actual || 0)
@@ -10048,14 +10129,8 @@ function renderKpi() {
     const ctx = document.getElementById('chartTop3Process');
     const proc = ['제판','인쇄','코팅'];
     const vals = proc.map(p=>D.top3.monthly.reduce((s,r)=>s+(r[p]||0),0));
-    if(ctx) chartInstances.chartTop3Process = new Chart(ctx, {
-      type:'doughnut',
-      data:{labels:proc, datasets:[{data:vals, backgroundColor:['#17A2B8','#E67E22','#7B4EA0'], borderWidth:2, borderColor:'#fff'}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
-        plugins:{legend:{position:'right',labels:{font:{size:12},boxWidth:14,
-          generateLabels:chart=>proc.map((l,i)=>({text:`${l}  ${vals[i]}건`,fillStyle:['#17A2B8','#E67E22','#7B4EA0'][i],strokeStyle:['#17A2B8','#E67E22','#7B4EA0'][i],lineWidth:0,index:i,hidden:false}))
-        }},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed}건`}}}}
-    });
+    // 도넛 → 구성비 가로막대 (제판/인쇄/코팅 순서 고정, 반복불량 월별 막대와 같은 색)
+    if(ctx) chartInstances.chartTop3Process = new Chart(ctx, shareBarConfig(proc, vals, { unit:'건', colors:['#17A2B8','#E8630B','#7B4EA0'], sort:false }));
   } catch(e){}
 
   // 품질비용 월별 막대
@@ -10088,15 +10163,8 @@ function renderKpi() {
     const procPairs = NC_PROCS.map(p=>[p, (D.cost.monthly||[]).reduce((s,r)=>s+((r[p])||0),0)]).filter(x=>x[1]>0);
     const procs = procPairs.length ? procPairs.map(x=>x[0]) : ['데이터없음'];
     const pVals = procPairs.length ? procPairs.map(x=>x[1]) : [0];
-    const pColors = TARA_COLORS;
-    if(ctx) chartInstances.chartCostProcess = new Chart(ctx, {
-      type:'doughnut',
-      data:{labels:procs, datasets:[{data:pVals, backgroundColor:pColors, borderWidth:2, borderColor:'#fff'}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
-        plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,
-          generateLabels:chart=>procs.map((l,i)=>({text:`${l}  ${Math.round(pVals[i]/10000)}만`,fillStyle:pColors[i],strokeStyle:pColors[i],lineWidth:0,index:i,hidden:false}))
-        }},tooltip:{callbacks:{label:c=>` ${c.label}: ${Math.round(c.parsed/10000).toLocaleString()}만원`}}}}
-    });
+    // 도넛 → 구성비 가로막대 (금액 큰 순, 라벨 'N만 (xx%)')
+    if(ctx) chartInstances.chartCostProcess = new Chart(ctx, shareBarConfig(procs, pVals, { fmt: v => Math.round(v/10000).toLocaleString() + '만' }));
   } catch(e){}
 
   // SOP 준수율 꺾은선
