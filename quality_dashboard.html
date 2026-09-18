@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789693857">
+<meta name="data-version" content="1789696909">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -518,6 +518,46 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   /* ── 검사 항목 행 ── */
   .insp-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
 
+  /* ── 데이터 건강 표시 (탭바 오른쪽 끝, 가로 스크롤 시에도 고정) ── */
+  #health-pill.hp {
+    position: sticky; right: 0; margin-left: auto; align-self: center; flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 9px; margin-bottom: 6px;
+    border-radius: 999px; font-size: 11.5px; font-weight: 600; letter-spacing: -0.01em; cursor: pointer; user-select: none;
+    background: #fff; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 1px 2px rgba(0,0,0,0.04); white-space: nowrap;
+  }
+  #health-pill .hp-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+  #health-pill .hp-time { font-weight: 500; opacity: .75; font-variant-numeric: tabular-nums; }
+  #health-pill.hp-ok   { color: #1f7a4d; background: #eef8f2; border-color: #cfe9da; }
+  #health-pill.hp-warn { color: #9a6700; background: #fff7e6; border-color: #f1dfb0; }
+  #health-pill.hp-fail { color: #b42318; background: #fdeeec; border-color: #f5c6c0; }
+  #health-pill.hp-fail .hp-dot { animation: hp-blink 1.6s ease-in-out infinite; }
+  @keyframes hp-blink { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+  #health-panel {
+    position: fixed; z-index: 5000; width: min(440px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow: auto;
+    background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; box-shadow: 0 12px 36px rgba(0,0,0,0.14);
+    padding: 12px 14px 10px; font-size: 12.5px; color: #1d1d1f;
+  }
+  #health-panel .hp-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+  #health-panel .hp-head b { font-size: 13.5px; }
+  #health-panel .hp-head span { color: #6e6e73; font-size: 12px; }
+  #health-panel .hp-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  #health-panel .hp-tbl th { text-align: left; font-weight: 600; color: #86868b; font-size: 11px; padding: 4px 6px; border-bottom: 1px solid #eef0f2; }
+  #health-panel .hp-tbl td { padding: 6px 6px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; font-variant-numeric: tabular-nums; }
+  #health-panel .hp-tbl td i { color: #86868b; font-style: normal; font-size: 11px; }
+  #health-panel .hp-tbl tr.hp-sub td { padding: 0 6px 6px 14px; color: #b42318; font-size: 11.5px; border-bottom: 1px solid #f3f4f6; }
+  #health-panel .hp-badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #f2f2f4; color: #6e6e73; }
+  #health-panel .hp-b-ok   { background: #eef8f2; color: #1f7a4d; }
+  #health-panel .hp-b-warn { background: #fff7e6; color: #9a6700; }
+  #health-panel .hp-b-fail { background: #fdeeec; color: #b42318; }
+  #health-panel .hp-err { margin-top: 10px; padding: 8px 10px; background: #fff8f7; border: 1px solid #f5c6c0; border-radius: 8px; }
+  #health-panel .hp-err b { display: block; font-size: 11.5px; color: #b42318; margin-bottom: 4px; }
+  #health-panel .hp-err > div { margin-top: 6px; }
+  #health-panel .hp-err-k { font-weight: 600; }
+  #health-panel .hp-err pre { margin: 3px 0 0; white-space: pre-wrap; word-break: break-all; font: 11px/1.45 Consolas, monospace; color: #5b2a26; background: #fff; border-radius: 6px; padding: 6px 8px; border: 1px solid #f5dcd8; max-height: 120px; overflow: auto; }
+  #health-panel .hp-note { margin-top: 10px; padding: 8px 10px; background: #fff7e6; border-radius: 8px; color: #7a5200; font-size: 12px; }
+  #health-panel .hp-foot { margin-top: 10px; font-size: 11px; color: #86868b; }
+  @media (max-width: 640px) { #health-pill .hp-time { display: none; } }
+
   /* ── 인쇄 ── */
 
   /* ── 모바일 (≤900px): 사이드바는 서랍(오프캔버스)으로, 본문은 전폭 ── */
@@ -723,6 +763,8 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 <script>document.write('<script src="kpi_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
 <!-- (구)내장 NCCOST 데이터 제거 — nccost_data.js 가 정본 -->
 <script>document.write('<script src="nccost_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
+<!-- 수집 건강 상태(health.py) — 없어도 화면은 정상, 표시만 생략 -->
+<script>document.write('<script src="health_data.js?v=' + TARA_DATA_VER + '"><\/script>');</script>
 <!-- worklog_data.js 는 '작업이력 추적' 탭 열 때만 지연 로드 (초기 로드 가볍게) -->
 <!-- GAJEBON_DATA_END -->
 
@@ -2939,6 +2981,88 @@ function renderOpenTabs() {
     </div>`;
   }).join('');
   const act = [...bar.children][openTabs.indexOf(activeName)]; if (act && act.scrollIntoView) { try { act.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {} }
+  if (typeof renderHealthPill === 'function') renderHealthPill(bar);   // 탭바 오른쪽 끝 데이터 건강 표시
+}
+
+/* ── 데이터 건강 표시 (health_data.js) ──
+   자동수집 단계별 성공/실패 + 데이터 파일 갱신 시각으로 정상/지연/실패 판정.
+   지연 규칙(health.py 와 동일): 매 수집(slot) 소스는 마지막 평일 예정시각(07:40/08:00/12:00/15:00, 90분 여유) 이후 갱신이 없으면 지연,
+   하루1회(daily) 소스는 마지막 근무일에 갱신이 없으면 지연. 수동(manual) 소스는 판정 안 함. */
+function healthCompute() {
+  const H = window.HEALTH_DATA; if (!H || !H.sources) return null;
+  const now = new Date();
+  const pd = s => { if (!s) return null; const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/); return m ? new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +(m[6]||0)) : null; };
+  const slots = (H.slots || ['07:40','08:00','12:00','15:00']).map(s => s.split(':').map(Number)).sort((a,b) => (b[0]*60+b[1]) - (a[0]*60+a[1]));
+  const grace = (H.graceMin || 90) * 60000;
+  let lastSlot = null, day0 = null;
+  for (let back = 0; back < 10 && (!lastSlot || !day0); back++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    if (!lastSlot) for (const [h, m] of slots) { const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m); if (now - t >= grace) { lastSlot = t; break; } }
+    if (!day0) { const first = slots[slots.length - 1]; const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), first[0], first[1]); if (now - t >= grace) day0 = new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  }
+  const steps = H.steps || {};
+  const failedSteps = Object.keys(steps).filter(k => steps[k] && steps[k].ok === false && !steps[k].ignore).map(k => Object.assign({ key: k }, steps[k]));
+  const items = (H.sources || []).map(src => {
+    const mt = pd(src.mtime);
+    const fails = (src.steps || []).filter(k => steps[k] && steps[k].ok === false && !steps[k].ignore).map(k => steps[k].label || k);
+    let stale = false;
+    if (src.file && src.cadence !== 'manual') {
+      if (!mt) stale = true;
+      else if (src.cadence === 'slot' && lastSlot && mt < lastSlot) stale = true;
+      else if (src.cadence === 'daily' && day0 && mt < day0) stale = true;
+    }
+    const lastOk = (src.steps || []).map(k => steps[k] && steps[k].okAt).filter(Boolean).sort().pop() || null;
+    const level = fails.length ? 'fail' : (stale ? 'warn' : 'ok');
+    return { name: src.name, file: src.file, mtime: mt, lastOk: lastOk, fails: fails, level: level, manual: src.cadence === 'manual' };
+  });
+  const level = items.some(i => i.level === 'fail') ? 'fail' : (items.some(i => i.level === 'warn') ? 'warn' : 'ok');
+  const newest = items.map(i => i.mtime).filter(Boolean).sort((a, b) => b - a)[0] || null;
+  return { level, items, failedSteps, newest, generated: pd(H.generated), lastRun: pd(H.lastRun) };
+}
+function _hpFmt(d) { if (!d) return '-'; const p = n => String(n).padStart(2, '0'); const today = new Date(); const same = d.toDateString() === today.toDateString(); return (same ? '오늘 ' : (d.getMonth()+1) + '/' + d.getDate() + ' ') + p(d.getHours()) + ':' + p(d.getMinutes()); }
+function _hpIsAdmin() { try { return typeof ACCESS_ADMIN !== 'undefined' && ACCESS_ADMIN.includes(_cookie('tara_user')); } catch (e) { return false; } }
+function renderHealthPill(bar) {
+  bar = bar || document.getElementById('open-tabbar'); if (!bar) return;
+  const st = healthCompute();
+  let el = document.getElementById('health-pill');
+  if (!st) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'health-pill'; el.setAttribute('role', 'button'); el.title = '자동수집 상태 — 눌러서 화면별 갱신 시각 보기'; el.onclick = function (e) { e.stopPropagation(); toggleHealthPanel(); }; }
+  const txt = st.level === 'fail' ? '수집 실패' : (st.level === 'warn' ? '데이터 지연' : '데이터 정상');
+  el.className = 'hp hp-' + st.level;
+  el.innerHTML = '<span class="hp-dot"></span><span class="hp-txt">' + txt + '</span><span class="hp-time">' + _hpFmt(st.newest) + '</span>';
+  bar.appendChild(el);
+}
+function toggleHealthPanel(force) {
+  let p = document.getElementById('health-panel');
+  const open = p && p.style.display !== 'none';
+  if (force === false || (open && force !== true)) { if (p) p.style.display = 'none'; return; }
+  const st = healthCompute(); if (!st) return;
+  if (!p) { p = document.createElement('div'); p.id = 'health-panel'; p.onclick = e => e.stopPropagation(); document.body.appendChild(p);
+    document.addEventListener('click', () => toggleHealthPanel(false)); document.addEventListener('keydown', e => { if (e.key === 'Escape') toggleHealthPanel(false); }); }
+  const admin = _hpIsAdmin();
+  const badge = l => l === 'fail' ? '<span class="hp-badge hp-b-fail">실패</span>' : (l === 'warn' ? '<span class="hp-badge hp-b-warn">지연</span>' : '<span class="hp-badge hp-b-ok">정상</span>');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let html = '<div class="hp-head"><b>자동수집 상태</b><span>' + (st.level === 'fail' ? '실패한 단계가 있어요' : st.level === 'warn' ? '예정 시각에 갱신되지 않은 데이터가 있어요' : '모든 데이터가 예정대로 갱신됐어요') + '</span></div>';
+  html += '<table class="hp-tbl"><thead><tr><th>화면</th><th>마지막 갱신</th><th>상태</th></tr></thead><tbody>';
+  for (const it of st.items) {
+    html += '<tr><td>' + esc(it.name) + (it.manual ? ' <i>(수동)</i>' : '') + '</td><td>' + (it.mtime ? _hpFmt(it.mtime) : (it.lastOk ? _hpFmt(new Date(it.lastOk.replace(' ', 'T'))) : '-')) + '</td><td>' + (it.manual ? '<span class="hp-badge">-</span>' : badge(it.level)) + '</td></tr>';
+    if (it.fails.length) html += '<tr class="hp-sub"><td colspan="3">실패 단계: ' + esc(it.fails.join(', ')) + '</td></tr>';
+  }
+  html += '</tbody></table>';
+  if (st.failedSteps.length) {
+    if (admin) {
+      html += '<div class="hp-err"><b>오류 내용 (관리자)</b>' + st.failedSteps.map(f => '<div><span class="hp-err-k">' + esc(f.label || f.key) + '</span> · ' + esc(f.at || '') + (f.failCount > 1 ? ' · ' + f.failCount + '회 연속' : '') + '<pre>' + esc(f.msg || '(메시지 없음)') + '</pre></div>').join('') + '</div>';
+    } else {
+      html += '<div class="hp-note">수집이 실패했어요. 관리자(배원기)에게 알려주세요. 실패한 화면은 마지막으로 성공한 데이터가 보입니다.</div>';
+    }
+  }
+  html += '<div class="hp-foot">평일 07:40 · 08:00 · 12:00 · 15:00 자동수집 · 상태 기록 ' + _hpFmt(st.generated) + (admin ? ' · 메일 알림: mail_config.txt' : '') + '</div>';
+  p.innerHTML = html;
+  const pill = document.getElementById('health-pill');
+  const r = pill ? pill.getBoundingClientRect() : { bottom: 60, right: window.innerWidth - 16 };
+  p.style.top = Math.round(r.bottom + 6) + 'px'; p.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+  p.style.display = 'block';
 }
 
 function closeTab(name) {
