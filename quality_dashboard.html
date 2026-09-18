@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789731641">
+<meta name="data-version" content="1789732753">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -2661,6 +2661,8 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <div class="cph-actions">
           <select id="monthly-sel" onchange="renderMonthly()" style="border:1px solid #d2d2d7;border-radius:8px;padding:5px 10px;font-size:13px"></select>
           <button class="btn btn-primary btn-sm" onclick="generateGiahnDoc()"><i class="ti ti-file-text"></i> 기안 문서 생성</button>
+          <button class="btn btn-sm" onclick="downloadGiahnPdf()" title="인쇄창 없이 바로 PDF 파일로 내려받기"><i class="ti ti-file-type-pdf"></i> PDF 저장</button>
+          <button class="btn btn-sm" onclick="copyGiahnSummary()" title="팀즈 승인 요청의 세부 정보에 붙일 요약 글 복사"><i class="ti ti-brand-teams"></i> 팀즈 요약 복사</button>
         </div>
       </div>
       <div class="cph-desc">품질사고 관리대장 기준 · 관리월별 <b>비용 발생 건</b> 집계 · 사내/외주는 비용 부담 기준</div>
@@ -6969,7 +6971,8 @@ function giahnCharts(yr, moN) {
   return { c1, c2, c3, c4, prevYtd, prevSame, cumCost: cc, cumGoal: cumGoal[moN - 1] || 0, pct };
 }
 
-function generateGiahnDoc() {
+// 기안 문서 만들기: {html, title, filename, summary} 를 돌려준다. (팝업 열기 = generateGiahnDoc, PDF = downloadGiahnPdf, 팀즈 요약 = copyGiahnSummary)
+function buildGiahnDoc() {
   const sel = document.getElementById('monthly-sel');
   const curM = sel ? sel.value : '';
   if (!curM) { alert('먼저 월을 선택하세요.'); return; }
@@ -6977,6 +6980,7 @@ function generateGiahnDoc() {
   const ND = (window.NCCOST_DATA || {})[yr];
   if (!monthlyLedgerPeriod(curM)) { alert(yr + '년 ' + moN + '월 관리대장 데이터가 없습니다.'); return; }
   const mv = ND.months[moK];
+  const selfM = mv.selfCost || 0, outM = (mv.cost || 0) - selfM;
   // ── 요약·그래프·내역용 추가 계산 ──
   const CH = giahnCharts(yr, moN);
   const prevPeriod = moN > 1 ? yr + '-' + String(moN - 1).padStart(2, '0') : String(Number(yr) - 1) + '-12';
@@ -6993,8 +6997,25 @@ function generateGiahnDoc() {
   const _ytdRows = monthlyLedgerYtd(yr, moN).flatMap(m => Array.isArray(m.rows) ? m.rows : []);
   const _repMap = {}; _ytdRows.forEach(r => { const k = (r[8] || '').trim(); if (!k) return; if (!_repMap[k]) _repMap[k] = { c: 0, cost: 0, thisMonth: false }; _repMap[k].c++; _repMap[k].cost += (Number(r[12]) || 0) + (Number(r[13]) || 0); if (r[0] === curM) _repMap[k].thisMonth = true; });
   const repeats = Object.entries(_repMap).filter(([, v]) => v.c >= 2).sort((a, b) => b[1].c - a[1].c || b[1].cost - a[1].cost).slice(0, 6);
-  const selfM = mv.selfCost || 0, outM = (mv.cost || 0) - selfM;
-  const PRC = ['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
+  // 팀즈 승인 요청 '세부 정보'에 붙일 요약(순수 텍스트)
+  const docTitle = `${yr}년 ${moN}월 품질사고 내역 및 심의결과 보고`;
+  const pdfName = `${yr}년_${moN}월_품질사고_보고.pdf`;
+  const pctTxt = (a, b) => b ? Math.round(a / b * 100) + '%' : '-';
+  const deltaPlain = (a, b) => { if (b == null || !b) return '비교 없음'; const d = Math.round((a - b) / b * 100); return d > 0 ? `▲${d}%` : d < 0 ? `▼${Math.abs(d)}%` : '동일'; };
+  const wonP = v => (v || 0).toLocaleString();
+  const summary = [
+    `[기안] ${docTitle}`,
+    `- 발생: ${mv.cnt || 0}건 · ${wonP(mv.cost)}원 (자사 ${wonP(selfM)} / 협력사 ${wonP(outM)}) · 전월 대비 ${deltaPlain(mv.cost || 0, pv ? pv.cost : null)}`,
+    `- ${moN}월 목표 대비 ${pctTxt(mv.cost, monthGoalAll)} (목표 ${wonP(monthGoalAll)}원) · 1~${moN}월 누적 목표 대비 ${pctTxt(CH.cumCost, CH.cumGoal)} (누적 ${(CH.cumCost || 0).toLocaleString()}만 / 목표 ${(CH.cumGoal || 0).toLocaleString()}만)`,
+    CH.prevYtd ? `- 전년 동기(1~${moN}월) ${CH.prevYtd.toLocaleString()}만 → 올해 ${(CH.cumCost || 0).toLocaleString()}만 (${deltaPlain(CH.cumCost, CH.prevYtd)})` : '',
+    `- 심의 판정: ${lvSummary || '해당 없음(등급 대상 건 없음)'}`,
+    repeats.length ? `- 반복 발생 유형(올해 2회 이상): ${repeats.slice(0, 4).map(([k, v]) => `${k} ${v.c}회`).join(', ')}` : '',
+    `- 근거: ${yr}년 ${moN}월 품질사고 관리대장 · 첨부: 기안 문서 PDF`,
+    `검토·승인 부탁드립니다.`,
+  ].filter(Boolean).join('\n');
+  const libUrl = new URL('vendor/html2pdf.bundle.min.js', location.href).href;
+  const libCdn = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js';
+  const PRC =['제판', '매엽', '윤전', '코팅', '제본', '외주', '특재외'];
   const PT = ND.procTargets || {};
   const cum = {}; PRC.forEach(p => cum[p] = { cost: 0, cnt: 0 });
   monthlyLedgerYtd(yr, moN).forEach(m => PRC.forEach(p => {
@@ -7073,7 +7094,25 @@ function generateGiahnDoc() {
     .lv.l2 { border-color:#E8630B; color:#9A4406; background:#FFF3E8; } .lv.l3, .lv.l4 { border-color:#D0342A; color:#8A2320; background:#FCEBEA; } .lv.l1 { border-color:#0F9D63; color:#0B6B45; background:#E8F6EF; }
     .rep { font-size:11px; margin:4px 0 0 14px; }
     .rep b.now { color:#c0392b; }
+    /* 화면용 도구막대(인쇄·PDF 에는 안 나감) · 문서 폭은 A4 본문 폭(186mm)으로 고정해 PDF 와 화면이 같게 */
+    body { margin:0; background:#eef0f3; }
+    #doc { width:186mm; max-width:100%; margin:14px auto 40px; background:#fff; padding:14mm 12mm 16mm; box-sizing:border-box; box-shadow:0 2px 14px rgba(0,0,0,.08); }
+    body.pdfing #doc { box-shadow:none; margin:0 auto; padding:0; width:186mm; }
+    .gtb { position:sticky; top:0; z-index:5; display:flex; gap:8px; align-items:center; padding:10px 14px; background:rgba(255,255,255,.95); border-bottom:1px solid #dfe3e8; font-size:12.5px; }
+    .gtb b { margin-right:auto; font-size:13px; }
+    .gtb button { height:34px; padding:0 14px; border-radius:8px; border:1px solid #cfd5dc; background:#fff; font:600 12.5px 'Malgun Gothic',sans-serif; cursor:pointer; color:#1f2937; }
+    .gtb button.pri { background:#17A2B8; border-color:#17A2B8; color:#fff; }
+    .gtb button:disabled { opacity:.6; cursor:default; }
+    .gtoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#111827; color:#fff; padding:9px 14px; border-radius:9px; font-size:12.5px; opacity:0; transition:opacity .25s; pointer-events:none; }
+    @media print { body { background:#fff; } .gtb, .gtoast { display:none !important; } #doc { width:auto; margin:0; padding:0; box-shadow:none; } }
   </style></head><body>
+  <div class="gtb"><b>${docTitle}</b>
+    <button type="button" class="pri" id="gtb-pdf" onclick="giahnPdf()">PDF 저장</button>
+    <button type="button" onclick="giahnCopy()">팀즈 요약 복사</button>
+    <button type="button" onclick="window.print()">인쇄</button>
+    <button type="button" onclick="window.close()">닫기</button>
+  </div>
+  <div id="doc">
   <table class="approve"><tr><td class="h">담당</td><td class="h">검토</td><td class="h">승인</td></tr><tr><td class="s"></td><td class="s"></td><td class="s"></td></tr></table>
   <div style="clear:both"></div>
   <h1>${yr}년 ${moN}월 품질사고 내역 및 심의결과 보고</h1>
@@ -7163,14 +7202,68 @@ function generateGiahnDoc() {
   <div style="padding-left:14px">- ${yr}년 ${moN}월 품질사고 관리대장</div>
 
   <div class="foot">※ 본 문서는 품질사고 관리대장 데이터를 기준으로 통합품질관리시스템에서 자동 생성되었습니다. (생성일 ${today})</div>
-  <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
+  </div>
+  <div class="gtoast" id="gtoast"></div>
+  <script>
+  window.GIAHN = ${JSON.stringify({ title: docTitle, filename: pdfName, summary, lib: libUrl, cdn: libCdn })};
+  function gToast(m){ var t=document.getElementById('gtoast'); if(!t) return; t.textContent=m; t.style.opacity='1'; clearTimeout(gToast._t); gToast._t=setTimeout(function(){ t.style.opacity='0'; }, 2600); }
+  function giahnLoadLib(cb){
+    if (window.html2pdf) return cb();
+    var s=document.createElement('script'); s.src=GIAHN.lib;
+    s.onload=cb; s.onerror=function(){ var t=document.createElement('script'); t.src=GIAHN.cdn; t.onload=cb; t.onerror=function(){ alert('PDF 도구를 불러오지 못했어요. [인쇄] 버튼 → 대상 "PDF로 저장" 으로 저장해 주세요.'); giahnDone(false); }; document.head.appendChild(t); };
+    document.head.appendChild(s);
+  }
+  function giahnDone(ok){ document.body.classList.remove('pdfing'); var b=document.getElementById('gtb-pdf'); if(b){ b.disabled=false; b.textContent='PDF 저장'; } if (window.parent && window.parent !== window) { try { window.parent.postMessage({ giahn: ok ? 'pdf-done' : 'pdf-fail' }, '*'); } catch(e){} } }
+  function giahnPdf(){
+    var b=document.getElementById('gtb-pdf'); if(b){ b.disabled=true; b.textContent='PDF 만드는 중…'; }
+    giahnLoadLib(function(){
+      document.body.classList.add('pdfing');
+      try {
+        html2pdf().set({ margin:[12,12,14,12], filename: GIAHN.filename, image:{ type:'jpeg', quality:.96 }, html2canvas:{ scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false }, jsPDF:{ unit:'mm', format:'a4', orientation:'portrait' }, pagebreak:{ mode:['css','legacy'], avoid:['section','.chart','.kpis','tr'] } })
+          .from(document.getElementById('doc')).save().then(function(){ gToast('PDF 를 내려받았어요'); giahnDone(true); }).catch(function(e){ alert('PDF 생성 실패: ' + e); giahnDone(false); });
+      } catch(e) { alert('PDF 생성 실패: ' + e); giahnDone(false); }
+    });
+  }
+  function giahnCopy(){
+    var t=GIAHN.summary;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ gToast('팀즈 승인 요청에 붙일 요약을 복사했어요'); }, function(){ window.prompt('복사가 막혔어요. 아래 글을 직접 복사하세요', t); });
+    else window.prompt('아래 글을 복사하세요', t);
+  }
+  if (document.body.getAttribute('data-auto') === 'pdf') { window.addEventListener('load', function(){ setTimeout(giahnPdf, 250); }); }
+  <\/script>
   </body></html>`;
-  const w = window.open('', '_blank');
-  if (!w) { alert('팝업이 차단됐어요. 팝업 허용 후 다시 눌러주세요.'); return; }
-  w.document.open(); w.document.write(html); w.document.close();
+  return { html, title: docTitle, filename: pdfName, summary };
 }
 
-function generateGiahnPdf() { generateGiahnDoc(); }
+// 기안 문서 팝업(도구막대: PDF 저장 · 팀즈 요약 복사 · 인쇄 · 닫기)
+function generateGiahnDoc() {
+  const d = buildGiahnDoc(); if (!d) return;
+  const w = window.open('', '_blank');
+  if (!w) { alert('팝업이 차단됐어요. 팝업 허용 후 다시 눌러주세요.'); return; }
+  w.document.open(); w.document.write(d.html); w.document.close();
+}
+// 팝업 없이 바로 PDF 내려받기: 숨은 iframe 에 문서를 띄우고(data-auto="pdf") 그 안에서 html2pdf 가 저장 → 끝나면 메시지로 알려 정리
+let _giahnFrame = null, _giahnFrameTimer = null;
+function downloadGiahnPdf() {
+  const d = buildGiahnDoc(); if (!d) return;
+  if (_giahnFrame) { _giahnFrame.remove(); _giahnFrame = null; }
+  if (typeof gajToast === 'function') gajToast('PDF 만드는 중… 잠시만요 (그래프 4장 포함, 5~10초)', true);
+  const f = document.createElement('iframe');
+  f.setAttribute('aria-hidden', 'true'); f.style.cssText = 'position:fixed;left:-2000px;top:0;width:900px;height:1400px;border:0;opacity:0;pointer-events:none';
+  f.srcdoc = d.html.replace('<body>', '<body data-auto="pdf">');
+  document.body.appendChild(f); _giahnFrame = f;
+  const cleanup = () => { clearTimeout(_giahnFrameTimer); window.removeEventListener('message', onMsg); setTimeout(() => { if (_giahnFrame === f) { f.remove(); _giahnFrame = null; } }, 1500); };
+  const onMsg = (ev) => { if (!ev.data || !ev.data.giahn) return; if (ev.data.giahn === 'pdf-done') { if (typeof gajToast === 'function') gajToast('PDF 저장 완료 · ' + d.filename, true); } else { if (typeof gajToast === 'function') gajToast('PDF 자동 저장에 실패했어요. [기안 문서 생성] → 인쇄 → PDF로 저장을 이용해 주세요', false); } cleanup(); };
+  window.addEventListener('message', onMsg);
+  _giahnFrameTimer = setTimeout(() => { if (typeof gajToast === 'function') gajToast('PDF 생성이 오래 걸려요. [기안 문서 생성] 창에서 PDF 저장을 눌러보세요', false); cleanup(); }, 60000);
+}
+// 팀즈 승인 요청 '세부 정보'용 요약 복사
+async function copyGiahnSummary() {
+  const d = buildGiahnDoc(); if (!d) return;
+  try { await navigator.clipboard.writeText(d.summary); if (typeof gajToast === 'function') gajToast('팀즈 승인 요청에 붙일 요약을 복사했어요 (' + d.summary.split('\n').length + '줄)', true); }
+  catch (e) { if (typeof taraPrompt === 'function') taraPrompt('복사가 막혔어요. 아래 글을 직접 복사하세요', { defaultValue: d.summary }); else window.prompt('아래 글을 복사하세요', d.summary); }
+}
+function generateGiahnPdf() { downloadGiahnPdf(); }
 
 let monthlySub = 'summary';   // 월간 리포트 서브탭: summary | giahn | detail
 function setMonthlySub(s) { monthlySub = s; renderMonthly(); }
