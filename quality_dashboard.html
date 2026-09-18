@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789700804">
+<meta name="data-version" content="1789703882">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1022,6 +1022,82 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     .dh-search { width: 100%; } .dh-actions { width: 100%; justify-content: flex-end; }
     .dh-selbar { bottom: 12px; padding: 8px 10px 8px 12px; gap: 6px; max-width: calc(100vw - 16px); }
   }
+  /* 대시보드 홈 하단: 2열 그리드 · 지금 인쇄 중 · 달력 · 최근 부적합 · 설비별 표 · 섹션 헤더 */
+  .dh-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .dh-grid2 > .dh-card { margin-bottom: 0; }
+  @media (max-width: 1100px) { .dh-grid2 { grid-template-columns: 1fr; } }
+  .dh-sechead { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 20px 0 10px; flex-wrap: wrap; }
+  .dh-select { height: 30px; padding: 0 28px 0 10px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink-2); font: inherit; font-size: 12px; font-weight: 500; }
+  .dh-tag { display: inline-block; padding: 1px 7px; border-radius: 5px; background: var(--brand-100); color: var(--brand-700); font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+  .dh-collapse { cursor: pointer; user-select: none; }
+  .dh-caret { display: inline-block; font-size: 10px; color: var(--ink-3); transition: transform .15s; margin-right: 6px; }
+  .dh-caret.open { transform: rotate(90deg); }
+  /* 지금 인쇄 중 */
+  .dh-wip { margin-top: 10px; }
+  .dh-wip-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 120px 44px; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .dh-wip-row:last-child { border-bottom: 0; }
+  .dh-wip-m { justify-self: start; }
+  .dh-wip-p { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; color: var(--ink); }
+  .dh-wip-p small { font-weight: 500; color: var(--ink-3); margin-left: 6px; font-size: 11px; }
+  .dh-wip-bar { height: 6px; border-radius: 3px; background: var(--gray-100); overflow: hidden; }
+  .dh-wip-bar i { display: block; height: 100%; background: var(--brand); border-radius: 3px; }
+  .dh-wip-pct { text-align: right; font-weight: 600; color: var(--ink-2); font-size: 12px; }
+  @media (max-width: 640px) { .dh-wip-row { grid-template-columns: 90px minmax(0, 1fr) 40px; } .dh-wip-bar { grid-column: 1 / -1; } }
+  /* 가제본 완료 달력 */
+  .dh-calnav { display: inline-flex; align-items: center; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 3px; }
+  .dh-calnav button { border: 0; background: transparent; width: 28px; height: 26px; border-radius: 7px; font-size: 16px; line-height: 1; color: var(--ink-2); cursor: pointer; }
+  .dh-calnav button:hover { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+  .dh-calnav button.today { width: auto; padding: 0 10px; font-size: 12px; font-weight: 600; }
+  .dh-calnav span { min-width: 92px; text-align: center; font-size: 13px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .dh-cal { margin-top: 10px; }
+  .dh-cal-tbl { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+  .dh-cal-tbl th { padding: 6px 4px; font-size: 11px; font-weight: 600; color: var(--ink-3); text-align: center; background: transparent; border-bottom: 1px solid var(--border-strong); }
+  .dh-cal-tbl th.sun { color: var(--danger); } .dh-cal-tbl th.sat { color: var(--brand-700); }
+  .dh-cal-tbl td { height: 74px; vertical-align: top; padding: 4px 5px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 11px; background: var(--surface); overflow: hidden; }
+  .dh-cal-tbl td:last-child { border-right: 0; }
+  .dh-cal-tbl td.pad { background: var(--surface-2); }
+  .dh-cal-tbl td.today { background: var(--brand-50); box-shadow: inset 0 0 0 1px var(--brand-100); }
+  .dh-cal-tbl td.hol { background: var(--danger-bg); }
+  .dh-cal-tbl tr:hover td { background: var(--surface-2); } .dh-cal-tbl tr:hover td.today { background: var(--brand-50); } .dh-cal-tbl tr:hover td.hol { background: var(--danger-bg); }
+  .dh-cal-d { font-size: 11px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 4px; }
+  .dh-cal-tbl td.sun .dh-cal-d, .dh-cal-tbl td.hol .dh-cal-d { color: var(--danger); } .dh-cal-tbl td.sat .dh-cal-d { color: var(--brand-700); }
+  .dh-cal-tbl td.today .dh-cal-d { color: var(--brand-700); }
+  .dh-cal-d em { font-style: normal; font-size: 9.5px; font-weight: 600; color: var(--brand-700); background: var(--brand-100); border-radius: 4px; padding: 0 4px; }
+  .dh-cal-h { font-size: 9.5px; color: var(--danger); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-cal-n { display: inline-block; font-size: 10px; font-weight: 700; color: var(--good); background: var(--good-bg); border-radius: 4px; padding: 0 5px; margin: 2px 0; }
+  .dh-cal-i { font-size: 10px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; }
+  .dh-cal-more { font-size: 10px; color: var(--brand-700); font-weight: 600; cursor: pointer; }
+  /* 최근 부적합 */
+  .dh-recent { margin-top: 8px; }
+  .dh-recent-row { display: grid; grid-template-columns: 78px 120px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .dh-recent-row:last-child { border-bottom: 0; }
+  .dh-recent-d { color: var(--ink-3); font-size: 12px; }
+  .dh-recent-c { justify-self: start; max-width: 120px; }
+  .dh-recent-p { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); font-weight: 500; }
+  @media (max-width: 640px) { .dh-recent-row { grid-template-columns: 70px minmax(0, 1fr); } .dh-recent-c, .dh-recent-row .dh-tag { display: none; } }
+  /* 설비별 부적합 유형 현황 */
+  .dh-eq { margin-top: 10px; }
+  .dh-eq-tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; table-layout: fixed; }
+  .dh-eq-tbl th { text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 600; color: var(--ink-3); background: var(--surface-2); border-bottom: 1px solid var(--border-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-eq-tbl th.c, .dh-eq-tbl td.c { text-align: center; }
+  .dh-eq-dot { display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 5px; vertical-align: 1px; }
+  .dh-eq-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .dh-eq-row { cursor: pointer; }
+  .dh-eq-row:hover td { background: var(--surface-2); }
+  .dh-eq-row.open td { background: var(--brand-50); }
+  .dh-eq-name { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-eq-total { font-weight: 700; color: var(--ink); }
+  .dh-eq-bar { height: 6px; border-radius: 3px; background: var(--gray-100); overflow: hidden; }
+  .dh-eq-bar i { display: block; height: 100%; background: var(--brand); border-radius: 3px; }
+  .dh-eq-n { display: inline-block; min-width: 22px; padding: 1px 6px; border-radius: 5px; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dh-eq-none { color: var(--gray-300); }
+  .dh-eq-detail td { background: var(--surface-2); padding: 0; }
+  .dh-eq-detail-in { padding: 10px 14px 14px; }
+  .dh-eq-detail-t { font-size: 11px; color: var(--ink-3); margin-bottom: 8px; } .dh-eq-detail-t b { color: var(--ink-2); }
+  .dh-eq-sub { width: 100%; border-collapse: collapse; font-size: 11.5px; background: var(--surface); border-radius: var(--r-md); overflow: hidden; }
+  .dh-eq-sub th { padding: 6px 8px; text-align: left; color: var(--ink-3); font-size: 10.5px; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); }
+  .dh-eq-sub td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .dh-eq-sub .r { text-align: right; } .dh-eq-sub .nowrap { white-space: nowrap; } .dh-eq-sub .ell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 </style>
 
@@ -1248,71 +1324,66 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       </div>
       <div class="dh-selbar" id="print-selbar" aria-live="polite"><b id="print-selbar-n">0건 선택</b><span class="dh-sep"></span><button onclick="copySelectedPrintTargets()">작업번호 복사</button><button onclick="copyPrintTargetDetails()">상세 복사</button><button class="ghost" onclick="clearPrintSelection()">해제</button></div>
 
-      <!-- 지금 인쇄 중 -->
-      <div class="card" style="margin-bottom:16px;padding:18px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
-          <div class="card-title" style="margin:0;"><span class="dash-icon-chip"><i class="ti ti-printer"></i></span> 지금 인쇄 중 <span id="home-wip-count" style="font-size:11px;font-weight:400;color:#aaa;"></span></div>
-          <button onclick="showTab('wip',document.getElementById('nav-wip'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
+      <!-- 지금 인쇄 중 + 가제본 완료 달력 (2열) -->
+      <div class="dh-grid2">
+        <div class="card dh-card">
+          <div class="dh-head">
+            <div><h2 class="dh-title">지금 인쇄 중 <small id="home-wip-count"></small></h2><div class="dh-sub">ERP 인쇄생산일정 기준 · 실적수량이 있고 잔여 통수가 남은 작업 · 상위 6건</div></div>
+            <button class="dh-link" onclick="showTab('wip',document.getElementById('nav-wip'))">전체 보기 →</button>
+          </div>
+          <div id="home-wip-list" class="dh-wip"></div>
         </div>
-        <div id="home-wip-list"></div>
+        <div class="card dh-card">
+          <div class="dh-head">
+            <div><h2 class="dh-title">가제본 완료 달력 <small id="gajcal-total"></small></h2><div class="dh-sub">날짜 도장(가제본 완료) 기준 · 칸을 누르면 그날 완료 목록</div></div>
+            <div class="dh-calnav"><button onclick="gajCalMove(-1)" aria-label="이전 달">‹</button><span id="gajcal-label"></span><button onclick="gajCalMove(1)" aria-label="다음 달">›</button><button class="today" onclick="gajCalToday()">오늘</button></div>
+          </div>
+          <div id="dash-gajcal" class="dh-cal"></div>
+        </div>
       </div>
 
-      <!-- 가제본 완료 달력 -->
-      <div class="card" style="margin-bottom:16px;padding:18px 20px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-          <div class="card-title" style="margin:0;"><span class="dash-icon-chip"><i class="ti ti-bookmark"></i></span> 가제본 완료 달력</div>
-          <button class="claim-year-btn" onclick="gajCalMove(-1)" style="padding:3px 9px">◀</button>
-          <span id="gajcal-label" style="font-size:14px;font-weight:600;min-width:120px;text-align:center"></span>
-          <button class="claim-year-btn" onclick="gajCalMove(1)" style="padding:3px 9px">▶</button>
-          <button class="claim-year-btn" onclick="gajCalToday()" style="padding:3px 9px">오늘</button>
+      <div class="dh-grid2">
+        <div class="card dh-card">
+          <div class="dh-head"><div><h2 class="dh-title">최근 부적합 <small>취합대장 최신 5건</small></h2></div><button class="dh-link" onclick="showTab('claim',document.getElementById('nav-claim'))">전체 보기 →</button></div>
+          <div id="dash-claim-list" class="dh-recent"></div>
         </div>
-        <div id="dash-gajcal"></div>
-      </div>
-
-      <div class="grid2" style="margin-bottom:16px;">
-        <div class="card">
-          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-alert-triangle"></i></span> 최근 부적합 <span style="font-size:11px;font-weight:400;color:#aaa">취합대장 최신 5건</span></div>
-          <div id="dash-claim-list"></div>
-        </div>
-        <div class="card">
-          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-chart-pie"></i></span> 불량 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa" id="dash-year-label"></span></div>
+        <div class="card dh-card">
+          <div class="dh-head"><div><h2 class="dh-title">불량 유형 현황 <small id="dash-year-label"></small></h2><div class="dh-sub">부적합유형별 건수 · 상위 6개</div></div></div>
           <div class="chart-wrap"><canvas id="dash-chartType"></canvas></div>
         </div>
       </div>
 
-      <div class="grid2" style="margin-bottom:16px;">
-        <div class="card">
-          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-trending-up"></i></span> 월별 부적합 추이</div>
+      <div class="dh-grid2">
+        <div class="card dh-card">
+          <div class="dh-head"><div><h2 class="dh-title">월별 부적합 추이</h2><div class="dh-sub">취합대장 접수일 기준 · 올해</div></div></div>
           <div class="chart-wrap"><canvas id="dash-chartTrend"></canvas></div>
         </div>
-        <div class="card">
-          <div class="card-title"><span class="dash-icon-chip"><i class="ti ti-building-store"></i></span> 부적합 상위 거래처</div>
+        <div class="card dh-card">
+          <div class="dh-head"><div><h2 class="dh-title">부적합 상위 거래처</h2><div class="dh-sub">거래처 미입력 건 제외 · 상위 8곳</div></div></div>
           <div class="chart-wrap"><canvas id="dash-chartClient"></canvas></div>
         </div>
       </div>
 
       <!-- 설비별 부적합 -->
-      <div class="card" style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div class="card-title" style="margin:0;cursor:pointer;user-select:none" onclick="(function(){var t=document.getElementById('dash-equip-table');var c=document.getElementById('equip-caret');var on=t.style.display==='none';t.style.display=on?'block':'none';c.textContent=on?'▼':'▶';})()">
-            <span id="equip-caret" style="color:#17A2B8">▼</span> <span class="dash-icon-chip"><i class="ti ti-building-factory-2"></i></span> 설비별 부적합 유형 현황 <span style="font-size:11px;font-weight:400;color:#aaa">클레임 DB 기준 · 제목 클릭해 펼치기</span>
+      <div class="card dh-card">
+        <div class="dh-head">
+          <div class="dh-collapse" onclick="(function(){var t=document.getElementById('dash-equip-table');var c=document.getElementById('equip-caret');var on=t.style.display==='none';t.style.display=on?'block':'none';c.classList.toggle('open',on);})()" role="button" tabindex="0">
+            <h2 class="dh-title"><span id="equip-caret" class="dh-caret open">▶</span>설비별 부적합 유형 현황 <small>취합대장 기준 · 제목을 눌러 접기/펼치기</small></h2>
           </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <select id="dash-equip-year" onchange="renderEquipDefect()" style="font-size:12px;padding:3px 8px;border:1px solid #ddd;border-radius:5px;color:#555">
-              <option value="">전체 연도</option>
-              <option>2023</option><option>2024</option><option>2025</option><option selected>2026</option>
-            </select>
-          </div>
+          <select id="dash-equip-year" class="dh-select" onchange="renderEquipDefect()">
+            <option value="">전체 연도</option>
+            <option>2023</option><option>2024</option><option>2025</option><option selected>2026</option>
+          </select>
         </div>
-        <div id="dash-equip-table" style="display:block"></div>
+        <div id="dash-equip-table" class="dh-eq" style="display:block"></div>
       </div>
 
       <!-- 품질 핵심지표 그래프 (임원 한눈에 파악용) -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div class="card-title" style="margin:0;">품질 핵심지표</div>
-        <button onclick="showTab('core',document.getElementById('nav-core-dash'))" style="font-size:12px;color:#0a7a8a;font-weight:500;background:none;border:none;cursor:pointer;">전체 보기 →</button>
+      <div class="dh-sechead">
+        <div><h2 class="dh-title" style="font-size:16px">품질 핵심지표</h2><div class="dh-sub">6개 화면의 대표 그래프 · 각 화면과 같은 계산</div></div>
+        <button class="dh-link" onclick="showTab('core',document.getElementById('nav-core-dash'))">전체 보기 →</button>
       </div>
-      <div id="home-chart-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div id="home-chart-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
         <div class="card">
           <div class="card-title">월별 품질비용 추이 <span style="font-size:11px;font-weight:400;color:#8a93a0" id="home-cost-year-label"></span></div>
           <div class="chart-wrap"><canvas id="home-chart-cost"></canvas></div>
@@ -3676,14 +3747,14 @@ function renderHomeWip() {
       prog.push({ name: m.name, product: j.product, config: j.config, pct: Math.min(100, Math.round(Number(j.workcnt) / Number(j.tong) * 100)) });
   }));
   if (cnt) cnt.textContent = prog.length ? (prog.length + '건 진행 중') : '';
-  if (!prog.length) { list.innerHTML = '<div style="color:#aaa;font-size:13px">지금 인쇄 중인 작업이 없어요</div>'; return; }
+  if (!prog.length) { list.innerHTML = '<div class="dh-empty">지금 인쇄 중인 작업이 없어요</div>'; return; }
+  // 설비 칩 · 제품명(구성) · 진행 막대 · 퍼센트 — 시안 규격(잉크 글자, 틸 막대)
   list.innerHTML = prog.slice(0, 6).map(j => `
-    <div style="padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04)">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;color:#17A2B8">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.name)} · ${esc(j.product)}</span>
-        <span style="flex-shrink:0;margin-left:8px">${j.pct}%</span>
-      </div>
-      <div style="height:6px;background:#eef0f2;border-radius:3px;margin-top:3px"><div style="width:${j.pct}%;height:6px;background:#17A2B8;border-radius:3px"></div></div>
+    <div class="dh-wip-row" title="${esc(j.name)} · ${esc(j.product)}${j.config ? ' · ' + esc(j.config) : ''}">
+      <span class="dh-chip dh-wip-m">${esc(j.name)}</span>
+      <span class="dh-wip-p">${esc(j.product)}${j.config ? `<small>${esc(j.config)}</small>` : ''}</span>
+      <span class="dh-wip-bar"><i style="width:${j.pct}%"></i></span>
+      <span class="dh-wip-pct num">${j.pct}%</span>
     </div>`).join('');
 }
 
@@ -3952,13 +4023,15 @@ function refreshDash() {
     .sort((a,b)=>(b[0]||'').localeCompare(a[0]||''))
     .slice(0,5);
   const clEl = document.getElementById('dash-claim-list');
+  const _e5 = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   if (clEl) clEl.innerHTML = recent.length ? recent.map(r=>`
-    <div style="display:flex;align-items:center;gap:14px;padding:9px 2px;border-bottom:1px solid rgba(0,0,0,0.05);font-size:13px;">
-      <span style="color:#6e6e73;flex-shrink:0;min-width:84px;font-variant-numeric:tabular-nums;">${r[0]||'-'}</span>
-      <span style="flex-shrink:0;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1d1d1f;font-weight:500;">${r[2]||'-'}</span>
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#424245;">${r[4]||'-'}</span>
+    <div class="dh-recent-row" title="${_e5(r[6]||'')}">
+      <span class="dh-recent-d num">${_e5(r[0]||'-')}</span>
+      <span class="dh-chip dh-recent-c" title="${_e5(r[2]||'')}">${_e5((r[2]||'').trim()||'미상')}</span>
+      <span class="dh-recent-p">${_e5(r[4]||'-')}</span>
+      ${r[7] ? `<span class="dh-tag">${_e5(r[7])}</span>` : ''}
     </div>`).join('')
-    : '<div style="color:#86868b;font-size:13px;padding:16px 0;text-align:center;">클레임 데이터 없음</div>';
+    : '<div class="dh-empty">부적합 데이터 없음</div>';
 
   const ylEl = document.getElementById('dash-year-label');
   if (ylEl) ylEl.textContent = thisYear+'년';
@@ -3988,7 +4061,7 @@ function renderDashCharts(year) {
   const typeMap = {};
   d.forEach(r=>{ const t=r[7]||'기타'; typeMap[t]=(typeMap[t]||0)+1; });
   const typeS = Object.entries(typeMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  if (typeS.length) renderPie('dash-chartType', typeS.map(x=>x[0]), typeS.map(x=>x[1]));
+  if (typeS.length) renderBarH('dash-chartType', typeS.map(x=>x[0]), typeS.map(x=>x[1]), '#17A2B8');   // 도넛 → 단일 계열 가로 막대(시안 규칙)
 
   // 월별 추이 라인 (dash-chartTrend)
   const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
@@ -4250,8 +4323,8 @@ function renderEquipDefect() {
   const equipList = Object.entries(equipMap).sort((a,b)=>b[1].total-a[1].total);
   const maxTotal = equipList[0]?.[1].total || 1;
 
-  // 부적합유형 색상 매핑
-  const typeColors = ['#17A2B8','#c0392b','#d4860a','#1a7a4a','#7B4EA0','#888','#e67e22','#16a085'];
+  // 부적합유형 색상 = 디자인 토큰 계열 순서 (CHART_PALETTE --s1~s8)
+  const typeColors = (typeof CHART_PALETTE !== 'undefined' ? CHART_PALETTE : ['#17A2B8','#E8630B','#7B4EA0','#0F9D63','#D0342A','#C2870A','#1F5C99','#D9569A']).slice(0, 8);
 
   // 전체 등장하는 유형 목록
   const allTypes = [...new Set(filtered.map(r=>(r[8]||'').trim()||'기타'))];
@@ -4259,18 +4332,21 @@ function renderEquipDefect() {
     .map(t => [t, filtered.filter(r=>(r[8]||'').trim()===t||(!(r[8]||'').trim()&&t==='기타')).length])
     .sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
 
-  const headerCols = topTypes.map((t,i)=>`<th style="font-size:11px;font-weight:600;color:${typeColors[i]};min-width:60px;text-align:center">${t}</th>`).join('');
+  // 유형 열 머리: 글자는 잉크색, 앞의 색 점이 계열 식별 (글자에 계열색 금지 — 시안 규칙)
+  const eqEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const headerCols = topTypes.map((t,i)=>`<th class="c"><i class="dh-eq-dot" style="background:${typeColors[i]}"></i>${eqEsc(t)}</th>`).join('');
 
   let tableHTML = `
     <div class="tbl-wrap">
-    <table style="width:100%">
+    <table class="dh-eq-tbl">
+      <colgroup><col style="width:200px"><col style="width:64px"><col style="width:140px">${topTypes.map(()=>'<col>').join('')}<col style="width:36px"></colgroup>
       <thead>
-        <tr style="background:#f8f8f6">
-          <th style="text-align:left;padding:8px 12px;font-size:12px;width:200px">설비명</th>
-          <th style="font-size:12px;text-align:center;width:60px">총건수</th>
-          <th style="font-size:12px;min-width:120px;padding:0 8px">비율</th>
+        <tr>
+          <th>설비명</th>
+          <th class="c">총건수</th>
+          <th>비율</th>
           ${headerCols}
-          <th style="font-size:11px;color:#999;text-align:center">펼치기</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="equip-tbody">`;
@@ -4279,45 +4355,35 @@ function renderEquipDefect() {
     const pct = Math.round(info.total/maxTotal*100);
     const typeCells = topTypes.map((t,i)=>{
       const cnt = info.types[t]||0;
-      return `<td style="text-align:center;font-size:12px">${cnt ? `<span style="background:${typeColors[i]}22;color:${typeColors[i]};border-radius:4px;padding:1px 7px;font-weight:600">${cnt}</span>` : '<span style="color:#ddd">-</span>'}</td>`;
+      return `<td class="c">${cnt ? `<span class="dh-eq-n" style="background:${typeColors[i]}1f;color:${typeColors[i]}">${cnt}</span>` : '<span class="dh-eq-none">·</span>'}</td>`;
     }).join('');
 
     tableHTML += `
-      <tr style="border-bottom:1px solid #f0f0ee;cursor:pointer" onclick="toggleEquipDetail('equip-detail-${idx}', this)" title="클릭하여 상세 내역 보기">
-        <td style="padding:9px 12px;font-size:13px;font-weight:600;color:#333">${equip}</td>
-        <td style="text-align:center;font-size:14px;font-weight:700;color:#17A2B8">${info.total}</td>
-        <td style="padding:0 8px">
-          <div style="background:#f0f0ee;border-radius:3px;height:8px">
-            <div style="background:#17A2B8;height:8px;border-radius:3px;width:${pct}%;opacity:0.75"></div>
-          </div>
-        </td>
+      <tr class="dh-eq-row" onclick="toggleEquipDetail('equip-detail-${idx}', this)" title="클릭하여 상세 내역 보기">
+        <td class="dh-eq-name">${eqEsc(equip)}</td>
+        <td class="c dh-eq-total num">${info.total}</td>
+        <td><div class="dh-eq-bar"><i style="width:${pct}%${equip === '(설비 미기재)' ? ';background:var(--s-muted)' : ''}"></i></div></td>
         ${typeCells}
-        <td style="text-align:center;font-size:14px;color:#bbb" id="equip-arrow-${idx}">▶</td>
+        <td class="c"><span class="dh-caret" id="equip-arrow-${idx}">▶</span></td>
       </tr>
-      <tr id="equip-detail-${idx}" style="display:none;background:#fafaf8">
-        <td colspan="${4+topTypes.length}" style="padding:0">
-          <div style="padding:10px 16px 14px">
-            <div style="font-size:11px;color:#888;margin-bottom:8px"><b>${equip}</b> 전체 내역 ${info.total}건</div>
-            <table style="width:100%;font-size:11px;border-collapse:collapse">
-              <thead><tr style="background:#f0f0ee">
-                <th style="padding:5px 8px;text-align:left;color:#666">접수일</th>
-                <th style="padding:5px 8px;text-align:left;color:#666">거래처</th>
-                <th style="padding:5px 8px;text-align:left;color:#666">제품명</th>
-                <th style="padding:5px 8px;text-align:left;color:#666">품질유형</th>
-                <th style="padding:5px 8px;text-align:left;color:#666">부적합유형</th>
-                <th style="padding:5px 8px;text-align:left;color:#666">조치사항</th>
-                <th style="padding:5px 8px;text-align:right;color:#666">비용</th>
+      <tr id="equip-detail-${idx}" class="dh-eq-detail" style="display:none">
+        <td colspan="${4+topTypes.length}">
+          <div class="dh-eq-detail-in">
+            <div class="dh-eq-detail-t"><b>${eqEsc(equip)}</b> 전체 내역 ${info.total}건</div>
+            <table class="dh-eq-sub">
+              <thead><tr>
+                <th>접수일</th><th>거래처</th><th>제품명</th><th>품질유형</th><th>부적합유형</th><th>조치사항</th><th class="r">비용</th>
               </tr></thead>
               <tbody>
                 ${info.rows.slice().sort((a,b)=>(b[0]||'').localeCompare(a[0]||'')).map(r=>`
-                  <tr style="border-bottom:1px solid #efefed">
-                    <td style="padding:5px 8px;white-space:nowrap">${r[0]||'-'}</td>
-                    <td style="padding:5px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[2]}">${r[2]||'-'}</td>
-                    <td style="padding:5px 8px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[4]}">${r[4]||'-'}</td>
-                    <td style="padding:5px 8px"><span style="font-size:10px;background:#e8f0fb;color:#17A2B8;border-radius:3px;padding:1px 5px">${r[7]||'-'}</span></td>
-                    <td style="padding:5px 8px">${r[8]||'-'}</td>
-                    <td style="padding:5px 8px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[10]}">${r[10]||'-'}</td>
-                    <td style="padding:5px 8px;text-align:right;white-space:nowrap">${typeof r[12]==='number' ? r[12].toLocaleString()+'원' : '-'}</td>
+                  <tr>
+                    <td class="num nowrap">${eqEsc(r[0]||'-')}</td>
+                    <td class="ell" style="max-width:110px" title="${eqEsc(r[2])}">${eqEsc(r[2]||'-')}</td>
+                    <td class="ell" style="max-width:160px" title="${eqEsc(r[4])}">${eqEsc(r[4]||'-')}</td>
+                    <td><span class="dh-tag">${eqEsc(r[7]||'-')}</span></td>
+                    <td>${eqEsc(r[8]||'-')}</td>
+                    <td class="ell" style="max-width:180px" title="${eqEsc(r[10])}">${eqEsc(r[10]||'-')}</td>
+                    <td class="r num nowrap">${typeof r[12]==='number' ? r[12].toLocaleString()+'원' : '-'}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -4338,8 +4404,8 @@ function toggleEquipDetail(detailId, row) {
   const arrow = document.getElementById('equip-arrow-'+idx);
   const isOpen = detail.style.display !== 'none';
   detail.style.display = isOpen ? 'none' : 'table-row';
-  if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
-  row.style.background = isOpen ? '' : '#f0f5ff';
+  if (arrow) arrow.classList.toggle('open', !isOpen);
+  if (row && row.classList) row.classList.toggle('open', !isOpen);
 }
 
 // ========================
@@ -4732,17 +4798,19 @@ function renderLine(id, labels, data) {
       type: 'line',
       data: { labels, datasets: [{
         label: '건수', data,
-        borderColor: '#17A2B8',
-        backgroundColor: ctx2 => {
+        borderColor: '#17A2B8', borderWidth: 2,
+        backgroundColor: ctx2 => {   // 계열색 10% 워시 (시안 규칙)
           const g = ctx2.chart.ctx.createLinearGradient(0,0,0,200);
-          g.addColorStop(0,'rgba(24,95,165,0.25)'); g.addColorStop(1,'rgba(24,95,165,0.01)');
+          g.addColorStop(0,'rgba(23,162,184,0.16)'); g.addColorStop(1,'rgba(23,162,184,0.01)');
           return g;
         },
-        tension: 0.35, fill: true, pointRadius: 5, pointBackgroundColor: '#17A2B8',
-        pointBorderColor: '#fff', pointBorderWidth: 2, pointHoverRadius: 7
+        tension: 0.35, fill: true, pointRadius: 4, pointBackgroundColor: '#17A2B8',
+        pointBorderColor: '#fff', pointBorderWidth: 2, pointHoverRadius: 7, pointHitRadius: 14,
+        datalabels: { display: ctx => { const raw = ctx.dataset.data; const d = Array.isArray(raw) ? raw : Object.values(raw || {}); let last = -1; d.forEach((v, i) => { if (v) last = i; }); const mx = Math.max(0, ...d.map(Number)); return ctx.dataIndex === last || (Number(d[ctx.dataIndex]) === mx && mx > 0); },
+          align: 'top', offset: 6, color: '#4b5563', font: { size: 10.5, weight: '600' }, formatter: v => v ? v + '건' : '' }
       }]},
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false, layout: { padding: { top: 16 } },
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}건` } } },
         scales: {
           y: { beginAtZero: true, ticks: { font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
@@ -4762,8 +4830,8 @@ const valueLabelPlugin = {
       const val = chart.data.datasets[0].data[i];
       if (!val) return;
       ctx.save();
-      ctx.fillStyle = '#444';
-      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#4b5563';
+      ctx.font = '600 11px ' + ((Chart.defaults && Chart.defaults.font && Chart.defaults.font.family) || 'sans-serif');
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       const label = Number(val).toLocaleString() + '건';
@@ -4785,17 +4853,14 @@ function renderBarH(id, labels, data, color) {
   const wrap = document.getElementById('wrap-' + id);
   if (wrap) wrap.style.height = Math.min(300, Math.max(150, labels.length * 26 + 30)) + 'px';
 
-  const maxVal = Math.max(...data, 1);
+  // 단일 계열 = 한 색 (값 크기에 따른 명도 램프는 막대 길이와 중복 인코딩이라 제거 — 시안 규칙)
   const base = color || '#17A2B8';
-  const bgColors = data.map(v => {
-    const alpha = 0.45 + (v / maxVal) * 0.55;
-    return base + Math.round(alpha * 255).toString(16).padStart(2,'0');
-  });
+  const bgColors = labels.map(l => (l === '미상' || l === '(설비 미기재)') ? '#C5CCD3' : base);
 
   try {
     chartInstances[id] = new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ data, backgroundColor: bgColors, borderRadius: 5, borderSkipped: false }] },
+      data: { labels, datasets: [{ data, backgroundColor: bgColors, borderRadius: 4, borderSkipped: 'start', maxBarThickness: 22 }] },
       plugins: [valueLabelPlugin],
       options: {
         indexAxis: 'y',
@@ -7075,32 +7140,33 @@ function renderGajCal(){
   const daysIn=new Date(gajCalYear,gajCalMonth+1,0).getDate();
   const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
   const DOW=['일','월','화','수','목','금','토'];
-  let html='<table style="width:100%;table-layout:fixed;border-collapse:collapse">';
-  html+='<thead><tr>'+DOW.map((d,i)=>`<th style="padding:5px;font-size:11px;color:${i===0?'#c0392b':i===6?'#2980b9':'#888'};border-bottom:2px solid #e5e5e0">${d}</th>`).join('')+'</tr></thead><tbody>';
+  // 시안 규격: 헤어라인 격자, 오늘 = 브랜드 옅은 배경, 휴일 = 위험색 옅은 배경, 완료 수 배지 = good
+  let html='<table class="dh-cal-tbl">';
+  html+='<thead><tr>'+DOW.map((d,i)=>`<th class="${i===0?'sun':i===6?'sat':''}">${d}</th>`).join('')+'</tr></thead><tbody>';
   let day=1-startDow, total=0;
   for(let w=0;w<6&&day<=daysIn;w++){
     html+='<tr>';
     for(let dow=0;dow<7;dow++,day++){
-      if(day<1||day>daysIn){ html+='<td style="height:72px;border:1px solid #f0f0ee;background:#fafafa"></td>'; continue; }
+      if(day<1||day>daysIn){ html+='<td class="pad"></td>'; continue; }
       const ds=gajCalYear+'-'+String(gajCalMonth+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
       const isToday=ds===today, hol=KOR_HOLIDAYS[ds];
-      const dcolor=(hol||dow===0)?'#c0392b':dow===6?'#2980b9':'#1d1d1f';
-      const bg=isToday?'background:rgba(23,162,184,0.07);':(hol?'background:rgba(192,57,43,0.05);':'');
+      const cls=[isToday?'today':'', hol?'hol':'', (dow===0)?'sun':dow===6?'sat':''].filter(Boolean).join(' ');
       const orders=[...(by[ds]||[])]; total+=orders.length;
       let inner='';
       if(orders.length){
         const LIMIT=3, exp=gajCalExpanded.has(ds);
         const shown=exp?orders:orders.slice(0,LIMIT);
-        inner=`<div style="font-size:10px;background:#FFE58A;color:#7a5c00;border-radius:4px;padding:1px 5px;margin-bottom:2px;display:inline-block;font-weight:700">✓ ${orders.length}</div>`
-          +shown.map(o=>`<div title="${esc4(prodOf(o))}" style="font-size:9.5px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(prodOf(o))}</div>`).join('')
-          +(orders.length>LIMIT?`<div onclick="gajCalToggle('${ds}')" style="font-size:9px;color:#17A2B8;cursor:pointer;font-weight:600">${exp?'접기':'+'+(orders.length-LIMIT)}</div>`:'');
+        inner=`<span class="dh-cal-n">✓ ${orders.length}</span>`
+          +shown.map(o=>`<div class="dh-cal-i" title="${esc4(prodOf(o))}">${esc4(prodOf(o))}</div>`).join('')
+          +(orders.length>LIMIT?`<div class="dh-cal-more" onclick="gajCalToggle('${ds}')">${exp?'접기':'+'+(orders.length-LIMIT)+'건 더'}</div>`:'');
       }
-      html+=`<td style="height:72px;vertical-align:top;border:1px solid #f0f0ee;padding:2px 3px;${bg}"><div style="font-size:11px;font-weight:${isToday?700:500};color:${dcolor}">${day}</div>${hol?`<div style="font-size:8.5px;color:#c0392b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc4(hol)}</div>`:''}${inner}</td>`;
+      html+=`<td class="${cls}"><div class="dh-cal-d">${day}${isToday?'<em>오늘</em>':''}</div>${hol?`<div class="dh-cal-h">${esc4(hol)}</div>`:''}${inner}</td>`;
     }
     html+='</tr>';
   }
   html+='</tbody></table>';
-  el.innerHTML=`<div style="font-size:11px;color:#888;margin-bottom:6px">이 달 완료 <b style="color:#7a5c00">${total}</b>건</div>`+html;
+  el.innerHTML=html;
+  const tot=document.getElementById('gajcal-total'); if(tot) tot.textContent='이 달 완료 '+total+'건';
 }
 
 function _schedFillCats(cur){
