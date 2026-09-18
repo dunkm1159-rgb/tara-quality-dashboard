@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789704362">
+<meta name="data-version" content="1789704881">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -855,11 +855,19 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   #dash-refresh-btn:hover { background: var(--gray-700); }
 
   /* 핵심지표 요약 타일 (renderCoreSummary) — 시안과 동일 구조 */
-  #core-summary-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 12px !important; margin-bottom: 16px !important; }
-  @media (max-width: 1280px) { #core-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
-  @media (max-width: 900px) { #core-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+  /* 카드 규격 = 본부 품질 KPI 요약 카드 실측과 동일 (260px 폭 · 190px 높이 · 패딩 18 · 라벨 15 · 숫자 30 · 보조 13, 형 요청 09-18) */
+  #core-summary-grid { grid-template-columns: repeat(auto-fill, 260px) !important; gap: 12px !important; margin-bottom: 20px !important; }
+  @media (max-width: 560px) { #core-summary-grid { grid-template-columns: minmax(0, 1fr) !important; } }
   #core-chart-grid { gap: 12px !important; }
-  .core-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px 18px 14px; box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 6px; min-width: 0; cursor: pointer; transition: box-shadow .15s, transform .15s; outline: none; }
+  .core-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; height: 190px; min-height: 190px; box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 0; min-width: 0; cursor: pointer; transition: box-shadow .15s, transform .15s; outline: none; }
+  .core-tile .ct-head { font-size: 15px; font-weight: 600; color: var(--ink); height: 22px; line-height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; gap: 8px; }
+  .core-tile .ct-head .ct-sw { width: 9px; height: 9px; }
+  .core-tile .ct-val { font-size: 30px; line-height: 36px; margin-top: 18px; }
+  .core-tile .ct-val small { font-size: 14px; }
+  .core-tile .ct-sub { margin-top: 6px; min-height: 0; -webkit-line-clamp: 1; font-size: 13px; line-height: 18px; color: var(--ink-3); }
+  .core-tile .ct-foot { margin-top: auto; }
+  .core-tile .ct-foot .badge { height: 22px; font-size: 11.5px; padding: 0 9px; }
+  .core-tile .ct-go { font-size: 12px; }
   .core-tile:hover, .core-tile:focus-visible { box-shadow: var(--shadow-2); transform: translateY(-1px); }
   .core-tile .ct-head { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .core-tile .ct-sw { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
@@ -920,7 +928,6 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   @media (max-width: 900px) {
     .content { padding: 12px 12px 28px; }
     #open-tabbar { padding: 0 12px !important; }
-    .core-tile { padding: 12px 14px; } .core-tile .ct-val { font-size: 22px; }
   }
 
   /* ── 대시보드 홈 상단 2카드 (dh-*) — design/대시보드홈_시안.html 과 동일 ── */
