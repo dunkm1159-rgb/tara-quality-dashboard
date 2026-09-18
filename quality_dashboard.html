@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789719030">
+<meta name="data-version" content="1789719149">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -76,6 +76,7 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
       var isErr = kind === 'alert' && /실패|오류|없습니다|올바르지|않습니다|해 주세요|해주세요/.test(msg);
       var title = opt.title || (kind === 'alert' ? (isErr ? '확인해 주세요' : '알림') : kind === 'prompt' ? '입력' : (danger ? '정말 진행할까요?' : '확인'));
       var paras = msg.split(/\n\n+/); var lead = paras.shift() || '';
+      document.querySelectorAll('.td-back.out').forEach(function(x){ x.remove(); });   // 닫히는 중인 이전 상자는 즉시 제거(겹침 방지)
       var wrap = document.createElement('div'); wrap.className = 'td-back';
       wrap.innerHTML = '<div class="td-box" role="dialog" aria-modal="true" aria-labelledby="td-title">'
         + '<div class="td-head"><span class="td-ic ' + (kind === 'alert' ? (isErr ? 'warn' : 'info') : (danger ? 'danger' : 'ask')) + '"><i class="ti ' + (kind === 'alert' ? (isErr ? 'ti-alert-circle' : 'ti-info-circle') : (danger ? 'ti-alert-triangle' : 'ti-help-circle')) + '"></i></span><h3 id="td-title">' + esc(title) + '</h3></div>'
