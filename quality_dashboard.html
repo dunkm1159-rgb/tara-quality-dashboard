@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789728471">
+<meta name="data-version" content="1789729787">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1341,6 +1341,37 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .rg-paste-act { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .rg-msg { font-size: 12.5px; color: var(--ink-2); }
   .rg-form { padding: 18px 20px 16px; }
+  /* 등록 화면 · 비슷한 과거 사례 패널 */
+  .rs-panel { border: 1px solid var(--brand-100); background: var(--brand-50); border-radius: var(--r-lg); padding: 12px 14px 10px; }
+  .rs-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .rs-title { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .rs-title i { color: var(--brand-700); }
+  .rs-title span { font-weight: 500; color: var(--ink-3); font-size: 12px; }
+  .rs-actions { display: flex; align-items: center; gap: 6px; }
+  .rs-more.dh-btn { padding: 4px 9px; font-size: 11.5px; }
+  .rs-x { border: 0; background: transparent; color: var(--ink-3); cursor: pointer; width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; }
+  .rs-x:hover { background: #fff; color: var(--ink); }
+  .rs-list { display: flex; flex-direction: column; gap: 6px; }
+  .rs-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: start; background: #fff; border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; }
+  .rs-ring { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--ink); background: conic-gradient(var(--brand) calc(var(--p) * 1%), var(--gray-100) 0); position: relative; }
+  .rs-ring::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: #fff; z-index: 0; }
+  .rs-ring span { position: relative; z-index: 1; }
+  .rs-body { min-width: 0; }
+  .rs-meta { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 11.5px; color: var(--ink-3); margin-bottom: 3px; }
+  .rs-meta b { color: var(--ink-2); font-weight: 600; }
+  .rs-meta .dh-tag { font-size: 10.5px; padding: 1px 6px; }
+  .rs-sym { font-size: 12.5px; color: var(--ink); line-height: 1.45; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rs-sym mark, .rs-act mark { background: #FFF1B8; color: inherit; padding: 0 1px; border-radius: 2px; }
+  .rs-act { margin-top: 5px; font-size: 12px; line-height: 1.45; color: var(--ink-2); padding: 5px 8px; border-left: 3px solid var(--good); background: var(--good-bg); border-radius: 0 var(--r-md) var(--r-md) 0; word-break: keep-all; }
+  .rs-act.none { border-left-color: var(--gray-300); background: var(--surface-2); color: var(--ink-3); font-style: italic; }
+  .rs-act.cause { border-left-color: var(--brand); background: var(--brand-50); }
+  .rs-act b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+  .rs-take.dh-btn { padding: 4px 9px; font-size: 11.5px; white-space: nowrap; }
+  .rs-take.dh-btn:disabled { opacity: .45; cursor: default; }
+  .rs-hint { margin-top: 8px; font-size: 11px; color: var(--ink-3); }
+  .rs-empty { font-size: 12.5px; color: var(--ink-3); padding: 6px 2px; }
+  @media (max-width: 720px) { .rs-row { grid-template-columns: 34px minmax(0, 1fr); } .rs-take { grid-column: 2; justify-self: start; } .rs-more .ti + * { display: none; } .rs-head { align-items: flex-start; } }
+
   .rg-foot { margin-top: 18px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
   .rg-foot .rg-msg { margin-right: auto; }
   .rg-log { font-size: 12.5px; color: var(--ink-3); }
@@ -2158,7 +2189,20 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
       <div style="grid-column:1/-1;">
         <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">품질 부적합 내용</label>
-        <textarea id="reg-defcontent" rows="3" placeholder="구체적인 부적합 내용을 입력하세요" style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;resize:vertical;"></textarea>
+        <textarea id="reg-defcontent" rows="3" placeholder="구체적인 부적합 내용을 입력하세요 · 적는 동안 아래에 비슷한 과거 사례와 그때 조치가 떠요" style="width:100%;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:13px;box-sizing:border-box;resize:vertical;"></textarea>
+      </div>
+
+      <!-- 비슷한 과거 사례 (클레임 DB, 2026-09-18) — 현상·유형·제품을 적는 동안 자동 검색, 조치를 한 번에 가져올 수 있음 -->
+      <div id="reg-similar" class="rs-panel" style="grid-column:1/-1;display:none" aria-live="polite">
+        <div class="rs-head">
+          <div class="rs-title"><i class="ti ti-database-search"></i> 비슷한 과거 사례 <span id="rs-count"></span></div>
+          <div class="rs-actions">
+            <button type="button" class="dh-btn rs-more" onclick="regSimilarOpenDb()"><i class="ti ti-external-link"></i> 클레임 DB에서 더 보기</button>
+            <button type="button" class="rs-x" title="접기" onclick="regSimilarHide(true)"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+        <div id="rs-list" class="rs-list"></div>
+        <div class="rs-hint">현상·부적합유형·제품명·거래처를 함께 비교해요 · <b>조치 가져오기</b>를 누르면 아래 조치사항 칸에 들어가요(이미 적은 게 있으면 뒤에 덧붙임)</div>
       </div>
 
       <div style="position:relative">
@@ -8406,6 +8450,86 @@ function initRegForm() {
   const today = new Date().toISOString().slice(0,10);
   const rd = document.getElementById('reg-date');
   if (rd && !rd.value) rd.value = today;
+  regSimilarBind();
+}
+
+// ── 등록 화면 · 비슷한 과거 사례 (클레임 DB 재사용) ──
+// 현상(reg-defcontent)·유형·제품·거래처를 적는 동안 300ms 뒤 클레임 DB(cdbScore)로 상위 5건을 폼 안에 보여준다.
+// '조치 가져오기'는 reg-action 에 넣고(있으면 ' / ' 로 덧붙임), 접기(X)를 누르면 이번 입력 내용이 바뀔 때까지 숨긴다.
+let _rsTimer = null, _rsBound = false, _rsDismissedFor = '';
+function regSimilarBind() {
+  if (_rsBound) return; _rsBound = true;
+  ['reg-defcontent', 'reg-deftype', 'reg-product', 'reg-client'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', regSimilarDebounce); });
+}
+function regSimilarDebounce() { clearTimeout(_rsTimer); _rsTimer = setTimeout(renderRegSimilar, 300); }
+function _rsQuery() {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  return { sym: v('reg-defcontent'), dtype: v('reg-deftype'), product: v('reg-product'), client: v('reg-client') };
+}
+function regSimilarHide(dismiss) {
+  const p = document.getElementById('reg-similar'); if (p) p.style.display = 'none';
+  if (dismiss) { const q = _rsQuery(); _rsDismissedFor = q.sym + '|' + q.dtype + '|' + q.product; }
+}
+function regSimilarOpenDb() {
+  const q = _rsQuery(); const text = [q.sym, q.dtype, q.product].filter(Boolean).join(' ');
+  try { showTab('claimdb', document.getElementById('nav-claimdb')); } catch (e) { return; }
+  const qa = document.getElementById('cdb-q'); if (qa) { qa.value = text; }
+  const cl = document.getElementById('cdb-client'); if (cl) cl.value = '';   // 거래처는 폼에서 가산점으로만 쓰고, DB 화면은 넓게 본다
+  if (typeof renderClaimDb === 'function') renderClaimDb();
+}
+function regSimilarTake(id) {
+  const D = window.CLAIMDB; const r = D && D.rows ? D.rows.find(x => x.id === id) : null;
+  if (!r || !r.action) return;
+  const inp = document.getElementById('reg-action'); if (!inp) return;
+  const cur = inp.value.trim();
+  const act = r.action.replace(/\s+/g, ' ').trim();
+  if (cur && cur.includes(act)) { if (typeof gajToast === 'function') gajToast('이미 들어 있는 조치예요', true); return; }
+  inp.value = cur ? cur + ' / ' + act : act;
+  try { inp.focus(); inp.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+  if (typeof gajToast === 'function') gajToast('조치사항에 넣었어요 · 우리 건에 맞게 고쳐서 등록해 주세요', true);
+}
+function renderRegSimilar() {
+  const panel = document.getElementById('reg-similar'), list = document.getElementById('rs-list'), cnt = document.getElementById('rs-count');
+  if (!panel || !list) return;
+  const D = window.CLAIMDB;
+  const q = _rsQuery();
+  const text = [q.sym, q.dtype, q.product].filter(Boolean).join(' ');
+  const key = q.sym + '|' + q.dtype + '|' + q.product;
+  // 현상 4자 미만(유형만 골랐을 때는 유형 2자 이상)이면 안 띄움
+  const enough = cdbNorm(q.sym).length >= 4 || (cdbNorm(q.dtype).length >= 2 && cdbNorm(q.sym + q.product).length >= 2);
+  if (!D || !D.rows || !D.rows.length || !enough || key === _rsDismissedFor) { panel.style.display = 'none'; return; }
+  if (key !== _rsDismissedFor) _rsDismissedFor = '';
+  cdbIndex();
+  const qx = cdbExpand(text);
+  const qb = cdbBigrams(qx), qtoks = cdbTokens(qx);
+  const cli = cdbNorm(q.client);
+  const hits = D.rows.map(r => {
+    let s = cdbScore(r, qb, qtoks);
+    if (cli && cli.length >= 2 && r.client && cdbNorm(r.client).includes(cli)) s += 0.06;   // 같은 거래처 가산
+    return { r, s };
+  }).filter(x => x.s >= 0.14).sort((a, b) => b.s - a.s).slice(0, 5);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const top = hits.length ? hits[0].s : 0;
+  const pct = s => Math.max(8, Math.min(100, Math.round((s / Math.max(top, 0.6)) * 100)));
+  if (cnt) cnt.textContent = hits.length ? '· ' + hits.length + '건 · 클레임 DB ' + D.rows.length.toLocaleString() + '건에서' : '';
+  if (!hits.length) {
+    list.innerHTML = '<div class="rs-empty">비슷한 기록이 아직 없어요. 이번 건의 조치를 자세히 남겨두면 다음 사람이 이 화면에서 보게 돼요.</div>';
+  } else {
+    list.innerHTML = hits.map(({ r, s }) => {
+      const actCls = !r.action ? 'none' : (r.aq === 1 ? 'generic' : '');
+      const actTxt = r.action ? cdbHl(r.action, qtoks) : '조치 기록 없음';
+      const tags = [r.dtype ? '<span class="dh-tag">' + esc(r.dtype) + '</span>' : '', r.equip ? '<span class="dh-tag alt">' + esc(r.equip) + '</span>' : '', r.inout ? '<span class="dh-tag alt">' + esc(r.inout) + '</span>' : ''].join('');
+      return '<div class="rs-row" data-id="' + esc(r.id) + '">'
+        + '<div class="rs-ring" style="--p:' + pct(s) + '" title="유사도"><span>' + Math.round(s * 100) + '</span></div>'
+        + '<div class="rs-body"><div class="rs-meta"><b>' + esc(r.date || '') + '</b>' + (r.client ? '<span>' + esc(r.client) + '</span>' : '') + (r.product ? '<span>· ' + esc(r.product.length > 28 ? r.product.slice(0, 28) + '…' : r.product) + '</span>' : '') + tags + '</div>'
+        + '<div class="rs-sym">' + cdbHl(r.symptom || r.dtype || '', qtoks) + '</div>'
+        + (r.cause ? '<div class="rs-act cause"><b>원인</b>' + cdbHl(r.cause, qtoks) + '</div>' : '')
+        + '<div class="rs-act ' + actCls + '"><b>조치</b>' + actTxt + '</div></div>'
+        + '<button type="button" class="dh-btn rs-take" ' + (r.action ? '' : 'disabled ') + 'onclick="regSimilarTake(\'' + esc(r.id) + '\')"><i class="ti ti-arrow-bar-to-down"></i> 조치 가져오기</button>'
+        + '</div>';
+    }).join('');
+  }
+  panel.style.display = '';
 }
 // ── 부적합유형 분류표 (공정별) ──
 const DEFTYPE_GROUPS = {
@@ -8450,6 +8574,7 @@ function resetClaimRegForm() {
   const rd = document.getElementById('reg-date');
   if (rd) rd.value = today;
   document.getElementById('reg-msg').textContent = '';
+  _rsDismissedFor = ''; regSimilarHide(false);
 }
 
 // ── ERP 행 붙여넣기 → 자동 등록 ──
