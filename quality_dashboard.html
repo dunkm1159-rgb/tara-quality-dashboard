@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789730717">
+<meta name="data-version" content="1789731641">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1541,6 +1541,108 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     .dh-actions .dh-search { width: 100%; }
   }
 
+  /* ══ 모바일 리뉴얼 (2026-09-18) — 하단 탭바 · 터치 타깃 · 헤더 · 표→카드 ══ */
+  .mtab { display: none; }
+  @media (max-width: 900px) {
+    .mtab { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; background: rgba(255, 255, 255, .96); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .mtab button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 46px; padding: 4px 0 2px; font: 600 10.5px/1.2 var(--font-sans); color: var(--ink-3); cursor: pointer; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
+    .mtab button i { font-size: 22px; line-height: 1; display: block; height: 22px; }
+    .mtab button.on { color: var(--brand-700); }
+    .mtab button.on i { color: var(--brand); }
+    .mtab button:active { background: var(--brand-50); }
+    .content { padding: 12px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
+    .dh-selbar { bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important; }
+    #gaj-toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
+    .sidebar { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+    /* 터치 타깃: 버튼·입력칸 최소 36~40px, 글자 13px+ */
+    .dh-btn { height: 40px; font-size: 13px; padding: 0 14px; }
+    .dh-seg button { padding: 8px 12px; font-size: 13px; min-height: 36px; }
+    .claim-year-btn { padding: 8px 12px !important; font-size: 13px !important; min-height: 36px; }
+    .gj-toggle, .gj-filter .gj-toggle, .cdb-filters .gj-toggle { height: 36px !important; font-size: 13px !important; }
+    .dh-select, .gj-filter .dh-select, .cdb-filters .dh-select, .wl-f .dh-select { height: 40px !important; font-size: 14px !important; }
+    .dh-search { height: 40px; } .dh-search input { font-size: 15px !important; }
+    .cl-ic { width: 36px; height: 36px; font-size: 16px; }
+    .gj-st, .gj-gdate { height: 36px; font-size: 13px; }
+    .btn, .btn-sm, .btn-secondary, .btn-primary, .doc-filter { min-height: 38px; font-size: 13px; }
+    .dh-link { font-size: 13px; padding: 6px 0; }
+    .dh-tag, .ul-tag, .wl-shift { font-size: 11px; }
+    .dh-kbd, .dh-kbd-hint { display: none !important; }
+    .content input:not([type=checkbox]):not([type=radio]):not(.gj-gdate), .content textarea,
+    #tab-register input:not([type=file]):not([type=checkbox]), #tab-register select, #tab-register textarea, #tab-kpi-reg input, #tab-kpi-reg select, #tab-kpi-reg textarea { font-size: 15px !important; min-height: 40px; }
+    .content textarea { min-height: 72px; }
+    .rs-take.dh-btn, .rs-more.dh-btn { height: 36px; }
+    .content input[type=checkbox] { width: 22px; height: 22px; }
+    #dash-refresh-btn, .section-header button, .wip-head, .core-tile button, #tab-core .card button, .dh-cal-tbl td { min-height: 40px; }
+    .wip-head { align-items: center; }
+    .dh-cal-i { display: none; } .dh-cal-n { font-size: 11px; }
+    .chev, .dh-caret { font-size: 12px; }
+    .content [style*="font-size:10px"], .content [style*="font-size: 10px"], .content [style*="font-size:10.5px"], .content [style*="font-size:9"] { font-size: 11px !important; }
+    .core-page-header > .cph-period > span[style*="inline-flex"], .content span[style*="inline-flex"] { flex-wrap: wrap; flex-shrink: 1; row-gap: 6px; }
+    .dh-order { min-height: 32px; display: inline-flex; align-items: center; padding: 0 8px; }
+    #tab-core button, .dh-rowcopy { min-height: 40px; min-width: 40px; }
+    .section-title { white-space: normal; flex-wrap: wrap; line-height: 1.3; }
+    .section-title > span[style*="font-size:12px"] { display: block; white-space: normal; margin-top: 2px; }
+    /* 핵심지표 헤더: 고정 4행 높이 해제, 연도탭은 가로 스크롤, 기간 컨트롤은 줄바꿈 */
+    .core-page-header { grid-template-rows: auto; min-height: 0; row-gap: 8px; }
+    .core-page-header > .cph-title { flex-wrap: wrap; }
+    .core-page-header > .cph-title .section-title { font-size: 18px; white-space: normal; line-height: 1.3; }
+    .core-page-header > .cph-desc { white-space: normal; line-height: 1.45; }
+    .core-page-header > .cph-years { height: auto; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+    .core-page-header > .cph-years::-webkit-scrollbar { display: none; }
+    .core-page-header > .cph-years .claim-year-btn { flex-shrink: 0; }
+    .core-page-header > .cph-period { flex-wrap: wrap; overflow: visible; row-gap: 6px; }
+    .core-page-header > .cph-period select, .cph-actions select, .content select:not(.gj-st) { min-height: 40px !important; padding: 6px 10px !important; font-size: 14px !important; }
+    .sc-head { flex-wrap: wrap; } .sc-head .dh-actions { width: 100%; }
+    /* 모달·대화상자는 아래에서 올라오는 시트로 */
+    .sc-modal { align-items: flex-end; padding: 0; }
+    .sc-modal-box { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    #health-panel { left: 12px !important; right: 12px !important; width: auto !important; max-width: none !important; }
+  }
+  @media (max-width: 720px) {
+    /* 취합대장 표 → 카드 */
+    .cl-tbl { table-layout: auto !important; min-width: 0 !important; width: 100%; display: block; }
+    .cl-tbl colgroup, .cl-tbl thead { display: none; }
+    .cl-tbl tbody { display: block; }
+    .cl-tbl tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .cl-tbl tbody tr:last-child { border-bottom: 0; }
+    .cl-tbl tbody td { display: block; padding: 0 !important; border: 0 !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; }
+    .cl-tbl td.cl-year { display: none; }
+    .cl-tbl td.cl-date { order: 1; font-size: 11.5px; color: var(--ink-3); }
+    .cl-tbl td.cl-client { order: 2; font-size: 11.5px; font-weight: 600; color: var(--ink-2); background: var(--surface-2); border-radius: 999px; padding: 2px 8px !important; }
+    .cl-tbl td.cl-act { order: 3; margin-left: auto; display: flex; gap: 2px; }
+    .cl-tbl td.cl-prod { order: 4; flex-basis: 100%; font-weight: 600; font-size: 13.5px; color: var(--ink); line-height: 1.35; }
+    .cl-tbl td.cl-qtype { order: 5; } .cl-tbl td.cl-dtype { order: 6; font-size: 12px; color: var(--ink-2); }
+    .cl-tbl td.cl-cost { order: 7; margin-left: auto; font-weight: 600; color: var(--ink); font-size: 12.5px; }
+    .cl-tbl td.cl-cost:not(:empty)::before { content: '자사 '; font-weight: 500; color: var(--ink-3); font-size: 11px; }
+    .cl-tbl td.cl-desc { order: 8; flex-basis: 100%; font-size: 12px; color: var(--ink-3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden !important; }
+    .cl-tbl td[colspan] { flex-basis: 100%; }
+    /* 가제본 표 → 카드 (열 순서: 날짜·주문번호·거래처·담당자·제품명·요청·설비·진행상태·구성…) */
+    #gajebon-table { min-width: 0 !important; width: 100%; table-layout: auto !important; display: block; }
+    #gajebon-table thead { display: none; }
+    #gajebon-table tbody { display: block; }
+    #gajebon-table tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    #gajebon-table tbody td { display: block; padding: 0 !important; border: 0 !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; max-width: none !important; width: auto !important; background: transparent !important; }
+    .gj-tbl tr.gj-done-row { background: #FFF8DC; }
+    #gajebon-table td:nth-child(1) { order: 1; font-size: 11.5px; color: var(--ink-3); }
+    #gajebon-table td:nth-child(2) { order: 2; } #gajebon-table .gj-order { font-size: 11px; }
+    #gajebon-table td:nth-child(3) { order: 3; font-size: 11.5px; font-weight: 600; color: var(--ink-2); background: var(--surface-2) !important; border-radius: 999px; padding: 2px 8px !important; }
+    #gajebon-table td:nth-child(4) { order: 4; font-size: 11.5px; color: var(--ink-3); }
+    #gajebon-table td:nth-child(5) { order: 5; flex-basis: 100%; font-weight: 600 !important; font-size: 13.5px !important; color: var(--ink); line-height: 1.35; }
+    #gajebon-table td:nth-child(6), #gajebon-table td:nth-child(7) { order: 6; font-size: 12px; color: var(--ink-3); }
+    #gajebon-table td:nth-child(6):not(:empty)::before { content: '요청 '; color: var(--ink-3); font-weight: 600; font-size: 11px; }
+    #gajebon-table td:nth-child(7):not(:empty)::before { content: '설비 '; color: var(--ink-3); font-weight: 600; font-size: 11px; }
+    #gajebon-table td:nth-child(8) { order: 7; flex-basis: 100%; }
+    #gajebon-table .gj-stcell { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
+    #gajebon-table td:nth-child(n+9) { order: 8; border: 1px solid var(--border) !important; border-radius: 8px; padding: 4px 6px !important; min-width: 72px; text-align: center; background: #fff !important; font-size: 11px; }
+    #gajebon-table td:nth-child(n+9):empty { display: none; }
+    #gajebon-table td:nth-child(n+9) input { width: auto !important; min-width: 120px; height: 34px; font-size: 13px !important; }
+    #gajebon-table td:nth-child(n+9) input[type=number] { min-width: 72px; }
+    #gajebon-table td[data-lbl] { display: flex !important; align-items: center; gap: 6px; text-align: left; }
+    #gajebon-table td[data-lbl]::before { content: attr(data-lbl); font-size: 11px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+    #gajebon-table td[data-lbl="요청"] { flex-basis: 100%; } #gajebon-table td[data-lbl="요청"] input { flex: 1; }
+    .gj-count { flex-wrap: wrap; }
+  }
+
   @media (max-width: 720px) {
     .wl-tbl { table-layout: auto; } .wl-tbl col { width: auto !important; }
     .wl-tbl th:nth-child(2), .wl-tbl td:nth-child(2), .wl-tbl th:nth-child(4), .wl-tbl td:nth-child(4) { display: none; }
@@ -1710,6 +1812,14 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
   <!-- ── 메인 영역 ── -->
   <div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+  <!-- 모바일 하단 탭바 (≤900px 에서만 표시, 2026-09-18 모바일 리뉴얼) -->
+  <nav class="mtab" aria-label="빠른 이동">
+    <button type="button" data-tab="dashboard" class="on" onclick="showTab('dashboard')"><i class="ti ti-home"></i>홈</button>
+    <button type="button" data-tab="gajebon" onclick="showTab('gajebon')"><i class="ti ti-book"></i>가제본</button>
+    <button type="button" data-tab="wip" onclick="showTab('wip')"><i class="ti ti-building-factory-2"></i>설비</button>
+    <button type="button" data-tab="register" onclick="showTab('register')"><i class="ti ti-edit"></i>등록</button>
+    <button type="button" data-tab="__menu" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i>메뉴</button>
+  </nav>
   <div class="main-area">
     <!-- 모바일 상단 바 (≤900px 에서만 표시) -->
     <div class="mobile-bar">
@@ -4199,6 +4309,8 @@ function showTab(name, btn) {
   if (mTitle) mTitle.textContent = TAB_TITLES[name] || name;
   if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) toggleSidebar(false);
   renderOpenTabs();
+  document.querySelectorAll('.mtab button[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  try { const c = document.querySelector('.content'); if (c && window.matchMedia && window.matchMedia('(max-width: 900px)').matches) c.scrollTop = 0; } catch (e) {}
   if (name === 'dashboard') refreshDash();
   if (name === 'core') renderCoreSummary();
   if (name === 'analysis') renderErp();
@@ -6314,13 +6426,13 @@ function renderClaimTable() {
   tbody.innerHTML = filtered.map(r => `
     <tr>
       <td class="num cl-date">${clE(r[0]||'-')}</td>
-      <td class="c dim">${clE(r[14]||'-')}</td>
+      <td class="c dim cl-year">${clE(r[14]||'-')}</td>
       <td class="cl-client" title="${clE(r[2])}">${clE(r[2]||'-')}</td>
       <td class="cl-prod" title="${clE(r[4])}">${clE(r[4]||'-')}</td>
-      <td><span class="badge ${typeColor(r[7])}">${clE(r[7]||'-')}</span></td>
-      <td title="${clE(r[8])}">${clE(r[8]||'-')}</td>
-      <td class="dim" title="${clE(r[6]||'')}">${clE(r[6]||'-')}</td>
-      <td class="r num">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
+      <td class="cl-qtype"><span class="badge ${typeColor(r[7])}">${clE(r[7]||'-')}</span></td>
+      <td class="cl-dtype" title="${clE(r[8])}">${clE(r[8]||'-')}</td>
+      <td class="dim cl-desc" title="${clE(r[6]||'')}">${clE(r[6]||'-')}</td>
+      <td class="r num cl-cost">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
       <td class="c cl-act">
         <button class="cl-ic" title="이 건 수정" onclick="editClaim('${claimKey(r).replace(/'/g, "\\'")}')"><i class="ti ti-edit"></i></button>
         <button class="cl-ic del" title="이 건 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"><i class="ti ti-trash"></i></button></td>
@@ -8211,13 +8323,15 @@ function ovsCells(order) {
   const o = String(order || '').replace(/'/g, '');
   const box = 'border:1px solid #cdd5dd;border-radius:7px;padding:6px 7px;font-size:12.5px;width:100%;box-sizing:border-box;background:#fff;color:#1d1d1f';
   const td = 'text-align:center;background:#f4f9fb;padding:5px 6px';
-  const d = k => `<td style="${td}">
+  // data-lbl: 모바일 카드형에서 칸 이름표로 표시 (데스크톱은 머리글이 있어 안 보임)
+  const LBL = { fg: '확정', ship: '발송', final: '최종승인' };
+  const d = k => `<td style="${td}" data-lbl="${LBL[k]}">
       <input type="date" value="${getOvs(order, k)}" onchange="setOvs('${o}','${k}',this.value)" style="${box};cursor:pointer"></td>`;
   return d('fg')
-    + `<td style="${td}"><input type="number" min="0" value="${getOvs(order, 'sample')}" placeholder="0"
+    + `<td style="${td}" data-lbl="견본"><input type="number" min="0" value="${getOvs(order, 'sample')}" placeholder="0"
          onchange="setOvs('${o}','sample',this.value)" style="${box};text-align:center"></td>`
     + d('ship') + d('final')
-    + `<td style="background:#f4f9fb;padding:5px 6px"><input type="text" value="${String(getOvs(order, 'req')).replace(/"/g, '&quot;')}" placeholder="요청사항 입력"
+    + `<td style="background:#f4f9fb;padding:5px 6px" data-lbl="요청"><input type="text" value="${String(getOvs(order, 'req')).replace(/"/g, '&quot;')}" placeholder="요청사항 입력"
          onchange="setOvs('${o}','req',this.value)" style="${box};text-align:left"></td>`;
 }
 let gajebonPartStore = {};      // 주문별 파트 완료/날짜 + _app(해당 파트 목록)
