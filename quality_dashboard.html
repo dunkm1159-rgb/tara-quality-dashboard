@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789716899">
+<meta name="data-version" content="1789717495">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -1272,6 +1272,78 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
   .gj-stamp.soft { background: #FFF0C2; }
   @media (max-width: 720px) { .gj-legend { margin-left: 0; width: 100%; } .gj-search { min-width: 100%; } }
 
+  /* ── 부적합사고 취합대장 (cl-*) ── */
+  .cl-count { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cl-trash { height: 28px; padding: 0 10px; font-size: 11.5px; }
+  .cl-trash-panel { padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .cl-tbl td { padding: 8px 10px; }
+  .cl-tbl td.c { text-align: center; } .cl-tbl td.r { text-align: right; } .cl-tbl td.dim { color: var(--ink-3); }
+  .cl-date { color: var(--ink-2); }
+  .cl-client { font-weight: 500; }
+  .cl-prod { font-weight: 600; color: var(--ink); }
+  .cl-act { white-space: nowrap; }
+  .cl-ic { border: 0; background: transparent; width: 26px; height: 26px; border-radius: 6px; color: var(--ink-3); cursor: pointer; font-size: 14px; line-height: 1; }
+  .cl-ic:hover { background: var(--brand-100); color: var(--brand-700); }
+  .cl-ic.del:hover { background: var(--danger-bg); color: var(--danger); }
+  #tab-claim .metrics { margin-bottom: 16px; }
+
+  /* ── 등록 화면 공통 (부적합사고 등록 · KPI 등록) rg-* ── */
+  .rg-wrap { max-width: 1040px; }
+  .rg-paste .dh-head { margin-bottom: 10px; }
+  .rg-paste-ta { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: var(--r-md); padding: 10px 12px; font: 12px/1.5 var(--font-mono); resize: vertical; background: var(--surface); color: var(--ink); outline: 0; }
+  .rg-paste-ta:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-100); }
+  .rg-paste-act { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .rg-msg { font-size: 12.5px; color: var(--ink-2); }
+  .rg-form { padding: 18px 20px 16px; }
+  .rg-foot { margin-top: 18px; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+  .rg-foot .rg-msg { margin-right: auto; }
+  .rg-log { font-size: 12.5px; color: var(--ink-3); }
+  /* 입력칸: 인라인 style 이 남아 있는 곳도 토큰 모양으로 (범위 한정 !important) */
+  #tab-register label, #tab-kpi-reg label { font-size: 12px !important; font-weight: 600 !important; color: var(--ink-2) !important; margin-bottom: 5px !important; }
+  #tab-register label span, #tab-kpi-reg label span { color: var(--ink-3) !important; font-weight: 500 !important; }
+  #tab-register input:not([type=file]):not([type=checkbox]), #tab-register select, #tab-register textarea:not(.rg-paste-ta),
+  #tab-kpi-reg input:not([type=file]):not([type=checkbox]), #tab-kpi-reg select, #tab-kpi-reg textarea {
+    border: 1px solid var(--border-strong) !important; border-radius: var(--r-md) !important; padding: 8px 10px !important;
+    font-family: inherit !important; font-size: 13px !important; color: var(--ink) !important; background: var(--surface) !important; outline: 0 !important; transition: border-color .12s, box-shadow .12s;
+  }
+  #tab-register input:focus, #tab-register select:focus, #tab-register textarea:focus,
+  #tab-kpi-reg input:focus, #tab-kpi-reg select:focus, #tab-kpi-reg textarea:focus { border-color: var(--brand) !important; box-shadow: 0 0 0 3px var(--brand-100) !important; }
+  #tab-register input::placeholder, #tab-kpi-reg input::placeholder { color: var(--ink-3); }
+  #reg-deftype-list { border: 1px solid var(--border) !important; border-radius: var(--r-md) !important; box-shadow: var(--shadow-3) !important; }
+  #tab-kpi-reg .kpi-reg-section { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: var(--r-lg) !important; padding: 18px 20px 16px !important; box-shadow: var(--shadow-1); }
+  #tab-kpi-reg .kpi-reg-section > div:first-child { font-size: 13px !important; color: var(--ink-2) !important; font-weight: 500; margin-bottom: 14px !important; }
+  #tab-kpi-reg button[onclick^="saveKpi"] { display: inline-flex; align-items: center; gap: 6px; height: 34px !important; padding: 0 16px !important; border-radius: var(--r-md) !important; background: var(--brand-600) !important; color: #fff !important; border: 1px solid var(--brand-600) !important; font-size: 12px !important; font-weight: 600 !important; cursor: pointer; }
+  #tab-kpi-reg button[onclick^="saveKpi"]:hover { background: var(--brand-700) !important; }
+  #tab-kpi-reg [id$="-msg"] { font-size: 12px !important; color: var(--good) !important; }
+  @media (max-width: 720px) { #tab-register [style*="grid-template-columns"], #tab-kpi-reg [style*="grid-template-columns"] { grid-template-columns: 1fr !important; } }
+
+  /* ── 변경 이력 · 접속 기록 (lg-*) ── */
+  .lg-search { width: 260px; height: 34px; }
+  .lg-scroll { max-height: 640px; overflow-y: auto; }
+  .lg-tbl { table-layout: fixed; }
+  .lg-tbl td { padding: 8px 12px; }
+  .lg-t { color: var(--ink-2); }
+  .lg-u { font-weight: 600; color: var(--ink); } .lg-u small { color: var(--ink-3); font-weight: 400; font-size: 11px; margin-left: 5px; }
+  .lg-a { color: var(--ink-2); }
+  .lg-mono { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-2); letter-spacing: 0; }
+  .lg-d { color: var(--ink-2); }
+  @media (max-width: 720px) { .lg-search { width: 100%; } .dh-actions { width: 100%; } }
+
+  /* ── 문서 관리 (dc-*) ── */
+  #tab-docs .dh-seg .doc-filter { border: 0; border-radius: 7px; background: transparent; color: var(--ink-3); padding: 5px 12px; font-size: 12px; font-weight: 500; }
+  #tab-docs .dh-seg .doc-filter.on, #tab-docs .dh-seg .doc-filter.active { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-1); border: 0; }
+  .dc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .dc-card { padding: 14px 16px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; transition: box-shadow .15s, transform .15s; margin-bottom: 0; }
+  .dc-card:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+  .dc-top { display: flex; align-items: center; gap: 8px; }
+  .dc-icon { width: 34px; height: 34px; border-radius: 9px; display: inline-grid; place-items: center; font-size: 18px; }
+  .dc-icon.xls { background: var(--good-bg); color: var(--good); } .dc-icon.doc { background: var(--brand-100); color: var(--brand-700); }
+  .dh-tag.alt { background: var(--surface-2); color: var(--ink-2); }
+  .dc-del { margin-left: auto; border: 0; background: transparent; width: 26px; height: 26px; border-radius: 6px; color: var(--ink-3); cursor: pointer; font-size: 14px; }
+  .dc-del:hover { background: var(--danger-bg); color: var(--danger); }
+  .dc-name { font-size: 13px; font-weight: 600; color: var(--ink); word-break: break-all; line-height: 1.4; }
+  .dc-meta { font-size: 11px; color: var(--ink-3); }
+
   @media (max-width: 720px) {
     .wl-tbl { table-layout: auto; } .wl-tbl col { width: auto !important; }
     .wl-tbl th:nth-child(2), .wl-tbl td:nth-child(2), .wl-tbl th:nth-child(4), .wl-tbl td:nth-child(4) { display: none; }
@@ -1635,26 +1707,27 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
     <!-- ============ NCR 기록 ============ -->
     <div id="tab-kpi-reg" class="tab">
-<div style="padding:24px;max-width:960px;">
+<!-- KPI 등록 (dh-* 디자인, 2026-09-18) — 입력 ID·저장 핸들러 무변경 -->
+<div class="rg-wrap">
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+  <div class="sc-head">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#17A2B8;margin:0;">KPI 데이터 등록</h2>
-      <p style="font-size:12px;color:#888;margin:4px 0 0;">품질개선팀 운영전략 엑셀 파일에 직접 저장</p>
+      <h1 class="sc-title">KPI 데이터 등록</h1>
+      <div class="dh-sub">품질개선팀 운영전략 엑셀 파일에 직접 저장 · 저장한 값은 팀 KPI 화면에 바로 반영</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <div id="kpi-excel-status" style="font-size:12px;color:#888;">엑셀 미연결</div>
-      <button onclick="connectKpiExcel()" style="background:#17A2B8;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;">KPI 엑셀 연결</button>
+    <div class="dh-actions">
+      <span id="kpi-excel-status" class="gj-meta">엑셀 미연결</span>
+      <button class="dh-btn dh-btn-brand" onclick="connectKpiExcel()"><i class="ti ti-file-spreadsheet"></i> KPI 엑셀 연결</button>
     </div>
   </div>
 
   <!-- 섹션 탭 -->
-  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e5e5e0;">
-    <button class="kpi-reg-tab-btn" id="kbtn-top3" onclick="switchKpiRegTab('top3',this)" style="background:none;border:none;border-bottom:3px solid #17A2B8;padding:8px 16px 9px;font-size:13px;font-weight:600;color:#17A2B8;cursor:pointer;margin-bottom:-2px;">TOP3 불량</button>
-    <button class="kpi-reg-tab-btn" id="kbtn-cost" onclick="switchKpiRegTab('cost',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">품질비용</button>
-    <button class="kpi-reg-tab-btn" id="kbtn-sop" onclick="switchKpiRegTab('sop',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">SOP 준수율</button>
-    <button class="kpi-reg-tab-btn" id="kbtn-std" onclick="switchKpiRegTab('std',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">표준 위반</button>
-    <button class="kpi-reg-tab-btn" id="kbtn-color" onclick="switchKpiRegTab('color',this)" style="background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px 9px;font-size:13px;color:#888;cursor:pointer;margin-bottom:-2px;">컬러 클레임</button>
+  <div class="gj-tabs">
+    <button class="kpi-reg-tab-btn claim-year-btn active" id="kbtn-top3" onclick="switchKpiRegTab('top3',this)">TOP3 불량</button>
+    <button class="kpi-reg-tab-btn claim-year-btn" id="kbtn-cost" onclick="switchKpiRegTab('cost',this)">품질비용</button>
+    <button class="kpi-reg-tab-btn claim-year-btn" id="kbtn-sop" onclick="switchKpiRegTab('sop',this)">SOP 준수율</button>
+    <button class="kpi-reg-tab-btn claim-year-btn" id="kbtn-std" onclick="switchKpiRegTab('std',this)">표준 위반</button>
+    <button class="kpi-reg-tab-btn claim-year-btn" id="kbtn-color" onclick="switchKpiRegTab('color',this)">컬러 클레임</button>
   </div>
 
   <!-- TOP3 불량 -->
@@ -1845,32 +1918,31 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 </div>
 
 <div id="tab-register" class="tab">
-<div style="padding:24px;max-width:960px;">
+<!-- 부적합사고 등록 (dh-* 디자인, 2026-09-18) — 입력 ID·핸들러 무변경, 입력칸 모양은 #tab-register 범위 CSS 로 통일 -->
+<div class="rg-wrap">
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+  <div class="sc-head">
     <div>
-      <h2 style="font-size:18px;font-weight:700;color:#17A2B8;margin:0;">부적합사고 등록</h2>
-      <p style="font-size:12px;color:#888;margin:4px 0 0;">등록 즉시 대시보드 반영 · 클라우드(구글시트)에 자동 저장</p>
+      <h1 class="sc-title">부적합사고 등록</h1>
+      <div class="dh-sub">등록 즉시 대시보드 반영 · 구글시트에 자동 저장되어 팀 공유 · <b>*</b> 는 필수</div>
     </div>
   </div>
 
   <!-- ERP 행 붙여넣기 → 자동 등록 -->
-  <div style="background:#f5fbfc;border:1px solid #cfeaef;border-radius:10px;padding:16px 18px;margin-bottom:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-      <div style="font-size:13.5px;font-weight:700;color:#0f6e7e">ERP 행 붙여넣기로 바로 등록</div>
-      <div style="font-size:11px;color:#888">ERP에서 행을 복사해 붙여넣으세요 · 여러 줄(여러 건) 한 번에 가능</div>
+  <div class="card dh-card rg-paste">
+    <div class="dh-head">
+      <div><h2 class="dh-title"><i class="ti ti-clipboard-text" style="color:var(--brand-700)"></i> ERP 행 붙여넣기로 바로 등록</h2><div class="dh-sub">ERP 부적합내역에서 행을 복사해 붙여넣으세요 · 여러 줄(여러 건) 한 번에 가능</div></div>
     </div>
-    <textarea id="reg-paste" rows="3" placeholder="접수일  작업번호  거래처  담당자  제품명  수량  부적합내용  접수유형  부적합유형  설비  작업일  주야  작업자  조치사항  조치일  (탭으로 구분된 ERP 행 그대로 붙여넣기)"
-      style="width:100%;box-sizing:border-box;border:1px solid #cfe0e3;border-radius:8px;padding:9px 11px;font-size:12px;font-family:monospace;resize:vertical;background:#fff"></textarea>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
-      <button type="button" onclick="parsePasteRegister()" style="background:#17A2B8;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">붙여넣기 등록</button>
-      <button type="button" onclick="previewPasteRegister()" style="background:#fff;color:#17A2B8;border:1px solid #17A2B8;border-radius:7px;padding:8px 14px;font-size:13px;cursor:pointer">미리보기</button>
-      <span id="reg-paste-msg" style="font-size:12px;color:#666"></span>
+    <textarea id="reg-paste" rows="3" class="rg-paste-ta" placeholder="접수일  작업번호  거래처  담당자  제품명  수량  부적합내용  접수유형  부적합유형  설비  작업일  주야  작업자  조치사항  조치일  (탭으로 구분된 ERP 행 그대로 붙여넣기)"></textarea>
+    <div class="rg-paste-act">
+      <button type="button" class="dh-btn dh-btn-brand" onclick="parsePasteRegister()"><i class="ti ti-player-play"></i> 붙여넣기 등록</button>
+      <button type="button" class="dh-btn" onclick="previewPasteRegister()"><i class="ti ti-eye"></i> 미리보기</button>
+      <span id="reg-paste-msg" class="rg-msg"></span>
     </div>
     <div id="reg-paste-preview" style="margin-top:10px;font-size:12px"></div>
   </div>
 
-  <form id="claim-reg-form" onsubmit="submitClaimReg(event)" style="background:#fff;border-radius:10px;border:1px solid #e0e3e8;padding:24px;">
+  <form id="claim-reg-form" class="card dh-card rg-form" onsubmit="submitClaimReg(event)">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
 
       <div>
@@ -1965,34 +2037,38 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
 
     </div>
 
-    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;align-items:center;">
-      <div id="reg-msg" style="font-size:13px;color:#666;"></div>
-      <button type="button" onclick="resetClaimRegForm()" style="background:#f5f5f7;color:#555;border:none;border-radius:6px;padding:9px 18px;font-size:13px;cursor:pointer;">초기화</button>
-      <button type="submit" style="background:#17A2B8;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">등록</button>
+    <div class="rg-foot">
+      <div id="reg-msg" class="rg-msg"></div>
+      <button type="button" class="dh-btn" onclick="resetClaimRegForm()"><i class="ti ti-refresh"></i> 초기화</button>
+      <button type="submit" class="dh-btn dh-btn-brand"><i class="ti ti-check"></i> 등록</button>
     </div>
   </form>
 
-  <div style="margin-top:24px;background:#fff;border-radius:10px;border:1px solid #e0e3e8;padding:20px;">
-    <h3 style="font-size:14px;font-weight:700;color:#17A2B8;margin:0 0 12px;">이번 세션 등록 내역</h3>
-    <div id="reg-log" style="font-size:13px;color:#888;">아직 등록된 항목 없음</div>
+  <div class="card dh-card">
+    <div class="dh-head"><div><h2 class="dh-title">이번 세션 등록 내역</h2><div class="dh-sub">이 브라우저에서 방금 등록한 건 · 취합대장에서 전체 확인</div></div></div>
+    <div id="reg-log" class="rg-log">아직 등록된 항목 없음</div>
   </div>
 
 </div>
 </div>
 
     <div id="tab-claim" class="tab">
-      <div class="section-header">
-        <div class="section-title">부적합사고 취합대장</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span id="claim-updated" style="font-size:12px;color:var(--color-text-secondary,#aaa)"></span>
-          <button onclick="exportClaims()" style="border:1px solid #17A2B8;background:#fff;color:#17A2B8;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap">엑셀 내려받기</button>
+      <!-- 부적합사고 취합대장 (dh-* 디자인, 2026-09-18) -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">부적합사고 취합대장</h1>
+          <div class="dh-sub">관리대장 엑셀 + 구글시트 직접 등록분을 취합 · 접수일 최신순 · 행 끝 아이콘으로 수정·삭제(휴지통) <span id="claim-updated" class="gj-meta"></span></div>
+        </div>
+        <div class="dh-actions">
+          <button class="dh-btn" onclick="showTab('analysis', document.getElementById('nav-analysis'))"><i class="ti ti-chart-bar"></i> 상세 분석</button>
+          <button class="dh-btn dh-btn-brand" onclick="exportClaims()"><i class="ti ti-file-spreadsheet"></i> 엑셀 내려받기</button>
         </div>
       </div>
 
       <div class="metrics" id="claim-metrics"></div>
 
       <!-- 연도 탭 -->
-      <div style="display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid #e5e5e0;padding-bottom:0">
+      <div class="gj-tabs">
         <button class="claim-year-btn" onclick="switchClaimYear('',this)">전체</button>
         <button class="claim-year-btn" onclick="switchClaimYear('2023',this)">2023</button>
         <button class="claim-year-btn" onclick="switchClaimYear('2024',this)">2024</button>
@@ -2000,28 +2076,29 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         <button class="claim-year-btn active" onclick="switchClaimYear('2026',this)">2026</button>
       </div>
 
-      <div class="filter-bar">
-        <input type="text" id="claim-search" placeholder="거래처, 제품명, 부적합 내용 검색..." oninput="renderClaimTable()" style="flex:2;min-width:200px">
-        <select id="claim-type" onchange="renderClaimTable()">
-          <option value="">전체 품질유형</option>
-        </select>
-        <select id="claim-defect" onchange="renderClaimTable()">
-          <option value="">전체 부적합유형</option>
-        </select>
-        <select id="claim-client" onchange="renderClaimTable()">
-          <option value="">전체 거래처</option>
-        </select>
+      <div class="card dh-card gj-filter">
+        <div class="gj-filter-row">
+          <label class="dh-search gj-search"><i class="ti ti-search"></i><input type="text" id="claim-search" placeholder="거래처 · 제품명 · 부적합 내용 · 부적합유형 검색" oninput="renderClaimTable()" autocomplete="off"></label>
+          <select id="claim-type" class="dh-select" onchange="renderClaimTable()">
+            <option value="">전체 품질유형</option>
+          </select>
+          <select id="claim-defect" class="dh-select" onchange="renderClaimTable()">
+            <option value="">전체 부적합유형</option>
+          </select>
+          <select id="claim-client" class="dh-select" onchange="renderClaimTable()">
+            <option value="">전체 거래처</option>
+          </select>
+        </div>
       </div>
 
-      <div class="card" style="padding:0">
-        <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div class="card dh-card gj-tablecard">
+        <div class="gj-count cl-count">
           <span id="claim-count"></span>
-          <button id="claim-trash-btn" onclick="toggleTrash()" title="삭제한 클레임 선택 복원 / 완전삭제"
-            style="border:1px solid #e5e5e5;background:#fff;border-radius:6px;padding:3px 10px;font-size:12px;color:#666;cursor:pointer">휴지통 0</button>
+          <button id="claim-trash-btn" class="dh-btn cl-trash" onclick="toggleTrash()" title="삭제한 클레임 선택 복원 / 완전삭제"><i class="ti ti-trash"></i> 휴지통 0</button>
         </div>
-        <div id="claim-trash-panel" style="display:none;padding:8px 16px;background:#fafafa;border-bottom:1px solid #f0f0ee"></div>
+        <div id="claim-trash-panel" class="cl-trash-panel" style="display:none"></div>
         <div class="tbl-wrap">
-          <table style="table-layout:fixed">
+          <table class="dh-tbl cl-tbl" style="table-layout:fixed">
             <colgroup>
               <col style="width:90px"><col style="width:80px"><col style="width:120px">
               <col style="width:220px"><col style="width:90px"><col style="width:90px">
@@ -2038,12 +2115,6 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
         </div>
       </div>
 
-      <!-- 분석 탭 바로가기 -->
-      <div style="margin-top:28px;padding-top:16px;border-top:1px solid #e5e5e0;text-align:center">
-        <button class="btn btn-secondary" onclick="showTab('analysis', document.getElementById('nav-analysis'))" style="font-size:13px">
-          상세 분석 보기 →
-        </button>
-      </div>
     </div>
 
     <!-- ============ 가제본 현황 ============ -->
@@ -2766,25 +2837,23 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     <!-- ============ 문서 관리 ============ -->
     <!-- ============ 변경 이력 ============ -->
     <div id="tab-log" class="tab">
-      <div class="section-header" style="margin-bottom:10px">
-        <div class="section-title">변경 이력 <span style="font-size:12px;color:#aaa;font-weight:400">감사추적 (등록·삭제·복원)</span></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="log-search" oninput="renderChangeLog()" placeholder="검색 (작업번호·작성자·내용)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:220px">
-          <button onclick="loadLogFromSheet()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer" title="시트에서 최신 기록 다시 불러오기">새로고침</button>
+      <!-- 변경 이력 (dh-* 디자인, 2026-09-18) -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">변경 이력</h1>
+          <div class="dh-sub">감사추적 · 등록 · 삭제 · 복원 기록 · 모든 PC 의 기록이 구글시트로 합쳐져 공용 표시 (탭 열 때 자동 동기화)</div>
+        </div>
+        <div class="dh-actions">
+          <label class="dh-search lg-search"><i class="ti ti-search"></i><input id="log-search" oninput="renderChangeLog()" placeholder="작업번호 · 작성자 · 내용 검색" autocomplete="off"></label>
+          <button class="dh-btn" onclick="loadLogFromSheet()" title="시트에서 최신 기록 다시 불러오기"><i class="ti ti-refresh"></i> 새로고침</button>
         </div>
       </div>
-      <div style="font-size:11.5px;color:#86868b;margin-bottom:12px">모든 PC의 등록·삭제·복원 기록이 공용으로 표시됩니다. (탭 열 때 자동 동기화)</div>
-      <div class="card" style="padding:0">
-        <div style="padding:9px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="log-count"></div>
-        <div style="overflow-x:auto;max-height:560px;overflow-y:auto">
-          <table style="width:100%;font-size:12.5px">
-            <thead><tr>
-              <th style="white-space:nowrap;text-align:left">일시</th>
-              <th style="white-space:nowrap;text-align:left">작성자</th>
-              <th style="white-space:nowrap;text-align:left">동작</th>
-              <th style="white-space:nowrap;text-align:left">작업번호</th>
-              <th style="white-space:nowrap;text-align:left">내용</th>
-            </tr></thead>
+      <div class="card dh-card gj-tablecard">
+        <div class="gj-count" id="log-count"></div>
+        <div class="dh-tbl-wrap lg-scroll">
+          <table class="dh-tbl lg-tbl">
+            <colgroup><col style="width:140px"><col style="width:110px"><col style="width:110px"><col style="width:170px"><col></colgroup>
+            <thead><tr><th>일시</th><th>작성자</th><th>동작</th><th>작업번호</th><th>내용</th></tr></thead>
             <tbody id="log-tbody"></tbody>
           </table>
         </div>
@@ -2792,51 +2861,51 @@ var TARA_DATA_VER = (function(){ var m = document.querySelector('meta[name="data
     </div>
 
     <div id="tab-access" class="tab">
-      <div class="section-header" style="margin-bottom:10px">
-        <div class="section-title">접속기록 <span style="font-size:12px;color:#aaa;font-weight:400">관리자 전용 · 로그인 · 페이지 열람 이력</span></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="access-search" oninput="renderAccessLog()" placeholder="검색 (이름·아이디·IP)" style="border:1px solid #d2d2d7;border-radius:7px;padding:6px 10px;font-size:12.5px;width:200px">
-          <button onclick="loadAccessLog()" style="border:1px solid #e5e5e5;background:#fff;border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer">새로고침</button>
+      <!-- 접속 기록 (dh-* 디자인, 2026-09-18) -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">접속 기록 <span class="badge badge-low" style="vertical-align:middle;margin-left:6px">관리자 전용</span></h1>
+          <div class="dh-sub">로그인 성공 시 자동 기록 · 누가 · 언제 · 어디서(IP) 접속했는지 · 페이지 열람 이력 포함</div>
+        </div>
+        <div class="dh-actions">
+          <label class="dh-search lg-search"><i class="ti ti-search"></i><input id="access-search" oninput="renderAccessLog()" placeholder="이름 · 아이디 · IP 검색" autocomplete="off"></label>
+          <button class="dh-btn" onclick="loadAccessLog()"><i class="ti ti-refresh"></i> 새로고침</button>
         </div>
       </div>
-      <div style="font-size:11.5px;color:#86868b;margin-bottom:12px">로그인 성공 시 자동 기록됩니다 — 누가·언제·어디서(IP) 접속했는지. (관리자만 볼 수 있어요)</div>
-      <div class="card" style="padding:0">
-        <div style="padding:9px 16px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ee" id="access-count"></div>
-        <div style="overflow-x:auto;max-height:560px;overflow-y:auto">
-          <table style="width:100%;font-size:12.5px">
-            <thead><tr>
-              <th style="white-space:nowrap;text-align:left;padding:8px 12px">접속 일시</th>
-              <th style="white-space:nowrap;text-align:left;padding:8px 12px">이름 (아이디)</th>
-              <th style="white-space:nowrap;text-align:left;padding:8px 12px">동작 · 페이지</th>
-              <th style="white-space:nowrap;text-align:left;padding:8px 12px">IP 주소</th>
-            </tr></thead>
-            <tbody id="access-tbody"><tr><td colspan="4" style="padding:16px;color:#ccc">불러오는 중…</td></tr></tbody>
+      <div class="card dh-card gj-tablecard">
+        <div class="gj-count" id="access-count"></div>
+        <div class="dh-tbl-wrap lg-scroll">
+          <table class="dh-tbl lg-tbl">
+            <colgroup><col style="width:150px"><col style="width:200px"><col><col style="width:160px"></colgroup>
+            <thead><tr><th>접속 일시</th><th>이름 (아이디)</th><th>동작 · 페이지</th><th>IP 주소</th></tr></thead>
+            <tbody id="access-tbody"><tr><td colspan="4"><div class="dh-empty">불러오는 중…</div></td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
     <div id="tab-docs" class="tab">
-      <div class="section-header" style="margin-bottom:20px">
-        <div class="section-title">문서 관리</div>
-        <span style="font-size:12px;color:#aaa">작업표준서 · 작업지침서</span>
+      <!-- 문서 관리 (dh-* 디자인, 2026-09-18) -->
+      <div class="sc-head">
+        <div>
+          <h1 class="sc-title">문서 관리</h1>
+          <div class="dh-sub">작업표준서 · 작업지침서 · 파일은 이 PC 브라우저에 연결되고 카드를 누르면 바로 열려요</div>
+        </div>
+        <div class="dh-actions">
+          <button class="dh-btn" onclick="addDocFile('standard')"><i class="ti ti-plus"></i> 작업표준서 추가</button>
+          <button class="dh-btn dh-btn-brand" onclick="addDocFile('instruction')"><i class="ti ti-plus"></i> 작업지침서 추가</button>
+        </div>
       </div>
 
-      <!-- 필터 + 추가 버튼 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-        <div style="display:flex;gap:8px;">
-          <button id="dft-all"        class="doc-filter active" onclick="filterDocs('all',this)">전체</button>
-          <button id="dft-standard"   class="doc-filter" onclick="filterDocs('standard',this)">작업표준서</button>
-          <button id="dft-instruction"class="doc-filter" onclick="filterDocs('instruction',this)">작업지침서</button>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-blue" onclick="addDocFile('standard')">+ 작업표준서 추가</button>
-          <button class="btn-blue" onclick="addDocFile('instruction')">+ 작업지침서 추가</button>
-        </div>
+      <!-- 필터 -->
+      <div class="dh-seg" style="margin-bottom:14px">
+        <button id="dft-all"        class="doc-filter on active" onclick="filterDocs('all',this)">전체</button>
+        <button id="dft-standard"   class="doc-filter" onclick="filterDocs('standard',this)">작업표준서</button>
+        <button id="dft-instruction"class="doc-filter" onclick="filterDocs('instruction',this)">작업지침서</button>
       </div>
 
       <!-- 문서 카드 목록 -->
-      <div id="docs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;"></div>
+      <div id="docs-grid" class="dc-grid"></div>
 
       <!-- Excel 미리보기 패널 -->
       <div id="docs-preview-wrap" style="display:none;margin-top:24px;">
@@ -5597,12 +5666,12 @@ function renderAccessLog(){
   let rows=_accessRows.slice().sort((a,b)=>String(b.t).localeCompare(String(a.t)));
   if(q) rows=rows.filter(r=>(userName(r.user)+' '+r.user+' '+r.ip+' '+(r.act||'')).toLowerCase().includes(q));
   const cnt=document.getElementById('access-count'); if(cnt) cnt.textContent='총 '+_accessRows.length+'건'+(q?(' 중 '+rows.length+'건'):'');
-  tb.innerHTML=rows.length?rows.slice(0,1000).map(r=>`<tr style="border-bottom:1px solid #f5f5f2">
-    <td style="padding:6px 12px;white-space:nowrap;color:#555">${esc(fmt(r.t))}</td>
-    <td style="padding:6px 12px;white-space:nowrap;font-weight:600">${esc(userName(r.user))}<span style="color:#aab;font-weight:400;font-size:11px"> (${esc(r.user)})</span></td>
-    <td style="padding:6px 12px;white-space:nowrap;color:#334">${esc(r.act)}</td>
-    <td style="padding:6px 12px;white-space:nowrap;font-family:monospace;color:#667">${esc(r.ip)}</td></tr>`).join('')
-    :'<tr><td colspan="4" style="padding:16px;color:#ccc">접속기록이 없습니다.</td></tr>';
+  tb.innerHTML=rows.length?rows.slice(0,1000).map(r=>`<tr>
+    <td class="num lg-t">${esc(fmt(r.t))}</td>
+    <td class="lg-u">${esc(userName(r.user))}<small>${esc(r.user)}</small></td>
+    <td class="lg-a">${esc(r.act)}</td>
+    <td class="lg-mono">${esc(r.ip)}</td></tr>`).join('')
+    :'<tr><td colspan="4"><div class="dh-empty">접속기록이 없어요</div></td></tr>';
 }
 try{ _initAccessNav(); }catch(e){}
 
@@ -5620,15 +5689,16 @@ function renderChangeLog() {
   const rows = q ? merged.filter(e => (e.u + e.a + e.tg + e.d).toLowerCase().includes(q)) : merged;
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const fmt = t => { try { return new Date(t).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(0, 16); } catch (e) { return t; } };
-  const color = a => a.includes('완전삭제') ? '#c0392b' : a.includes('삭제') ? '#e67e22' : a.includes('복원') ? '#1F5C99' : '#248a3d';
+  // 동작 = 상태 배지 (완전삭제 위험 · 삭제 주의 · 복원 정보 · 등록 정상)
+  const actCls = a => a.includes('완전삭제') ? 'badge-high' : a.includes('삭제') ? 'badge-mid' : a.includes('복원') ? 'badge-low' : 'badge-pass';
   const cnt = document.getElementById('log-count'); if (cnt) cnt.textContent = rows.length + '건';
   tb.innerHTML = rows.length ? rows.map(e => `<tr>
-    <td style="white-space:nowrap;color:#666">${fmt(e.t)}</td>
-    <td style="white-space:nowrap;font-weight:600">${esc(e.u)}</td>
-    <td style="white-space:nowrap"><span style="color:${color(e.a)};font-weight:600">${esc(e.a)}</span></td>
-    <td style="white-space:nowrap;font-family:monospace;color:#555">${esc(e.tg)}</td>
-    <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px" title="${esc(e.d)}">${esc(e.d)}</td>
-  </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:#ccc;padding:18px">기록 없음</td></tr>';
+    <td class="num lg-t">${esc(fmt(e.t))}</td>
+    <td class="lg-u">${esc(e.u)}</td>
+    <td><span class="badge ${actCls(e.a)}">${esc(e.a)}</span></td>
+    <td class="lg-mono">${esc(e.tg)}</td>
+    <td class="lg-d" title="${esc(e.d)}">${esc(e.d)}</td>
+  </tr>`).join('') : '<tr><td colspan="5"><div class="dh-empty">기록이 없어요</div></td></tr>';
 }
 async function loadLogFromSheet(silent) {
   const cnt = document.getElementById('log-count');
@@ -5767,27 +5837,22 @@ function renderClaimTable() {
   };
 
   const tbody = document.getElementById('claim-tbody');
-  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="9" class="empty">해당하는 데이터 없음</td></tr>'; return; }
+  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="9"><div class="dh-empty">조건에 맞는 건이 없어요 · 검색어나 필터를 풀어보세요</div></td></tr>'; return; }
 
+  const clE = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   tbody.innerHTML = filtered.map(r => `
     <tr>
-      <td style="white-space:nowrap;font-size:13px">${r[0]||'-'}</td>
-      <td style="text-align:center;font-size:13px">${r[14]||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r[2]}">${r[2]||'-'}</td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px" title="${r[4]}">${r[4]||'-'}</td>
-      <td><span class="badge ${typeColor(r[7])}">${r[7]||'-'}</span></td>
-      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[8]}">${r[8]||'-'}</td>
-      <td style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[6]||''}">${r[6]||'-'}</td>
-      <td style="text-align:right;font-size:13px">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
-      <td style="text-align:center;white-space:nowrap">
-        <button title="이 건 수정" onclick="editClaim('${claimKey(r).replace(/'/g, "\\'")}')"
-          style="border:none;background:none;cursor:pointer;color:#1F5C99;font-size:14px;padding:2px 5px;line-height:1"
-          onmouseover="this.style.background='#eaf2fb';this.style.borderRadius='6px'"
-          onmouseout="this.style.background='none'"><i class="ti ti-edit"></i></button>
-        <button title="이 건 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"
-          style="border:none;background:none;cursor:pointer;color:#c0392b;font-size:15px;padding:2px 5px;line-height:1"
-          onmouseover="this.style.background='#fdeaea';this.style.borderRadius='6px'"
-          onmouseout="this.style.background='none'"><i class="ti ti-trash"></i></button></td>
+      <td class="num cl-date">${clE(r[0]||'-')}</td>
+      <td class="c dim">${clE(r[14]||'-')}</td>
+      <td class="cl-client" title="${clE(r[2])}">${clE(r[2]||'-')}</td>
+      <td class="cl-prod" title="${clE(r[4])}">${clE(r[4]||'-')}</td>
+      <td><span class="badge ${typeColor(r[7])}">${clE(r[7]||'-')}</span></td>
+      <td title="${clE(r[8])}">${clE(r[8]||'-')}</td>
+      <td class="dim" title="${clE(r[6]||'')}">${clE(r[6]||'-')}</td>
+      <td class="r num">${typeof r[12]==='number' ? r[12].toLocaleString() : '-'}</td>
+      <td class="c cl-act">
+        <button class="cl-ic" title="이 건 수정" onclick="editClaim('${claimKey(r).replace(/'/g, "\\'")}')"><i class="ti ti-edit"></i></button>
+        <button class="cl-ic del" title="이 건 삭제" onclick="deleteClaim('${claimKey(r).replace(/'/g, "\\'")}')"><i class="ti ti-trash"></i></button></td>
     </tr>
   `).join('');
 }
@@ -8318,15 +8383,9 @@ function applyKpiOverrides() {
 
 function switchKpiRegTab(name, btn) {
   document.querySelectorAll('.kpi-reg-section').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.kpi-reg-tab-btn').forEach(b => {
-    b.style.borderBottomColor = 'transparent';
-    b.style.color = '#888';
-    b.style.fontWeight = '400';
-  });
+  document.querySelectorAll('.kpi-reg-tab-btn').forEach(b => b.classList.remove('active'));   // 탭 모양은 .claim-year-btn CSS
   document.getElementById('kpi-reg-' + name).style.display = '';
-  btn.style.borderBottomColor = '#17A2B8';
-  btn.style.color = '#17A2B8';
-  btn.style.fontWeight = '600';
+  if (btn) btn.classList.add('active');
 }
 
 function kv(id) { return document.getElementById(id)?.value || ''; }
@@ -9433,31 +9492,30 @@ function renderDocsList() {
   const meta = getDocsMeta();
   const filtered = docsCurrentFilter === 'all' ? meta : meta.filter(function(d){ return d.category === docsCurrentFilter; });
   if (!filtered.length) {
-    grid.innerHTML = '<div style="color:#aaa;padding:32px;text-align:center;grid-column:1/-1;">등록된 문서가 없습니다.<br><span style="font-size:12px">위의 버튼으로 파일을 추가하세요.</span></div>';
+    grid.innerHTML = '<div class="dh-empty" style="grid-column:1/-1;padding:48px 20px">등록된 문서가 없어요.<br><span style="font-size:12px">위의 「작업표준서 추가 / 작업지침서 추가」 버튼으로 파일을 연결하세요.</span></div>';
     return;
   }
+  const dcE = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   grid.innerHTML = filtered.map(function(doc) {
-    const icon = doc.fileType === 'excel' ? '' : '';
+    const isXls = doc.fileType === 'excel';
     const cat = doc.category === 'standard' ? '작업표준서' : '작업지침서';
     const size = doc.size ? (doc.size > 1048576 ? (doc.size/1048576).toFixed(1)+'MB' : (doc.size/1024).toFixed(0)+'KB') : '';
     const date = doc.addedAt ? doc.addedAt.slice(0,10) : '';
     const cardId = 'doc-card-' + doc.id;
-    return '<div id="' + cardId + '" class="card" style="padding:16px;cursor:pointer;" onclick="openDocFile(&quot;' + doc.id + '&quot;)">'
-      + '<div style="font-size:32px;margin-bottom:8px">' + icon + '</div>'
-      + '<div style="font-size:13px;font-weight:600;color:#17A2B8;margin-bottom:4px;word-break:break-all">' + doc.name + '</div>'
-      + '<div style="font-size:11px;color:#666;margin-bottom:10px">' + cat + '</div>'
-      + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      +   '<span style="font-size:11px;color:#999">' + size + (size && date ? ' &middot; ' : '') + date + '</span>'
-      +   '<button onclick="event.stopPropagation();deleteDocFile(&quot;' + doc.id + '&quot;)" title="삭제" style="border:none;background:none;color:#ccc;cursor:pointer;font-size:18px;padding:0;line-height:1">✕</button>'
-      + '</div>'
+    return '<div id="' + cardId + '" class="card dh-card dc-card" onclick="openDocFile(&quot;' + doc.id + '&quot;)" role="button" tabindex="0">'
+      + '<div class="dc-top"><span class="dc-icon ' + (isXls ? 'xls' : 'doc') + '"><i class="ti ' + (isXls ? 'ti-file-spreadsheet' : 'ti-file-text') + '"></i></span>'
+      +   '<span class="dh-tag' + (doc.category === 'standard' ? '' : ' alt') + '">' + cat + '</span>'
+      +   '<button class="dc-del" onclick="event.stopPropagation();deleteDocFile(&quot;' + doc.id + '&quot;)" title="목록에서 삭제"><i class="ti ti-x"></i></button></div>'
+      + '<div class="dc-name" title="' + dcE(doc.name) + '">' + dcE(doc.name) + '</div>'
+      + '<div class="dc-meta">' + size + (size && date ? ' · ' : '') + date + '</div>'
       + '</div>';
   }).join('');
 }
 
 function filterDocs(type, btn) {
   docsCurrentFilter = type;
-  document.querySelectorAll('.doc-filter').forEach(function(b){ b.classList.remove('active'); });
-  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.doc-filter').forEach(function(b){ b.classList.remove('active'); b.classList.remove('on'); });
+  if (btn) { btn.classList.add('active'); btn.classList.add('on'); }
   renderDocsList();
 }
 
