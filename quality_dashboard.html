@@ -18,7 +18,7 @@
   }
 }catch(e){}})();
 </script>
-<meta name="data-version" content="1789691662">
+<meta name="data-version" content="1789693857">
 <script>
 /* 벤더 라이브러리는 같은 사이트의 vendor/ 에서 먼저 받고, 실패하면 cdnjs 로 1회 폴백한다.
    (사내망에서 CDN 이 막히거나 CDN 장애 시에도 차트가 뜨도록) */
@@ -6327,7 +6327,11 @@ function gajebonNotifyPayload(order, date){
            request: String(r['요청내용']||'').trim(),
            sheet: (typeof gajebonCurrentSheet !== 'undefined' ? String(gajebonCurrentSheet||'') : ''), by };
 }
+// 가제본 완료 이메일 알림 켜기/끄기. 2026-09-18 형 결정으로 보류(false) — Apps Script v5 + 연락처 탭 준비되면 true 로.
+// false 면 날짜 저장만 하고 알림 POST 를 보내지 않음(운영 Apps Script 가 v4 라 보내면 'no data' 실패 토스트만 뜸).
+var GAJ_NOTIFY_ENABLED = false;
 async function notifyGajebonDone(order, date){
+  if(!GAJ_NOTIFY_ENABLED) return;
   if(!order || !date || typeof CLAIM_SHEET_URL === 'undefined' || typeof fetch !== 'function') return;
   let sent = {}; try { sent = JSON.parse(localStorage.getItem(GAJ_NOTIFY_KEY) || '{}'); } catch(e) {}
   if(sent[order] === date) return;                       // 같은 주문·같은 완료일은 이 브라우저에서 한 번만 (서버도 별도로 중복 차단)
